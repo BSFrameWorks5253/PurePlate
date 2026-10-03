@@ -50,9 +50,10 @@ const CONFIG = {
   RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '120', 10),
   AUTH_RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.AUTH_RATE_LIMIT_MAX_REQUESTS || '15', 10),
   MAP: {
-    provider: process.env.MAP_TILE_PROVIDER || 'carto-dark',
-    tileUrl: process.env.MAP_TILE_URL || 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution: process.env.MAP_ATTRIBUTION || '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    provider: process.env.MAP_TILE_PROVIDER || 'openfreemap',
+    styleUrl: process.env.MAP_STYLE_URL || 'https://tiles.openfreemap.org/styles/liberty',
+    tileUrl: process.env.MAP_TILE_URL || 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    attribution: process.env.MAP_ATTRIBUTION || '&copy; <a href="https://openfreemap.org">OpenFreeMap</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: parseInt(process.env.MAP_MAX_ZOOM || '20', 10),
     defaultLat: parseFloat(process.env.MAP_DEFAULT_LAT || '21.1738'),
     defaultLng: parseFloat(process.env.MAP_DEFAULT_LNG || '72.8028'),
@@ -581,7 +582,7 @@ function handleHttpRequest(req, res, isHttps = false) {
       'X-XSS-Protection': '1; mode=block',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
       'Permissions-Policy': 'camera=(self), geolocation=(self), accelerometer=(self), gyroscope=(self)',
-      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://*.cartocdn.com https://unpkg.com; connect-src 'self' https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://*.cartocdn.com ws: wss:; frame-ancestors 'self'; form-action 'self';",
+      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net blob:; worker-src 'self' blob:; child-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://tiles.openfreemap.org https://*.openfreemap.org https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://*.cartocdn.com https://unpkg.com https://api.qrserver.com; connect-src 'self' https://tiles.openfreemap.org https://*.openfreemap.org https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://*.cartocdn.com ws: wss:; frame-ancestors 'self'; form-action 'self';",
     };
 
     if (isHttps) {

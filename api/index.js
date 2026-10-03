@@ -8,9 +8,10 @@ const CONFIG = {
   TOKEN_EXPIRY_DAYS: parseInt(process.env.TOKEN_EXPIRY_DAYS || '30', 10),
   SURAT_NODE_ID: process.env.SURAT_NODE_ID || 'SURAT_ATHWA_CENTRAL_01',
   MAP: {
-    provider: process.env.MAP_TILE_PROVIDER || 'carto-dark',
-    tileUrl: process.env.MAP_TILE_URL || 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution: process.env.MAP_ATTRIBUTION || '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    provider: process.env.MAP_TILE_PROVIDER || 'openfreemap',
+    styleUrl: process.env.MAP_STYLE_URL || 'https://tiles.openfreemap.org/styles/liberty',
+    tileUrl: process.env.MAP_TILE_URL || 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    attribution: process.env.MAP_ATTRIBUTION || '&copy; <a href="https://openfreemap.org">OpenFreeMap</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: parseInt(process.env.MAP_MAX_ZOOM || '20', 10),
     defaultLat: parseFloat(process.env.MAP_DEFAULT_LAT || '21.1738'),
     defaultLng: parseFloat(process.env.MAP_DEFAULT_LNG || '72.8028'),

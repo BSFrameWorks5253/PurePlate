@@ -118,17 +118,7 @@
                 </div>
               </div>
 
-              <div class="dev-setting-group">
-                <label class="dev-group-title">Android System Bars:</label>
-                <div class="dev-toggle-row">
-                  <span class="dev-toggle-text">Android Top Status Bar (5G, Clock, Battery)</span>
-                  <input type="checkbox" id="chk-android-statusbar" class="dev-switch" checked>
-                </div>
-                <div class="dev-toggle-row">
-                  <span class="dev-toggle-text">Android 3-Button Nav Bar (◀ ● ■)</span>
-                  <input type="checkbox" id="chk-android-navbar" class="dev-switch" checked>
-                </div>
-              </div>
+
             </div>
 
             <!-- TAB 2: SYSTEM DIAGNOSTICS & SELF-TEST -->
@@ -286,42 +276,7 @@
 
     document.body.appendChild(devContainer);
 
-    // Add Android System Bars to the app frame
-    const appFrame = document.querySelector(".app-frame");
-    if (appFrame) {
-      const androidStatusBar = document.createElement("div");
-      androidStatusBar.id = "android-status-bar";
-      androidStatusBar.className = "android-status-bar";
-      androidStatusBar.style.cssText = "display: flex; align-items: center; justify-content: space-between; padding: 6px 16px; font-size: 11px; font-weight: 700; color: var(--text-secondary); background: #000; flex-shrink: 0;";
-      androidStatusBar.innerHTML = `
-        <span class="asb-time" id="asb-time">12:30</span>
-        <div style="display:flex; align-items:center; gap:6px;">
-          <span>5G</span>
-          <span>📶</span>
-          <span>🔋 98%</span>
-        </div>
-      `;
-      appFrame.insertBefore(androidStatusBar, appFrame.firstChild);
 
-      const androidNavBar = document.createElement("div");
-      androidNavBar.id = "android-nav-bar";
-      androidNavBar.className = "android-nav-bar";
-      androidNavBar.style.cssText = "display: flex; align-items: center; justify-content: space-around; padding: 6px 0; background: #000; font-size: 14px; flex-shrink: 0; border-top: 1px solid rgba(255,255,255,0.06);";
-      androidNavBar.innerHTML = `
-        <button id="anb-back-btn" style="color:var(--text-muted); padding:4px 20px; font-size:16px;">◀</button>
-        <button id="anb-home-btn" style="color:var(--text-muted); padding:4px 20px; font-size:16px;">●</button>
-        <button id="anb-recents-btn" style="color:var(--text-muted); padding:4px 20px; font-size:16px;">■</button>
-      `;
-      appFrame.appendChild(androidNavBar);
-
-      setInterval(() => {
-        const timeEl = document.getElementById("asb-time");
-        if (timeEl) {
-          const now = new Date();
-          timeEl.innerText = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-        }
-      }, 1000);
-    }
 
     setupDevListeners();
     generateDevQrCode();
@@ -418,47 +373,7 @@
       });
     }
 
-    // Android Status/Nav bar checkboxes
-    const chkStatusBar = document.getElementById("chk-android-statusbar");
-    const chkNavBar = document.getElementById("chk-android-navbar");
-    const elStatusBar = document.getElementById("android-status-bar");
-    const elNavBar = document.getElementById("android-nav-bar");
 
-    if (chkStatusBar && elStatusBar) {
-      chkStatusBar.addEventListener("change", () => {
-        elStatusBar.style.display = chkStatusBar.checked ? "flex" : "none";
-      });
-    }
-
-    if (chkNavBar && elNavBar) {
-      chkNavBar.addEventListener("change", () => {
-        elNavBar.style.display = chkNavBar.checked ? "flex" : "none";
-      });
-    }
-
-    // Android 3-Button Nav actions
-    const anbBack = document.getElementById("anb-back-btn");
-    const anbHome = document.getElementById("anb-home-btn");
-    if (anbBack) {
-      anbBack.addEventListener("click", () => {
-        const btnBackHome = document.getElementById("btn-back-home");
-        const btnBackSel = document.getElementById("btn-back-selection");
-        const activeScreen = document.querySelector(".app-screen.active");
-
-        if (activeScreen && activeScreen.id === "screen-camera") {
-          if (btnBackSel) btnBackSel.click();
-        } else if (activeScreen && activeScreen.id !== "screen-home") {
-          if (btnBackHome) btnBackHome.click();
-        }
-      });
-    }
-
-    if (anbHome) {
-      anbHome.addEventListener("click", () => {
-        const btnHome = document.getElementById("nav-btn-home");
-        if (btnHome) btnHome.click();
-      });
-    }
 
     // Gyroscope tilt slider
     const gyroSlider = document.getElementById("slider-gyro-tilt");

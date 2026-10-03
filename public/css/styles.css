@@ -2095,8 +2095,15 @@ ul { list-style: none; }
    ============================================================ */
 
 /* Floating Android Action Button (Hidden to keep mobile UI clean) */
-.android-dev-fab {
+.android-dev-fab,
+#android-status-bar,
+#android-nav-bar,
+.android-status-bar,
+.android-nav-bar {
   display: none !important;
+  height: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 /* Dev Drawer Backdrop & Card */
