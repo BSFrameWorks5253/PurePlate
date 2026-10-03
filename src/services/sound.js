@@ -10,7 +10,7 @@ class PurePlateSound {
   }
 
   getAudioContext() {
-    if (!this.ctx) {
+    if (!this.ctx && typeof window !== 'undefined') {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (AudioCtx) {
         this.ctx = new AudioCtx();
@@ -29,7 +29,7 @@ class PurePlateSound {
 
   // Soft tactile UI click
   playClick() {
-    if (navigator.vibrate) {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
       try { navigator.vibrate(12); } catch (e) {}
     }
     if (this.isMuted) return;
@@ -57,7 +57,7 @@ class PurePlateSound {
 
   // Pure verification / correct quiz answer melodic chime
   playSuccess() {
-    if (navigator.vibrate) {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
       try { navigator.vibrate([30, 40, 30]); } catch (e) {}
     }
     if (this.isMuted) return;
@@ -89,7 +89,7 @@ class PurePlateSound {
 
   // Adulteration alert sound
   playWarning() {
-    if (navigator.vibrate) {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
       try { navigator.vibrate([100, 60, 100]); } catch (e) {}
     }
     if (this.isMuted) return;
@@ -120,7 +120,7 @@ class PurePlateSound {
 
   // Grand fanfare on badge unlocked or game completed
   playFanfare() {
-    if (navigator.vibrate) {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
       try { navigator.vibrate([50, 50, 50, 50, 120]); } catch (e) {}
     }
     if (this.isMuted) return;
@@ -151,5 +151,5 @@ class PurePlateSound {
   }
 }
 
-window.PurePlateSound = PurePlateSound;
-window.soundEngine = new PurePlateSound();
+export const soundEngine = new PurePlateSound();
+export default soundEngine;

@@ -4,9 +4,10 @@
   "description": "**Science Exhibition & Innovation Project**",
   "main": "serve.js",
   "scripts": {
-    "build": "node -e \"const fs=require('fs'); if(fs.existsSync('web_app')) fs.cpSync('web_app', 'public', {recursive:true, force:true}); console.log('PurePlate public build complete.');\"",
-    "dev": "node serve.js",
-    "start": "node serve.js",
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "node serve.js",
+    "start": "vite",
     "deploy": "wrangler deploy",
     "deploy:vercel": "vercel --prod",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -16,7 +17,13 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@vitejs/plugin-react": "^6.1.1",
+    "canvas-confetti": "^1.9.4",
+    "leaflet": "^1.9.4",
     "qrcode": "^1.5.4",
-    "selfsigned": "^5.5.0"
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "selfsigned": "^5.5.0",
+    "vite": "^8.3.2"
   }
 }
