@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -12,9 +12,9 @@
 
   <!-- PWA Meta Tags for iOS & Android -->
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="PurePlate">
-  <meta name="theme-color" content="#00C9A7">
+  <meta name="theme-color" content="#ffffff">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
 
@@ -67,6 +67,11 @@
 
     <!-- Right Controls -->
     <div class="dt-right-actions">
+      <button class="dt-btn" id="btn-toggle-theme" title="Toggle Theme (Light / Dark)">
+        <span id="theme-toggle-icon">☀️</span>
+        <span id="theme-toggle-label">Light Mode</span>
+      </button>
+
       <button class="dt-btn" id="btn-toggle-sound" title="Toggle Sound Feedback">
         <span id="sound-icon">🔊</span>
         <span id="sound-label">Audio On</span>
@@ -107,6 +112,9 @@
             </div>
           </div>
           <div class="header-badges">
+            <button class="mb-auth-btn" id="mb-theme-btn" title="Toggle Theme (Light / Dark)">
+              <span id="mb-theme-icon">☀️</span>
+            </button>
             <button class="mb-auth-btn" id="mb-user-btn" title="Sign In with Email to Sync Data Across Devices">
               <span id="mb-user-icon">👤</span>
               <span class="sync-pulse-indicator" title="Cloud Sync Active"></span>

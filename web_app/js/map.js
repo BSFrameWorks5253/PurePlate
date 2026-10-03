@@ -61,31 +61,36 @@ class PurePlateMap {
     L.control.zoom({ position: "bottomright" }).addTo(this.map);
 
     // Multi-Provider Base Layers (Configured via .env)
-    const darkMatterLayer = L.tileLayer(customTileUrl, {
+    this.darkMatterLayer = L.tileLayer(customTileUrl, {
       attribution: customAttribution,
       subdomains: "abcd",
       maxZoom: 20
     });
 
-    const daylightLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+    this.daylightLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
       attribution: '&copy; <a href="https://carto.com/">CARTO</a> & OpenStreetMap',
       subdomains: "abcd",
       maxZoom: 20
     });
 
-    const osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    this.osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 19
     });
 
-    // Add default configured layer
-    darkMatterLayer.addTo(this.map);
+    // Add default configured layer based on active theme
+    const activeTheme = document.documentElement.getAttribute("data-theme") || "light";
+    if (activeTheme === "dark") {
+      this.darkMatterLayer.addTo(this.map);
+    } else {
+      this.daylightLayer.addTo(this.map);
+    }
 
-    // Layer Switcher Control (Dark Mode HUD vs Daylight Roads vs OSM)
+    // Layer Switcher Control (Daylight Roads vs Dark Mode HUD vs OSM)
     const baseMaps = {
-      "🌙 Dark HUD": darkMatterLayer,
-      "☀️ Daylight": daylightLayer,
-      "🗺️ OSM Classic": osmLayer
+      "☀️ Daylight": this.daylightLayer,
+      "🌙 Dark HUD": this.darkMatterLayer,
+      "🗺️ OSM Classic": this.osmLayer
     };
     L.control.layers(baseMaps, null, { position: "topleft", collapsed: true }).addTo(this.map);
 
@@ -96,6 +101,25 @@ class PurePlateMap {
     setTimeout(() => {
       this.map.invalidateSize();
     }, 400);
+  }
+
+  setTheme(theme) {
+    if (!this.map || !this.daylightLayer || !this.darkMatterLayer) return;
+    if (theme === "light") {
+      if (this.map.hasLayer(this.darkMatterLayer)) {
+        this.map.removeLayer(this.darkMatterLayer);
+      }
+      if (!this.map.hasLayer(this.daylightLayer)) {
+        this.daylightLayer.addTo(this.map);
+      }
+    } else {
+      if (this.map.hasLayer(this.daylightLayer)) {
+        this.map.removeLayer(this.daylightLayer);
+      }
+      if (!this.map.hasLayer(this.darkMatterLayer)) {
+        this.darkMatterLayer.addTo(this.map);
+      }
+    }
   }
 
   setupFilterChips() {

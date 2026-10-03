@@ -730,6 +730,65 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // -------------------------------------------------------------------------
+  // Theme Management (Light Mode Default with Dual-Theme Toggle)
+  // -------------------------------------------------------------------------
+  function applyTheme(theme, save = true) {
+    document.documentElement.setAttribute("data-theme", theme);
+    if (save) {
+      try { localStorage.setItem("pureplate_theme", theme); } catch (e) {}
+    }
+
+    const themeToggleIcon = document.getElementById("theme-toggle-icon");
+    const themeToggleLabel = document.getElementById("theme-toggle-label");
+    const mbThemeIcon = document.getElementById("mb-theme-icon");
+
+    const isLight = theme === "light";
+    if (themeToggleIcon) themeToggleIcon.innerText = isLight ? "☀️" : "🌙";
+    if (themeToggleLabel) themeToggleLabel.innerText = isLight ? "Light Mode" : "Dark Mode";
+    if (mbThemeIcon) mbThemeIcon.innerText = isLight ? "☀️" : "🌙";
+
+    // Update meta theme-color for iOS/Android status bar
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute("content", isLight ? "#ffffff" : "#060a14");
+    }
+
+    // Sync Leaflet base map layer if map engine is ready
+    if (mapEngine && typeof mapEngine.setTheme === "function") {
+      mapEngine.setTheme(theme);
+    }
+  }
+
+  // Initialize theme from storage (default to 'light')
+  let currentSavedTheme = "light";
+  try {
+    currentSavedTheme = localStorage.getItem("pureplate_theme") || "light";
+  } catch (e) {}
+  applyTheme(currentSavedTheme, false);
+
+  const btnToggleTheme = document.getElementById("btn-toggle-theme");
+  if (btnToggleTheme) {
+    btnToggleTheme.addEventListener("click", () => {
+      const active = document.documentElement.getAttribute("data-theme") || "light";
+      const nextTheme = active === "light" ? "dark" : "light";
+      applyTheme(nextTheme, true);
+      if (window.soundEngine) window.soundEngine.playClick();
+      window.showAppToast(`Switched to ${nextTheme === "light" ? "☀️ Light" : "🌙 Dark"} Mode`, "info");
+    });
+  }
+
+  const mbThemeBtn = document.getElementById("mb-theme-btn");
+  if (mbThemeBtn) {
+    mbThemeBtn.addEventListener("click", () => {
+      const active = document.documentElement.getAttribute("data-theme") || "light";
+      const nextTheme = active === "light" ? "dark" : "light";
+      applyTheme(nextTheme, true);
+      if (window.soundEngine) window.soundEngine.playClick();
+      window.showAppToast(`Switched to ${nextTheme === "light" ? "☀️ Light" : "🌙 Dark"} Mode`, "info");
+    });
+  }
+
   // Desktop Mobile QR Button
   const btnShowQr = document.getElementById("btn-show-qr");
   if (btnShowQr) {
