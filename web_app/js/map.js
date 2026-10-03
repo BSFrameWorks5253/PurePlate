@@ -26,9 +26,29 @@ class PurePlateMap {
     this.renderRecentFeed();
   }
 
-  initMap() {
+  async initMap() {
     const mapEl = document.getElementById("pureplate-leaflet-map");
     if (!mapEl || this.map) return;
+
+    // Load dynamic map configuration from secure .env API if available
+    let customTileUrl = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+    let customAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+
+    try {
+      const configRes = await fetch("/api/config");
+      if (configRes.ok) {
+        const configData = await configRes.json();
+        if (configData.map) {
+          if (configData.map.tileUrl) customTileUrl = configData.map.tileUrl;
+          if (configData.map.attribution) customAttribution = configData.map.attribution;
+          if (configData.map.defaultLat) this.centerLat = configData.map.defaultLat;
+          if (configData.map.defaultLng) this.centerLng = configData.map.defaultLng;
+          if (configData.map.defaultZoom) this.currentZoom = configData.map.defaultZoom;
+        }
+      }
+    } catch (e) {
+      console.log("[PurePlate Map] Running with default high-contrast Carto Dark tiles");
+    }
 
     // Initialize Leaflet map
     this.map = L.map("pureplate-leaflet-map", {
@@ -40,11 +60,34 @@ class PurePlateMap {
     // Add zoom control at bottom right
     L.control.zoom({ position: "bottomright" }).addTo(this.map);
 
-    // High quality OpenStreetMap / CartoDB Voyager tiles (clean mobile style)
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+    // Multi-Provider Base Layers (Configured via .env)
+    const darkMatterLayer = L.tileLayer(customTileUrl, {
+      attribution: customAttribution,
+      subdomains: "abcd",
+      maxZoom: 20
+    });
+
+    const daylightLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
       attribution: '&copy; <a href="https://carto.com/">CARTO</a> & OpenStreetMap',
+      subdomains: "abcd",
+      maxZoom: 20
+    });
+
+    const osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 19
-    }).addTo(this.map);
+    });
+
+    // Add default configured layer
+    darkMatterLayer.addTo(this.map);
+
+    // Layer Switcher Control (Dark Mode HUD vs Daylight Roads vs OSM)
+    const baseMaps = {
+      "🌙 Dark HUD": darkMatterLayer,
+      "☀️ Daylight": daylightLayer,
+      "🗺️ OSM Classic": osmLayer
+    };
+    L.control.layers(baseMaps, null, { position: "topleft", collapsed: true }).addTo(this.map);
 
     this.markersLayer = L.layerGroup().addTo(this.map);
     this.radarCirclesLayer = L.layerGroup().addTo(this.map);

@@ -1144,7 +1144,42 @@ ul { list-style: none; }
   min-height: 300px;
   background: #080d1a;
 }
-.leaflet-tile-pane { filter: brightness(0.65) saturate(0.7) invert(1) hue-rotate(180deg); }
+.leaflet-tile-pane {
+  transition: opacity 0.25s ease;
+}
+
+/* Custom Glassmorphic Leaflet Controls */
+.leaflet-control-layers {
+  background: rgba(15, 23, 42, 0.94) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 12px !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(12px) !important;
+  padding: 8px 12px !important;
+}
+.leaflet-control-layers-base label {
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: var(--text-secondary) !important;
+  cursor: pointer !important;
+  margin: 3px 0 !important;
+}
+.leaflet-bar {
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+.leaflet-bar a {
+  background-color: rgba(15, 23, 42, 0.92) !important;
+  color: var(--brand-teal) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+}
+.leaflet-bar a:hover {
+  background-color: var(--bg-card-hover) !important;
+  color: #fff !important;
+}
 
 .map-legend-box {
   position: absolute; top: 12px; right: 12px;

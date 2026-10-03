@@ -8,8 +8,62 @@ const crypto = require('crypto');
 const QRCode = require('qrcode');
 const selfsigned = require('selfsigned');
 
-const HTTP_PORT = 3000;
-const HTTPS_PORT = 3443;
+// ── 1. Enterprise .env Environment Loader ──
+function loadEnvFile() {
+  const envPath = path.join(__dirname, '.env');
+  if (fs.existsSync(envPath)) {
+    try {
+      const content = fs.readFileSync(envPath, 'utf-8');
+      const lines = content.split('\n');
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const eqIdx = trimmed.indexOf('=');
+        if (eqIdx > 0) {
+          const key = trimmed.slice(0, eqIdx).trim();
+          let val = trimmed.slice(eqIdx + 1).trim();
+          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.slice(1, -1);
+          }
+          if (process.env[key] === undefined) {
+            process.env[key] = val;
+          }
+        }
+      }
+      console.log('🔒 Environment configuration loaded successfully from .env');
+    } catch (e) {
+      console.warn('⚠️ Could not load .env file:', e.message);
+    }
+  }
+}
+loadEnvFile();
+
+// ── 2. Environment Configuration Object ──
+const CONFIG = {
+  HTTP_PORT: parseInt(process.env.PORT || '3000', 10),
+  HTTPS_PORT: parseInt(process.env.HTTPS_PORT || '3443', 10),
+  HOST: process.env.HOST || '0.0.0.0',
+  NODE_ENV: process.env.NODE_ENV || 'production',
+  JWT_SECRET: process.env.JWT_SECRET || 'pureplate_default_dev_secret_key_change_in_production',
+  TOKEN_EXPIRY_DAYS: parseInt(process.env.TOKEN_EXPIRY_DAYS || '30', 10),
+  RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000', 10),
+  RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '120', 10),
+  AUTH_RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.AUTH_RATE_LIMIT_MAX_REQUESTS || '15', 10),
+  MAP: {
+    provider: process.env.MAP_TILE_PROVIDER || 'carto-dark',
+    tileUrl: process.env.MAP_TILE_URL || 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    attribution: process.env.MAP_ATTRIBUTION || '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    maxZoom: parseInt(process.env.MAP_MAX_ZOOM || '20', 10),
+    defaultLat: parseFloat(process.env.MAP_DEFAULT_LAT || '21.1738'),
+    defaultLng: parseFloat(process.env.MAP_DEFAULT_LNG || '72.8028'),
+    defaultZoom: parseInt(process.env.MAP_DEFAULT_ZOOM || '13', 10),
+  },
+  CLOUDFLARE_TUNNEL_URL: process.env.CLOUDFLARE_TUNNEL_URL || 'https://philips-quit-marion-activation.trycloudflare.com',
+  SURAT_NODE_ID: process.env.SURAT_NODE_ID || 'SURAT_ATHWA_CENTRAL_01',
+};
+
+const HTTP_PORT = CONFIG.HTTP_PORT;
+const HTTPS_PORT = CONFIG.HTTPS_PORT;
 const ROOT_DIR = path.join(__dirname, 'web_app');
 const DATA_DIR = path.join(__dirname, 'data');
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
@@ -40,6 +94,90 @@ function getAllLocalIps() {
   }
   return ips;
 }
+
+// ── 3. HMAC-SHA256 Cryptographic Token Engine ──
+function generateSignedToken(payload) {
+  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+  const exp = Math.floor(Date.now() / 1000) + (CONFIG.TOKEN_EXPIRY_DAYS * 86400);
+  const body = Buffer.from(JSON.stringify({ ...payload, exp })).toString('base64url');
+  const signature = crypto
+    .createHmac('sha256', CONFIG.JWT_SECRET)
+    .update(`${header}.${body}`)
+    .digest('base64url');
+  return `${header}.${body}.${signature}`;
+}
+
+function verifySignedToken(token) {
+  if (!token || typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  const [header, body, signature] = parts;
+
+  const expectedSignature = crypto
+    .createHmac('sha256', CONFIG.JWT_SECRET)
+    .update(`${header}.${body}`)
+    .digest('base64url');
+
+  try {
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expectedSignature);
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+      return null;
+    }
+    const payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf-8'));
+    if (payload.exp && Math.floor(Date.now() / 1000) > payload.exp) {
+      return null; // Token Expired
+    }
+    return payload;
+  } catch (e) {
+    return null;
+  }
+}
+
+// ── 4. Sliding Window IP Rate Limiter ──
+const rateLimitStore = new Map();
+
+function getClientIp(req) {
+  return (
+    req.headers['cf-connecting-ip'] ||
+    (req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].split(',')[0].trim() : '') ||
+    req.socket.remoteAddress ||
+    '127.0.0.1'
+  );
+}
+
+function checkRateLimit(ip, isAuthEndpoint = false) {
+  const now = Date.now();
+  const maxRequests = isAuthEndpoint
+    ? CONFIG.AUTH_RATE_LIMIT_MAX_REQUESTS
+    : CONFIG.RATE_LIMIT_MAX_REQUESTS;
+  const key = `${ip}:${isAuthEndpoint ? 'auth' : 'api'}`;
+
+  let record = rateLimitStore.get(key);
+  if (!record || now - record.resetTime > CONFIG.RATE_LIMIT_WINDOW_MS) {
+    record = { count: 1, resetTime: now };
+    rateLimitStore.set(key, record);
+    return { allowed: true, remaining: maxRequests - 1 };
+  }
+
+  record.count++;
+  if (record.count > maxRequests) {
+    const retryAfter = Math.ceil((CONFIG.RATE_LIMIT_WINDOW_MS - (now - record.resetTime)) / 1000);
+    return { allowed: false, remaining: 0, retryAfter: Math.max(1, retryAfter) };
+  }
+
+  return { allowed: true, remaining: maxRequests - record.count };
+}
+
+// Prune inactive rate limit records every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, record] of rateLimitStore.entries()) {
+    if (now - record.resetTime > CONFIG.RATE_LIMIT_WINDOW_MS) {
+      rateLimitStore.delete(key);
+    }
+  }
+}, 300000);
 
 // Initialize database storage
 if (!fs.existsSync(DATA_DIR)) {
@@ -133,7 +271,34 @@ async function handleApiRequest(req, res, reqPath) {
     return res.end();
   }
 
-  // 1. User Registration (Email Sign-Up)
+  // ── Enterprise Rate Limiter Guard ──
+  const clientIp = getClientIp(req);
+  const isAuthEndpoint = reqPath.startsWith('/api/auth/');
+  const rateLimit = checkRateLimit(clientIp, isAuthEndpoint);
+
+  res.setHeader('X-RateLimit-Limit', isAuthEndpoint ? CONFIG.AUTH_RATE_LIMIT_MAX_REQUESTS : CONFIG.RATE_LIMIT_MAX_REQUESTS);
+  res.setHeader('X-RateLimit-Remaining', Math.max(0, rateLimit.remaining));
+
+  if (!rateLimit.allowed) {
+    res.setHeader('Retry-After', rateLimit.retryAfter);
+    return sendJsonResponse(res, 429, {
+      success: false,
+      error: `Security Defense: Rate limit exceeded. Too many requests from ${clientIp}. Please wait ${rateLimit.retryAfter} seconds.`
+    });
+  }
+
+  // ── 0. Public Environment & Map Configuration Endpoint ──
+  if (req.method === 'GET' && reqPath === '/api/config') {
+    return sendJsonResponse(res, 200, {
+      success: true,
+      map: CONFIG.MAP,
+      nodeId: CONFIG.SURAT_NODE_ID,
+      version: '1.2.0-secure-grid',
+      serverTime: new Date().toISOString()
+    });
+  }
+
+  // ── 1. User Registration (Email Sign-Up) ──
   if (req.method === 'POST' && reqPath === '/api/auth/register') {
     try {
       const { email, password, name, school } = await parseJsonBody(req);
@@ -157,10 +322,11 @@ async function handleApiRequest(req, res, reqPath) {
 
       const salt = crypto.randomBytes(16).toString('hex');
       const passwordHash = hashPassword(password, salt);
-      const token = crypto.randomBytes(32).toString('hex');
+      const newUserId = 'usr_' + Date.now();
+      const token = generateSignedToken({ id: newUserId, email: normalizedEmail });
 
       const newUser = {
-        id: 'usr_' + Date.now(),
+        id: newUserId,
         email: normalizedEmail,
         name: (name || normalizedEmail.split('@')[0]).trim().slice(0, 50),
         school: (school || 'Surat Student').trim().slice(0, 80),
@@ -201,7 +367,7 @@ async function handleApiRequest(req, res, reqPath) {
     }
   }
 
-  // 2. User Login (Email Sign-In)
+  // ── 2. User Login (Email Sign-In) ──
   if (req.method === 'POST' && reqPath === '/api/auth/login') {
     try {
       const { email, password } = await parseJsonBody(req);
@@ -231,8 +397,8 @@ async function handleApiRequest(req, res, reqPath) {
         });
       }
 
-      // Generate refreshed session token
-      user.token = crypto.randomBytes(32).toString('hex');
+      // Generate refreshed HMAC-signed session token
+      user.token = generateSignedToken({ id: user.id, email: user.email });
       user.updatedAt = new Date().toISOString();
       saveUsers(users);
 
@@ -415,7 +581,7 @@ function handleHttpRequest(req, res, isHttps = false) {
       'X-XSS-Protection': '1; mode=block',
       'Referrer-Policy': 'strict-origin-when-cross-origin',
       'Permissions-Policy': 'camera=(self), geolocation=(self), accelerometer=(self), gyroscope=(self)',
-      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.tile.openstreetmap.org https://unpkg.com; connect-src 'self' https://*.tile.openstreetmap.org ws: wss:; frame-ancestors 'self'; form-action 'self';",
+      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://*.cartocdn.com https://unpkg.com; connect-src 'self' https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://*.cartocdn.com ws: wss:; frame-ancestors 'self'; form-action 'self';",
     };
 
     if (isHttps) {
@@ -452,14 +618,14 @@ async function startServers() {
 
   // 2. Start HTTP Server
   const httpServer = http.createServer(handleHttpRequest);
-  httpServer.listen(HTTP_PORT, '0.0.0.0', () => {
+  httpServer.listen(CONFIG.HTTP_PORT, CONFIG.HOST, () => {
     // 3. Start HTTPS Server if pems generated
     if (pems) {
       const httpsServer = https.createServer(
         { key: pems.private, cert: pems.cert },
         (req, res) => handleHttpRequest(req, res, true)
       );
-      httpsServer.listen(HTTPS_PORT, '0.0.0.0', async () => {
+      httpsServer.listen(CONFIG.HTTPS_PORT, CONFIG.HOST, async () => {
         printServerBanner(primaryIp, hostname, localIps);
       });
     } else {
@@ -468,7 +634,7 @@ async function startServers() {
   });
 
   // Automatically open desktop browser
-  exec(`start http://localhost:${HTTP_PORT}`);
+  exec(`start http://localhost:${CONFIG.HTTP_PORT}`);
 }
 
 async function printServerBanner(primaryIp, hostname, localIps) {

@@ -27,3 +27,8 @@ build/
 
 # Server Data & Database Files
 data/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
