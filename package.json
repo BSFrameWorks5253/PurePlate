@@ -5,6 +5,7 @@
   "main": "serve.js",
   "scripts": {
     "build": "echo \"PurePlate static site ready in web_app\"",
+    "dev": "echo \"PurePlate ready in web_app\"",
     "start": "node serve.js",
     "deploy": "wrangler deploy",
     "deploy:vercel": "vercel --prod",
