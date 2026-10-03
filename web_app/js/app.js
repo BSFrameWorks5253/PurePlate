@@ -705,4 +705,193 @@ document.addEventListener("DOMContentLoaded", () => {
       if (window.storage) window.storage.exportIncidentsAsCsv();
     });
   }
+
+  // =========================================================================
+  // Auth & Cloud Sync Modal Controller
+  // =========================================================================
+  const authModal = document.getElementById("auth-modal");
+  const dtUserBtn = document.getElementById("dt-user-btn");
+  const mbUserBtn = document.getElementById("mb-user-btn");
+  const btnCloseAuthModal = document.getElementById("btn-close-auth-modal");
+  const tabBtnLogin = document.getElementById("tab-btn-login");
+  const tabBtnRegister = document.getElementById("tab-btn-register");
+  const formAuthLogin = document.getElementById("form-auth-login");
+  const formAuthRegister = document.getElementById("form-auth-register");
+  const btnFillDemo = document.getElementById("btn-fill-demo");
+  const btnToggleLoginPwd = document.getElementById("btn-toggle-login-pwd");
+  const btnToggleRegPwd = document.getElementById("btn-toggle-reg-pwd");
+  const btnForceSync = document.getElementById("btn-force-sync");
+  const btnAccountLogout = document.getElementById("btn-account-logout");
+
+  function openAuthModal() {
+    if (authModal) {
+      if (window.authEngine) window.authEngine.updateModalState();
+      authModal.classList.add("active");
+      if (window.soundEngine) window.soundEngine.playClick();
+    }
+  }
+
+  function closeAuthModal() {
+    if (authModal) {
+      authModal.classList.remove("active");
+      if (window.soundEngine) window.soundEngine.playClick();
+    }
+  }
+
+  if (dtUserBtn) dtUserBtn.addEventListener("click", openAuthModal);
+  if (mbUserBtn) mbUserBtn.addEventListener("click", openAuthModal);
+  if (btnCloseAuthModal) btnCloseAuthModal.addEventListener("click", closeAuthModal);
+  if (authModal) {
+    authModal.addEventListener("click", (e) => {
+      if (e.target === authModal) closeAuthModal();
+    });
+  }
+
+  // Segmented Tabs Switcher
+  if (tabBtnLogin && tabBtnRegister && formAuthLogin && formAuthRegister) {
+    tabBtnLogin.addEventListener("click", () => {
+      tabBtnLogin.classList.add("active");
+      tabBtnRegister.classList.remove("active");
+      formAuthLogin.style.display = "flex";
+      formAuthRegister.style.display = "none";
+      if (window.soundEngine) window.soundEngine.playClick();
+    });
+
+    tabBtnRegister.addEventListener("click", () => {
+      tabBtnRegister.classList.add("active");
+      tabBtnLogin.classList.remove("active");
+      formAuthRegister.style.display = "flex";
+      formAuthLogin.style.display = "none";
+      if (window.soundEngine) window.soundEngine.playClick();
+    });
+  }
+
+  // Password Visibility Toggles
+  if (btnToggleLoginPwd) {
+    btnToggleLoginPwd.addEventListener("click", () => {
+      const input = document.getElementById("login-password");
+      if (input) {
+        input.type = input.type === "password" ? "text" : "password";
+        btnToggleLoginPwd.innerText = input.type === "password" ? "👁️" : "🙈";
+      }
+    });
+  }
+  if (btnToggleRegPwd) {
+    btnToggleRegPwd.addEventListener("click", () => {
+      const input = document.getElementById("reg-password");
+      if (input) {
+        input.type = input.type === "password" ? "text" : "password";
+        btnToggleRegPwd.innerText = input.type === "password" ? "👁️" : "🙈";
+      }
+    });
+  }
+
+  // Quick Demo Fill
+  if (btnFillDemo) {
+    btnFillDemo.addEventListener("click", () => {
+      const emailInput = document.getElementById("login-email");
+      const pwdInput = document.getElementById("login-password");
+      if (emailInput && pwdInput) {
+        emailInput.value = "student@dpssurat.edu";
+        pwdInput.value = "pureplate123";
+        if (window.soundEngine) window.soundEngine.playClick();
+        if (window.showAppToast) window.showAppToast("⚡ Filled demo credentials. Click 'Sign In & Sync Now'!", "info");
+      }
+    });
+  }
+
+  // Form Submit: Sign In
+  if (formAuthLogin) {
+    formAuthLogin.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const emailInput = document.getElementById("login-email");
+      const pwdInput = document.getElementById("login-password");
+      const submitBtn = document.getElementById("btn-submit-login");
+
+      if (!emailInput || !pwdInput) return;
+      const email = emailInput.value.trim();
+      const password = pwdInput.value;
+
+      try {
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          const textSpan = submitBtn.querySelector(".btn-text");
+          if (textSpan) textSpan.innerText = "Signing in...";
+        }
+        if (window.authEngine) {
+          await window.authEngine.login({ email, password });
+          closeAuthModal();
+        }
+      } catch (err) {
+        if (window.showAppToast) window.showAppToast(err.message, "error");
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          const textSpan = submitBtn.querySelector(".btn-text");
+          if (textSpan) textSpan.innerText = "Sign In & Sync Now";
+        }
+      }
+    });
+  }
+
+  // Form Submit: Register
+  if (formAuthRegister) {
+    formAuthRegister.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const nameInput = document.getElementById("reg-name");
+      const schoolInput = document.getElementById("reg-school");
+      const emailInput = document.getElementById("reg-email");
+      const pwdInput = document.getElementById("reg-password");
+      const submitBtn = document.getElementById("btn-submit-reg");
+
+      if (!emailInput || !pwdInput) return;
+      const name = nameInput ? nameInput.value.trim() : "";
+      const school = schoolInput ? schoolInput.value.trim() : "";
+      const email = emailInput.value.trim();
+      const password = pwdInput.value;
+
+      try {
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          const textSpan = submitBtn.querySelector(".btn-text");
+          if (textSpan) textSpan.innerText = "Creating account...";
+        }
+        if (window.authEngine) {
+          await window.authEngine.register({ email, password, name, school });
+          closeAuthModal();
+        }
+      } catch (err) {
+        if (window.showAppToast) window.showAppToast(err.message, "error");
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          const textSpan = submitBtn.querySelector(".btn-text");
+          if (textSpan) textSpan.innerText = "Create Account & Join Surat Grid";
+        }
+      }
+    });
+  }
+
+  // Force Sync Button
+  if (btnForceSync) {
+    btnForceSync.addEventListener("click", async () => {
+      if (window.authEngine) {
+        btnForceSync.disabled = true;
+        btnForceSync.innerText = "⏳ Syncing...";
+        await window.authEngine.syncCloudData(false);
+        btnForceSync.disabled = false;
+        btnForceSync.innerText = "🔄 Sync Now";
+      }
+    });
+  }
+
+  // Logout Button
+  if (btnAccountLogout) {
+    btnAccountLogout.addEventListener("click", () => {
+      if (window.authEngine) {
+        window.authEngine.logout();
+        closeAuthModal();
+      }
+    });
+  }
 });

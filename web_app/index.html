@@ -72,6 +72,12 @@
         <span id="sound-label">Audio On</span>
       </button>
 
+      <button class="dt-btn dt-btn-auth" id="dt-user-btn" title="Sign In with Email to Sync Data Across Devices">
+        <span class="auth-avatar" id="dt-user-avatar">👤</span>
+        <span class="auth-label" id="dt-user-email">Sign In / Sync</span>
+        <span class="sync-pulse-indicator" title="Cloud Sync Active"></span>
+      </button>
+
       <button class="dt-btn dt-btn-accent" id="btn-show-qr" title="Scan to open on your phone">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
         <span>Mobile QR</span>
@@ -101,6 +107,10 @@
             </div>
           </div>
           <div class="header-badges">
+            <button class="mb-auth-btn" id="mb-user-btn" title="Sign In with Email to Sync Data Across Devices">
+              <span id="mb-user-icon">👤</span>
+              <span class="sync-pulse-indicator" title="Cloud Sync Active"></span>
+            </button>
             <div class="network-badge" id="network-status" title="Network Status">
               <span class="pulse-dot"></span>
               <span id="network-text">Live Sync</span>
@@ -779,6 +789,148 @@
     <!-- Global Toast Container -->
     <div class="app-toast-container" id="toast-container"></div>
 
+    <!-- ============================================================
+         AUTH & MULTI-DEVICE DATA SYNC MODAL
+         ============================================================ -->
+    <div id="auth-modal" class="auth-modal-backdrop">
+      <div class="auth-modal-sheet">
+        <button class="modal-close-btn" id="btn-close-auth-modal" title="Close Modal">&times;</button>
+
+        <!-- View 1: Logged Out (Sign In / Register) -->
+        <div id="auth-state-logged-out" class="auth-view-content">
+          <div class="auth-sheet-header">
+            <div class="auth-icon-wrap">🛡️</div>
+            <h3>PurePlate Cloud Sync</h3>
+            <p>Sign in with your email to sync your food safety test logs, detective XP, and badges across all your devices.</p>
+          </div>
+
+          <!-- Segmented Tabs -->
+          <div class="auth-tabs-row">
+            <button class="auth-tab-btn active" id="tab-btn-login">Sign In</button>
+            <button class="auth-tab-btn" id="tab-btn-register">Create Account</button>
+          </div>
+
+          <!-- Form 1: Sign In -->
+          <form id="form-auth-login" class="auth-form active">
+            <div class="input-field-group">
+              <label for="login-email">Email Address</label>
+              <div class="input-with-icon">
+                <span class="field-icon">✉️</span>
+                <input type="email" id="login-email" placeholder="student@example.com" required autocomplete="email">
+              </div>
+            </div>
+
+            <div class="input-field-group">
+              <label for="login-password">Password</label>
+              <div class="input-with-icon">
+                <span class="field-icon">🔒</span>
+                <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+                <button type="button" class="btn-toggle-pwd" id="btn-toggle-login-pwd" title="Toggle visibility">👁️</button>
+              </div>
+            </div>
+
+            <div class="auth-options-row">
+              <label class="remember-label">
+                <input type="checkbox" id="login-remember" checked>
+                <span>Remember me on this device</span>
+              </label>
+            </div>
+
+            <button type="submit" class="btn-auth-submit" id="btn-submit-login">
+              <span class="btn-text">Sign In &amp; Sync Now</span>
+              <span class="btn-loader" style="display:none;"></span>
+            </button>
+
+            <!-- Quick Demo Evaluator Button -->
+            <div class="demo-account-box">
+              <span class="demo-box-label">Exhibition Evaluator / Quick Demo:</span>
+              <button type="button" class="btn-quick-demo-fill" id="btn-fill-demo">
+                ⚡ Use Demo: student@dpssurat.edu
+              </button>
+            </div>
+          </form>
+
+          <!-- Form 2: Register -->
+          <form id="form-auth-register" class="auth-form" style="display:none;">
+            <div class="input-field-group">
+              <label for="reg-name">Your Full Name</label>
+              <div class="input-with-icon">
+                <span class="field-icon">👤</span>
+                <input type="text" id="reg-name" placeholder="e.g. Aarav Patel" required>
+              </div>
+            </div>
+
+            <div class="input-field-group">
+              <label for="reg-school">School / Institution</label>
+              <div class="input-with-icon">
+                <span class="field-icon">🏫</span>
+                <input type="text" id="reg-school" placeholder="e.g. Delhi Public School, Surat" required>
+              </div>
+            </div>
+
+            <div class="input-field-group">
+              <label for="reg-email">Email Address</label>
+              <div class="input-with-icon">
+                <span class="field-icon">✉️</span>
+                <input type="email" id="reg-email" placeholder="student@dpssurat.edu" required autocomplete="email">
+              </div>
+            </div>
+
+            <div class="input-field-group">
+              <label for="reg-password">Create Password (min. 6 chars)</label>
+              <div class="input-with-icon">
+                <span class="field-icon">🔒</span>
+                <input type="password" id="reg-password" placeholder="••••••••" minlength="6" required autocomplete="new-password">
+                <button type="button" class="btn-toggle-pwd" id="btn-toggle-reg-pwd" title="Toggle visibility">👁️</button>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-auth-submit btn-accent-submit" id="btn-submit-reg">
+              <span class="btn-text">Create Account &amp; Join Surat Grid</span>
+              <span class="btn-loader" style="display:none;"></span>
+            </button>
+          </form>
+        </div>
+
+        <!-- View 2: Logged In Account Dashboard -->
+        <div id="auth-state-logged-in" class="auth-view-content" style="display: none;">
+          <div class="logged-in-profile-card">
+            <div class="lip-avatar">🎓</div>
+            <div class="lip-info">
+              <h3 id="account-modal-name">Student Inspector</h3>
+              <span class="lip-email" id="account-modal-email">student@dpssurat.edu</span>
+              <span class="lip-school" id="account-modal-school">Delhi Public School, Surat</span>
+            </div>
+            <div class="lip-badge-pill" id="account-modal-pts">550 XP</div>
+          </div>
+
+          <div class="sync-status-card">
+            <div class="ssc-row">
+              <div class="ssc-icon">☁️</div>
+              <div class="ssc-text">
+                <strong>Multi-Device Cloud Sync</strong>
+                <span class="auth-sync-time">Active &amp; Connected</span>
+              </div>
+              <button class="btn-force-sync" id="btn-force-sync" title="Sync now">
+                🔄 Sync Now
+              </button>
+            </div>
+            <div class="ssc-details">
+              <span>• Test logs automatically backup to central server</span>
+              <span>• Detective rank &amp; points mirror on all your screens</span>
+              <span>• Real-time community adulteration alerts enabled</span>
+            </div>
+          </div>
+
+          <div class="auth-logout-row">
+            <button class="btn-logout" id="btn-account-logout">
+              <span>Log Out of this Device</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- PWA Install Prompt Banner -->
     <div class="pwa-install-banner" id="pwa-banner" style="display:none;">
       <div class="pwa-content">
@@ -799,6 +951,7 @@
   <!-- App Scripts (Strict Load Order) -->
   <script src="js/data.js"></script>
   <script src="js/storage.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/sound.js"></script>
   <script src="js/camera.js"></script>
   <script src="js/map.js"></script>

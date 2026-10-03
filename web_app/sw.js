@@ -1,11 +1,12 @@
 // PurePlate Offline Production Service Worker
-const CACHE_NAME = "pureplate-v2";
+const CACHE_NAME = "pureplate-v3";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
   "./css/styles.css",
   "./js/data.js",
   "./js/storage.js",
+  "./js/auth.js",
   "./js/sound.js",
   "./js/camera.js",
   "./js/map.js",
@@ -48,6 +49,9 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (e) => {
   // Allow chrome-extension and external analytics to pass through
   if (!e.request.url.startsWith("http")) return;
+
+  // Never cache live backend REST API requests
+  if (e.request.url.includes("/api/")) return;
 
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {

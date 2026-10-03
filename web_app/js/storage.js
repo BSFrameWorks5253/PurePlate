@@ -128,6 +128,9 @@ class PurePlateStorage {
       // Direct store to community heat database
       this.saveIncident(incidentData);
       this.addPoints(50);
+      if (window.authEngine) {
+        window.authEngine.triggerSync([incidentData]);
+      }
       return {
         success: true,
         offline: false,
@@ -161,9 +164,10 @@ class PurePlateStorage {
     const queue = this.getOfflineQueue();
     if (queue.length > 0) {
       console.log(`[PurePlate] Syncing ${queue.length} offline records to community network...`);
-      localStorage.removeItem(this.STORAGE_KEY_OFFLINE_QUEUE);
-      if (window.showAppToast) {
-        window.showAppToast(`Synced ${queue.length} offline tests to PurePlate Community Network!`, "success");
+      if (window.authEngine) {
+        window.authEngine.syncCloudData(false);
+      } else {
+        localStorage.removeItem(this.STORAGE_KEY_OFFLINE_QUEUE);
       }
     }
   }
@@ -177,12 +181,32 @@ class PurePlateStorage {
     }
   }
 
+  refreshProfileUI() {
+    const profile = this.getUserProfile();
+    if (!profile) return;
+
+    const ptsBadge = document.getElementById("student-xp-badge");
+    const xpBar = document.getElementById("student-xp-fill");
+    const rankBadge = document.getElementById("student-rank-badge");
+    if (ptsBadge) ptsBadge.innerText = `${profile.points} XP`;
+    if (xpBar) {
+      const pct = Math.min(100, Math.floor((profile.points % 1000) / 10));
+      xpBar.style.width = `${pct}%`;
+    }
+    if (rankBadge) {
+      const rank = profile.points >= 800 ? "Senior Inspector 🌟" : profile.points >= 500 ? "Detective Level 2 🔍" : "Junior Inspector 🛡️";
+      rankBadge.innerText = rank;
+    }
+  }
+
   addPoints(amount) {
     const profile = this.getUserProfile();
     if (profile) {
       profile.points = (profile.points || 0) + amount;
       profile.testsCompleted = (profile.testsCompleted || 0) + 1;
       localStorage.setItem(this.STORAGE_KEY_USER_PROFILE, JSON.stringify(profile));
+      this.refreshProfileUI();
+      if (window.authEngine) window.authEngine.triggerSync();
       return profile.points;
     }
     return 0;
@@ -194,6 +218,8 @@ class PurePlateStorage {
       profile.badges.push(badgeKey);
       profile.points += 100;
       localStorage.setItem(this.STORAGE_KEY_USER_PROFILE, JSON.stringify(profile));
+      this.refreshProfileUI();
+      if (window.authEngine) window.authEngine.triggerSync();
       return true;
     }
     return false;

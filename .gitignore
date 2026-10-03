@@ -24,3 +24,6 @@ build/
 
 # GitHub Workflows (avoid PAT missing workflow scope error)
 .github/
+
+# Server Data & Database Files
+data/
