@@ -37,17 +37,25 @@ function getAllLocalIps() {
   return ips;
 }
 
-function handleHttpRequest(req, res) {
+function handleHttpRequest(req, res, isHttps = false) {
   let reqPath = req.url.split('?')[0];
   if (reqPath === '/' || reqPath === '') {
     reqPath = '/index.html';
   }
 
-  const filePath = path.join(ROOT_DIR, reqPath);
+  // Enterprise Security: Prevent Directory Traversal
+  const safePath = path.normalize(reqPath).replace(/^(\.\.[\/\\])+/, '');
+  const filePath = path.resolve(ROOT_DIR, '.' + safePath);
+
+  if (!filePath.startsWith(ROOT_DIR)) {
+    res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('403 Forbidden: Access Denied');
+    return;
+  }
 
   fs.stat(filePath, (err, stats) => {
     if (err || !stats.isFile()) {
-      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('404 Not Found');
       return;
     }
@@ -55,12 +63,23 @@ function handleHttpRequest(req, res) {
     const ext = path.extname(filePath).toLowerCase();
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
-    res.writeHead(200, {
+    const headers = {
       'Content-Type': contentType,
       'Access-Control-Allow-Origin': '*',
       'Cache-Control': 'no-cache',
-    });
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'SAMEORIGIN',
+      'X-XSS-Protection': '1; mode=block',
+      'Referrer-Policy': 'strict-origin-when-cross-origin',
+      'Permissions-Policy': 'camera=(self), geolocation=(self), accelerometer=(self), gyroscope=(self)',
+      'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.tile.openstreetmap.org https://unpkg.com; connect-src 'self' https://*.tile.openstreetmap.org ws: wss:; frame-ancestors 'self'; form-action 'self';",
+    };
 
+    if (isHttps) {
+      headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
+    }
+
+    res.writeHead(200, headers);
     fs.createReadStream(filePath).pipe(res);
   });
 }
@@ -95,7 +114,7 @@ async function startServers() {
     if (pems) {
       const httpsServer = https.createServer(
         { key: pems.private, cert: pems.cert },
-        handleHttpRequest
+        (req, res) => handleHttpRequest(req, res, true)
       );
       httpsServer.listen(HTTPS_PORT, '0.0.0.0', async () => {
         printServerBanner(primaryIp, hostname, localIps);

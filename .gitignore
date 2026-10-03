@@ -21,3 +21,6 @@ desktop.ini
 build/
 .flutter-plugins
 .flutter-plugins-dependencies
+
+# GitHub Workflows (avoid PAT missing workflow scope error)
+.github/

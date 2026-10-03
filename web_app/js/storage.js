@@ -77,23 +77,51 @@ class PurePlateStorage {
     return incident;
   }
 
+  // Data Sanitization & Security Helper
+  sanitize(str) {
+    if (typeof str !== "string") return "";
+    return str
+      .trim()
+      .slice(0, 150) // Strict length bounds
+      .replace(/[<>'"&]/g, (char) => {
+        switch (char) {
+          case "<": return "&lt;";
+          case ">": return "&gt;";
+          case "'": return "&#39;";
+          case '"': return "&quot;";
+          case "&": return "&amp;";
+          default: return char;
+        }
+      });
+  }
+
   // Submit test (Phase 4 Logic from Docs)
   submitTestResult({ food, testType, status, adulterant, vendorType, locationName, lat, lng }) {
     const isOnline = navigator.onLine;
 
+    // Secure bounds and validation
+    const safeLat = (typeof lat === "number" && !isNaN(lat) && lat >= -90 && lat <= 90)
+      ? lat
+      : 21.1738 + (Math.random() - 0.5) * 0.04;
+    const safeLng = (typeof lng === "number" && !isNaN(lng) && lng >= -180 && lng <= 180)
+      ? lng
+      : 72.8028 + (Math.random() - 0.5) * 0.04;
+
+    const safeStatus = status === "pass" ? "pass" : "fail";
+
     const incidentData = {
       id: "inc_" + Date.now(),
-      lat: lat || 21.1738 + (Math.random() - 0.5) * 0.04,
-      lng: lng || 72.8028 + (Math.random() - 0.5) * 0.04,
-      neighborhood: locationName || this.getUserRegion(),
-      food: food,
-      testType: testType,
-      status: status, // "pass" or "fail"
-      adulterant: adulterant,
-      vendorType: vendorType || "Local Loose Milk Vendor",
+      lat: safeLat,
+      lng: safeLng,
+      neighborhood: this.sanitize(locationName || this.getUserRegion()),
+      food: this.sanitize(food || "Sample"),
+      testType: this.sanitize(testType || "Chemical Test"),
+      status: safeStatus,
+      adulterant: this.sanitize(adulterant || "None Detected"),
+      vendorType: this.sanitize(vendorType || "Local Loose Milk Vendor"),
       timestamp: "Just now",
       date: new Date().toISOString(),
-      failCountInArea: status === "fail" ? 1 : 0
+      failCountInArea: safeStatus === "fail" ? 1 : 0
     };
 
     if (isOnline) {
@@ -171,19 +199,29 @@ class PurePlateStorage {
     return false;
   }
 
+  // Safe CSV Cell Formatting (Enterprise Defense against CSV / Formula Injection)
+  sanitizeCsvCell(val) {
+    if (val === null || val === undefined) return '""';
+    let str = String(val);
+    if (/^[=+\-@\t\r]/.test(str)) {
+      str = "'" + str; // Neutralize formula execution in Excel / Google Sheets
+    }
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+
   // Export Incidents as CSV (For Science Project presentations & charts)
   exportIncidentsAsCsv() {
     const incidents = this.getAllIncidents();
     const headers = ["ID", "Food", "Test Type", "Status", "Adulterant", "Neighborhood", "Vendor Type", "Date", "Latitude", "Longitude"];
     const rows = incidents.map(i => [
-      i.id,
-      `"${i.food}"`,
-      `"${i.testType}"`,
-      i.status.toUpperCase(),
-      `"${i.adulterant}"`,
-      `"${i.neighborhood}"`,
-      `"${i.vendorType || "Vendor"}"`,
-      i.date,
+      this.sanitizeCsvCell(i.id),
+      this.sanitizeCsvCell(i.food),
+      this.sanitizeCsvCell(i.testType),
+      this.sanitizeCsvCell(i.status ? i.status.toUpperCase() : "PASS"),
+      this.sanitizeCsvCell(i.adulterant),
+      this.sanitizeCsvCell(i.neighborhood),
+      this.sanitizeCsvCell(i.vendorType || "Vendor"),
+      this.sanitizeCsvCell(i.date),
       i.lat,
       i.lng
     ]);
