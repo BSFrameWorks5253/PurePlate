@@ -7,6 +7,7 @@
     "build": "echo \"PurePlate static site ready in web_app\"",
     "start": "node serve.js",
     "deploy": "wrangler deploy",
+    "deploy:vercel": "vercel --prod",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
