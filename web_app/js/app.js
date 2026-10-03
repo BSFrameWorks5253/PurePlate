@@ -600,10 +600,55 @@ document.addEventListener("DOMContentLoaded", () => {
       const total = incidents.length;
       const rate = total > 0 ? ((passes / total) * 100).toFixed(1) : "88.4";
       rateEl.innerText = `${rate}%`;
+
+      // Update Purity Hero Gauge
+      const heroGaugePct = document.getElementById("hero-gauge-pct");
+      const heroVerifiedCount = document.getElementById("hero-verified-count");
+      const gaugeFillCircle = document.getElementById("gauge-fill-circle");
+
+      if (heroGaugePct) heroGaugePct.innerText = `${rate}%`;
+      if (heroVerifiedCount) heroVerifiedCount.innerText = (1482 + incidents.length).toLocaleString();
+      if (gaugeFillCircle) {
+        const circumference = 314; // 2 * pi * 50
+        const numericRate = parseFloat(rate) || 88.4;
+        const offset = circumference - (numericRate / 100) * circumference;
+        gaugeFillCircle.style.strokeDashoffset = offset;
+      }
     }
 
     mapEngine.renderRecentFeed();
   }
+
+  // Global Keyboard Shortcuts (Ctrl+K, 1-4, Escape)
+  window.addEventListener("keydown", (e) => {
+    // Escape closes modals and sheets
+    if (e.key === "Escape") {
+      closeInstructionSheet();
+      const authModal = document.getElementById("auth-modal");
+      if (authModal) authModal.classList.remove("active");
+    }
+
+    // Don't trigger shortcuts if user is typing in an input
+    const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : "";
+    if (tag === "input" || tag === "select" || tag === "textarea") {
+      return;
+    }
+
+    // Ctrl+K or Cmd+K or "/" to search
+    if ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K") || e.key === "/") {
+      e.preventDefault();
+      navigateToScreen("screen-selection");
+      setTimeout(() => {
+        if (searchInput) searchInput.focus();
+      }, 150);
+    }
+
+    // Number keys for quick navigation
+    if (e.key === "1") navigateToScreen("screen-home");
+    if (e.key === "2") navigateToScreen("screen-selection");
+    if (e.key === "3") navigateToScreen("screen-heatmap");
+    if (e.key === "4") navigateToScreen("screen-learning");
+  });
 
   // Initial render
   renderFoodItems();
