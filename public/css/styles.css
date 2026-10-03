@@ -2403,16 +2403,26 @@ ul { list-style: none; }
    ANDROID DEV MODE & DEV STUDIO STYLING
    ============================================================ */
 
-/* Floating Android Action Button (Hidden to keep mobile UI clean) */
+/* Floating Android Action Button & Simulated System Bars (Permanently Eliminated) */
 .android-dev-fab,
 #android-status-bar,
 #android-nav-bar,
 .android-status-bar,
-.android-nav-bar {
+.android-nav-bar,
+#android-dev-suite,
+.asb-time {
   display: none !important;
   height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
+  position: absolute !important;
+  top: -9999px !important;
+  left: -9999px !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* Dev Drawer Backdrop & Card */
