@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import storage from '../services/storage.js';
 import soundEngine from '../services/sound.js';
 
@@ -8,89 +9,168 @@ export default function MapScreen({ showToast, theme }) {
   const mapInstanceRef = useRef(null);
   const markersLayerRef = useRef(null);
   const radarCirclesLayerRef = useRef(null);
-  const cartoVoyagerRef = useRef(null);
-  const cartoDarkRef = useRef(null);
+  const activeTileLayerRef = useRef(null);
 
   const [filter, setFilter] = useState('all');
   const [incidents, setIncidents] = useState(storage.getAllIncidents());
 
+  // Matches user screenshot exactly
   const filters = [
-    { id: 'all', label: 'All Tests' },
+    { id: 'all', label: 'All Food Types' },
     { id: 'fail', label: '⚠️ Contamination Spikes' },
-    { id: 'pass', label: '🛡️ Verified Pure' },
-    { id: 'milk', label: '🥛 Milk Reports' },
-    { id: 'spices', label: '🌶️ Spice Reports' },
+    { id: 'pass', label: '🛡️ Pure Zones' },
+    { id: 'milk', label: '🥛 Milk Only' },
+    { id: 'spices', label: '🌶️ Spices' },
   ];
 
-  // Initialize Leaflet Map
+  // Initialize and mount Leaflet Map
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    if (!mapInstanceRef.current) {
-      const map = L.map(mapContainerRef.current, {
-        center: [21.1738, 72.8028],
-        zoom: 13,
-        zoomControl: false,
-        preferCanvas: true
-      });
-
-      L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-      const cartoVoyager = L.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-        {
-          attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-          subdomains: 'abcd',
-          maxZoom: 20
-        }
-      );
-
-      const cartoDark = L.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-        {
-          attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-          subdomains: 'abcd',
-          maxZoom: 20
-        }
-      );
-
-      cartoVoyagerRef.current = cartoVoyager;
-      cartoDarkRef.current = cartoDark;
-
-      if (theme === 'dark') {
-        cartoDark.addTo(map);
-      } else {
-        cartoVoyager.addTo(map);
+    // Destroy existing instance if any
+    if (mapInstanceRef.current) {
+      try {
+        mapInstanceRef.current.remove();
+      } catch (e) {
+        console.warn('Map cleanup error:', e);
       }
-
-      markersLayerRef.current = L.layerGroup().addTo(map);
-      radarCirclesLayerRef.current = L.layerGroup().addTo(map);
-
-      mapInstanceRef.current = map;
+      mapInstanceRef.current = null;
     }
 
-    const timer = setTimeout(() => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.invalidateSize(true);
+    const container = mapContainerRef.current;
+
+    // Create Leaflet map instance
+    const map = L.map(container, {
+      center: [21.1738, 72.8028],
+      zoom: 13,
+      zoomControl: false,
+      preferCanvas: true,
+      fadeAnimation: true
+    });
+
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    // Setup base tile layers
+    const osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
+    });
+
+    const cartoVoyager = L.tileLayer(
+      'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+      {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 20
       }
-    }, 200);
+    );
+
+    const cartoDark = L.tileLayer(
+      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 20
+      }
+    );
+
+    // Resilient fallback mechanism: if CARTO fails or is blocked by client adblocker, fallback to OSM
+    let errorCount = 0;
+    const handleTileError = () => {
+      errorCount++;
+      if (errorCount >= 2 && map.hasLayer(cartoVoyager)) {
+        console.warn('Carto tile error or blocked by client; seamlessly falling back to OpenStreetMap standard tiles');
+        map.removeLayer(cartoVoyager);
+        osmLayer.addTo(map);
+        activeTileLayerRef.current = osmLayer;
+      }
+    };
+    cartoVoyager.on('tileerror', handleTileError);
+    cartoDark.on('tileerror', handleTileError);
+
+    // Add initial layer based on theme
+    const initialLayer = theme === 'dark' ? cartoDark : cartoVoyager;
+    initialLayer.addTo(map);
+    activeTileLayerRef.current = initialLayer;
+
+    // Create marker groups
+    const markersLayer = L.layerGroup().addTo(map);
+    const radarLayer = L.layerGroup().addTo(map);
+    markersLayerRef.current = markersLayer;
+    radarCirclesLayerRef.current = radarLayer;
+
+    mapInstanceRef.current = map;
+
+    // Staggered size invalidation to guarantee full container rendering
+    const triggerInvalidate = () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize({ debounceMoveEnd: true });
+      }
+    };
+
+    requestAnimationFrame(triggerInvalidate);
+    const timer1 = setTimeout(triggerInvalidate, 80);
+    const timer2 = setTimeout(triggerInvalidate, 250);
+    const timer3 = setTimeout(triggerInvalidate, 600);
+    const timer4 = setTimeout(triggerInvalidate, 1200);
+
+    // Dynamic ResizeObserver ensures map always adapts to flex layout changes
+    let resizeObserver = null;
+    if (window.ResizeObserver) {
+      resizeObserver = new ResizeObserver(() => {
+        triggerInvalidate();
+      });
+      resizeObserver.observe(container);
+    }
+
+    const handleWindowResize = () => triggerInvalidate();
+    window.addEventListener('resize', handleWindowResize);
 
     return () => {
-      clearTimeout(timer);
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+      clearTimeout(timer4);
+      window.removeEventListener('resize', handleWindowResize);
+      if (resizeObserver) resizeObserver.disconnect();
+      if (mapInstanceRef.current) {
+        try {
+          mapInstanceRef.current.remove();
+        } catch (e) {
+          // ignore cleanup err
+        }
+        mapInstanceRef.current = null;
+      }
     };
-  }, []);
+  }, []); // Run once on mount
 
-  // Update theme layer
+  // Update theme tile layer dynamically
   useEffect(() => {
     const map = mapInstanceRef.current;
-    if (!map || !cartoVoyagerRef.current || !cartoDarkRef.current) return;
+    if (!map) return;
 
     if (theme === 'dark') {
-      if (map.hasLayer(cartoVoyagerRef.current)) map.removeLayer(cartoVoyagerRef.current);
-      if (!map.hasLayer(cartoDarkRef.current)) cartoDarkRef.current.addTo(map);
+      const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 20
+      });
+      if (activeTileLayerRef.current && map.hasLayer(activeTileLayerRef.current)) {
+        map.removeLayer(activeTileLayerRef.current);
+      }
+      darkLayer.addTo(map);
+      activeTileLayerRef.current = darkLayer;
     } else {
-      if (map.hasLayer(cartoDarkRef.current)) map.removeLayer(cartoDarkRef.current);
-      if (!map.hasLayer(cartoVoyagerRef.current)) cartoVoyagerRef.current.addTo(map);
+      const lightLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 20
+      });
+      if (activeTileLayerRef.current && map.hasLayer(activeTileLayerRef.current)) {
+        map.removeLayer(activeTileLayerRef.current);
+      }
+      lightLayer.addTo(map);
+      activeTileLayerRef.current = lightLayer;
     }
   }, [theme]);
 
@@ -120,7 +200,7 @@ export default function MapScreen({ showToast, theme }) {
           weight: 1.5,
           opacity: 0.8,
           fillColor: '#e11d48',
-          fillOpacity: 0.18,
+          fillOpacity: 0.22,
           className: 'heat-radar-wave'
         });
         radarLayer.addLayer(radarCircle);
@@ -138,7 +218,7 @@ export default function MapScreen({ showToast, theme }) {
               align-items: center;
               justify-content: center;
               font-size: 16px;
-              box-shadow: 0 4px 10px rgba(225, 29, 72, 0.45);
+              box-shadow: 0 4px 12px rgba(225, 29, 72, 0.55);
               border: 2px solid white;
             ">⚠️</div>
           `,
@@ -177,7 +257,7 @@ export default function MapScreen({ showToast, theme }) {
               align-items: center;
               justify-content: center;
               font-size: 15px;
-              box-shadow: 0 4px 10px rgba(16, 185, 129, 0.45);
+              box-shadow: 0 4px 12px rgba(16, 185, 129, 0.55);
               border: 2px solid white;
             ">🛡️</div>
           `,
@@ -189,7 +269,7 @@ export default function MapScreen({ showToast, theme }) {
         marker.bindPopup(`
           <div style="font-family: inherit; font-size: 13px; line-height: 1.4;">
             <div style="font-weight: 800; color: #047857; font-size: 14px; margin-bottom: 2px;">
-              🛡️ Pure & Safe Sample
+              🛡️ Pure &amp; Safe Sample
             </div>
             <strong>${item.food}</strong><br/>
             <span style="color: #64748b; font-size: 11px;">📍 ${item.neighborhood}</span><br/>
@@ -246,7 +326,7 @@ export default function MapScreen({ showToast, theme }) {
   const handleExportJson = () => {
     soundEngine.playClick();
     storage.exportIncidentsAsJson();
-    showToast('📥 Exported JSON Database successfully!', 'success');
+    showToast('📦 Exported JSON Database successfully!', 'success');
   };
 
   return (
@@ -257,9 +337,9 @@ export default function MapScreen({ showToast, theme }) {
           <h2>Regional Food Security Tracker</h2>
           <p>Live crowdsourced adulteration heat map for Surat &amp; surrounding areas</p>
         </div>
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-          <button className="btn-locate-user" id="btn-locate-user-map" title="Find My Location" onClick={handleLocateUser}>
-            <span>📍 Find Me</span>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button className="btn-locate-user" id="btn-locate-user-map" title="Center on my location" onClick={handleLocateUser}>
+            <span>🎯 My GPS</span>
           </button>
           <button className="btn-locate-user" title="Export CSV" onClick={handleExportCsv}>
             <span>📥 CSV</span>
@@ -270,7 +350,7 @@ export default function MapScreen({ showToast, theme }) {
         </div>
       </div>
 
-      {/* Filter Tabs */}
+      {/* Filter Tabs matching screenshot */}
       <div className="map-filter-bar">
         {filters.map((f) => (
           <button
@@ -286,9 +366,25 @@ export default function MapScreen({ showToast, theme }) {
         ))}
       </div>
 
-      {/* Fullscreen Map Canvas */}
+      {/* Fullscreen Map Canvas with Legend */}
       <div className="map-viewport-wrapper">
-        <div ref={mapContainerRef} id="pureplate-leaflet-map" style={{ width: '100%', height: '100%', minHeight: '380px' }}></div>
+        <div 
+          ref={mapContainerRef} 
+          id="pureplate-leaflet-map" 
+          style={{ width: '100%', height: '100%', minHeight: '440px', position: 'relative' }}
+        ></div>
+
+        {/* Floating Apple Liquid Glass Legend Box from Screenshot */}
+        <div className="map-legend-box">
+          <div className="legend-row">
+            <span className="legend-dot red-pulse"></span>
+            <span>Spike (&gt;3 fails in 7 days)</span>
+          </div>
+          <div className="legend-row">
+            <span className="legend-dot green-shield"></span>
+            <span>Verified Pure Zone</span>
+          </div>
+        </div>
       </div>
 
       {/* Pull-Up Feed Sheet at Bottom of Map */}

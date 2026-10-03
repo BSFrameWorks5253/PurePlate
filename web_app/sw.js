@@ -1,27 +1,24 @@
-// PurePlate Modern Service Worker (Network First Strategy)
-const CACHE_NAME = "pureplate-v5-clean";
+// PurePlate Modern React Service Worker (Network First Strategy)
+const CACHE_NAME = "pureplate-v7-react";
 const ASSETS_TO_CACHE = [
-  "./",
-  "./index.html",
-  "./css/styles.css",
-  "./js/data.js",
-  "./js/storage.js",
-  "./js/auth.js",
-  "./js/sound.js",
-  "./js/camera.js",
-  "./js/map.js",
-  "./js/quiz.js",
-  "./js/app.js",
-  "./manifest.json",
-  "./assets/logo.svg"
+  "/",
+  "/index.html",
+  "/manifest.json",
+  "/assets/logo.svg"
 ];
 
-// Install Event: Cache fresh shell
+// Install Event: Cache fresh shell without breaking on 404s
 self.addEventListener("install", (e) => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log("[ServiceWorker] Pre-caching clean production assets");
-      return cache.addAll(ASSETS_TO_CACHE);
+    caches.open(CACHE_NAME).then(async (cache) => {
+      console.log("[ServiceWorker] Pre-caching clean production React shell");
+      for (const asset of ASSETS_TO_CACHE) {
+        try {
+          await cache.add(asset);
+        } catch (err) {
+          console.warn("[ServiceWorker] Non-critical cache skip:", asset);
+        }
+      }
     })
   );
   self.skipWaiting();
@@ -49,6 +46,10 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (e) => {
   if (!e.request.url.startsWith("http")) return;
   if (e.request.url.includes("/api/")) return;
+  // Let map tiles bypass SW cache to prevent tile corruption
+  if (e.request.url.includes("basemaps.cartocdn.com") || e.request.url.includes("tile.openstreetmap.org")) {
+    return;
+  }
 
   e.respondWith(
     fetch(e.request)
@@ -65,13 +66,13 @@ self.addEventListener("fetch", (e) => {
         }
         return networkResponse;
       })
-      .catch(() => {
-        return caches.match(e.request).then((cachedResponse) => {
-          if (cachedResponse) return cachedResponse;
-          if (e.request.mode === "navigate") {
-            return caches.match("./index.html");
-          }
-        });
+      .catch(async () => {
+        // Fallback to cache when offline
+        const cachedResponse = await caches.match(e.request);
+        if (cachedResponse) return cachedResponse;
+        if (e.request.mode === "navigate") {
+          return caches.match("/index.html") || caches.match("/");
+        }
       })
   );
 });
