@@ -92,6 +92,14 @@ export default function App() {
 
   return (
     <>
+      {/* Apple Liquid Glass Ambient Light Orbs */}
+      <div className="apple-liquid-mesh" aria-hidden="true">
+        <div className="liquid-orb orb-teal"></div>
+        <div className="liquid-orb orb-cyan"></div>
+        <div className="liquid-orb orb-purple"></div>
+        <div className="liquid-orb orb-amber"></div>
+      </div>
+
       <div id="app-container" className={`app-frame ${viewMode === 'desktop' ? 'frame-expanded' : 'frame-mobile'}`}>
         {/* Unified Desktop & App Header */}
         <Header
