@@ -497,14 +497,23 @@
                 <span id="gyro-angle-text">Surface Angle: 45° (Optimal)</span>
               </div>
 
+              <!-- Live Optical Status Pill -->
+              <div class="camera-status-pill" id="camera-live-badge" style="display:none;">
+                <span class="live-pulse-dot"></span>
+                <span>LIVE OPTICAL SCAN</span>
+              </div>
+
               <!-- Camera Controls Bar -->
               <div class="camera-lens-toolbar">
                 <button class="cam-lens-btn" id="btn-toggle-camera" title="Toggle Real / Test Mode">
-                  <span id="cam-mode-icon">📹</span>
-                  <span id="cam-mode-text">Camera Active</span>
+                  <span id="cam-mode-icon">🟢</span>
+                  <span id="cam-mode-text">Live Feed</span>
                 </button>
-                <button class="cam-lens-btn" id="btn-switch-lens" title="Flip Camera">
-                  🔄 Flip Lens
+                <button class="cam-lens-btn cam-btn-highlight" id="btn-analyze-frame" title="Analyze & Lock Optical Reading">
+                  ⚡ Analyze
+                </button>
+                <button class="cam-lens-btn" id="btn-switch-lens" title="Flip Front / Rear Lens">
+                  🔄 Flip
                 </button>
                 <button class="cam-lens-btn" id="btn-upload-photo" title="Snap or Pick Sample Photo">
                   📷 Photo
@@ -515,8 +524,8 @@
               <!-- Quick Demo Samples Switcher -->
               <div class="simulation-quickbar">
                 <span class="sim-caption">Demo Samples:</span>
-                <button class="btn-sim-pick pure" id="btn-sim-pure" title="Simulate Pure Sample">Pure Milk</button>
-                <button class="btn-sim-pick adulterated" id="btn-sim-adulterated" title="Simulate Adulterated Sample">Starch Contaminated</button>
+                <button class="btn-sim-pick pure" id="btn-sim-pure" title="Simulate Pure Sample">🥛 Pure Milk</button>
+                <button class="btn-sim-pick adulterated" id="btn-sim-adulterated" title="Simulate Adulterated Sample">🧪 Starch Contaminated</button>
               </div>
             </div>
 

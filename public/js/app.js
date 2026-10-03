@@ -379,8 +379,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (cameraSection) cameraSection.style.display = "block";
       if (choiceSection) choiceSection.style.display = "block";
 
-      // Start simulated pure feed or real camera
-      cameraEngine.renderSimulatedFeed("pure");
+      // Activate real device camera immediately!
+      cameraEngine.startCamera();
     });
   }
 

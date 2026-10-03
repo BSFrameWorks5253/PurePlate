@@ -31,8 +31,8 @@ class PurePlateMap {
     if (!mapEl || this.map) return;
 
     // Load dynamic map configuration from secure .env API if available
-    let customTileUrl = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
-    let customAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+    let customTileUrl = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+    let customAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
     let openFreeMapStyle = "https://tiles.openfreemap.org/styles/liberty";
 
     try {
@@ -49,7 +49,7 @@ class PurePlateMap {
         }
       }
     } catch (e) {
-      console.log("[PurePlate Map] Running with default OpenFreeMap & Carto tiles");
+      console.log("[PurePlate Map] Running with default OpenFreeMap & OSM tiles");
     }
 
     // Initialize Leaflet map
@@ -62,25 +62,13 @@ class PurePlateMap {
     // Add zoom control at bottom right
     L.control.zoom({ position: "bottomright" }).addTo(this.map);
 
-    // Multi-Provider Base Layers (Configured via .env & OpenFreeMap API)
-    this.darkMatterLayer = L.tileLayer(customTileUrl, {
-      attribution: customAttribution,
-      subdomains: "abcd",
-      maxZoom: 20
-    });
-
-    this.daylightLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-      attribution: '&copy; <a href="https://carto.com/">CARTO</a> & OpenStreetMap',
-      subdomains: "abcd",
-      maxZoom: 20
-    });
-
-    this.osmLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    // Multi-Provider Base Layers (OpenFreeMap Vector Tiles & OpenStreetMap Raster)
+    this.osmLayer = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 19
     });
 
-    // OpenFreeMap MapLibre GL Vector Tile Layers
+    // OpenFreeMap MapLibre GL Vector Tile Layers (No API key required, crisp Retina vector maps)
     this.openFreeMapLiberty = null;
     this.openFreeMapPositron = null;
     if (typeof L.maplibreGL === "function") {
@@ -101,24 +89,26 @@ class PurePlateMap {
     // Add default configured layer based on active theme
     const activeTheme = document.documentElement.getAttribute("data-theme") || "light";
     if (activeTheme === "dark") {
-      this.darkMatterLayer.addTo(this.map);
+      if (this.openFreeMapPositron) {
+        this.openFreeMapPositron.addTo(this.map);
+      } else {
+        this.osmLayer.addTo(this.map);
+      }
     } else {
       if (this.openFreeMapLiberty) {
         this.openFreeMapLiberty.addTo(this.map);
       } else {
-        this.daylightLayer.addTo(this.map);
+        this.osmLayer.addTo(this.map);
       }
     }
 
-    // Layer Switcher Control (OpenFreeMap Liberty / Positron + Daylight + Dark HUD + OSM)
+    // Layer Switcher Control (OpenFreeMap Liberty / Positron + OSM Standard)
     const baseMaps = {};
     if (this.openFreeMapLiberty) {
       baseMaps["🗺️ OpenFreeMap Liberty"] = this.openFreeMapLiberty;
       baseMaps["🕊️ OpenFreeMap Positron"] = this.openFreeMapPositron;
     }
-    baseMaps["☀️ Daylight Road"] = this.daylightLayer;
-    baseMaps["🌙 Dark HUD Retina"] = this.darkMatterLayer;
-    baseMaps["🌍 OpenStreetMap"] = this.osmLayer;
+    baseMaps["🌍 OpenStreetMap Standard"] = this.osmLayer;
 
     L.control.layers(baseMaps, null, { position: "topleft", collapsed: true }).addTo(this.map);
 
@@ -133,28 +123,19 @@ class PurePlateMap {
 
   setTheme(theme) {
     if (!this.map) return;
-    const lightLayers = [this.openFreeMapLiberty, this.openFreeMapPositron, this.daylightLayer, this.osmLayer].filter(Boolean);
-
-    if (theme === "light") {
-      if (this.darkMatterLayer && this.map.hasLayer(this.darkMatterLayer)) {
-        this.map.removeLayer(this.darkMatterLayer);
+    if (theme === "dark") {
+      if (this.openFreeMapLiberty && this.map.hasLayer(this.openFreeMapLiberty)) {
+        this.map.removeLayer(this.openFreeMapLiberty);
       }
-      const hasLightOn = lightLayers.some(layer => this.map.hasLayer(layer));
-      if (!hasLightOn) {
-        if (this.openFreeMapLiberty) {
-          this.openFreeMapLiberty.addTo(this.map);
-        } else if (this.daylightLayer) {
-          this.daylightLayer.addTo(this.map);
-        }
+      if (this.openFreeMapPositron && !this.map.hasLayer(this.openFreeMapPositron)) {
+        this.openFreeMapPositron.addTo(this.map);
       }
     } else {
-      lightLayers.forEach(layer => {
-        if (this.map.hasLayer(layer)) {
-          this.map.removeLayer(layer);
-        }
-      });
-      if (this.darkMatterLayer && !this.map.hasLayer(this.darkMatterLayer)) {
-        this.darkMatterLayer.addTo(this.map);
+      if (this.openFreeMapPositron && this.map.hasLayer(this.openFreeMapPositron)) {
+        this.map.removeLayer(this.openFreeMapPositron);
+      }
+      if (this.openFreeMapLiberty && !this.map.hasLayer(this.openFreeMapLiberty)) {
+        this.openFreeMapLiberty.addTo(this.map);
       }
     }
     setTimeout(() => {

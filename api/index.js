@@ -10,7 +10,7 @@ const CONFIG = {
   MAP: {
     provider: process.env.MAP_TILE_PROVIDER || 'openfreemap',
     styleUrl: process.env.MAP_STYLE_URL || 'https://tiles.openfreemap.org/styles/liberty',
-    tileUrl: process.env.MAP_TILE_URL || 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    tileUrl: process.env.MAP_TILE_URL || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution: process.env.MAP_ATTRIBUTION || '&copy; <a href="https://openfreemap.org">OpenFreeMap</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: parseInt(process.env.MAP_MAX_ZOOM || '20', 10),
     defaultLat: parseFloat(process.env.MAP_DEFAULT_LAT || '21.1738'),
