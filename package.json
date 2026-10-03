@@ -1,0 +1,17 @@
+{
+  "name": "science-project",
+  "version": "1.0.0",
+  "description": "**Science Exhibition & Innovation Project**",
+  "main": "serve.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "qrcode": "^1.5.4",
+    "selfsigned": "^5.5.0"
+  }
+}
