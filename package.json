@@ -5,7 +5,7 @@
   "main": "serve.js",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node -e \"const fs=require('fs'); if(fs.existsSync('public')) fs.cpSync('public', 'web_app', {recursive:true, force:true}); console.log('PurePlate React bundle synced.');\"",
     "serve": "node serve.js",
     "start": "vite",
     "deploy": "wrangler deploy",
