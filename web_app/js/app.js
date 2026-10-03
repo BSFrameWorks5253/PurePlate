@@ -654,36 +654,10 @@ document.addEventListener("DOMContentLoaded", () => {
   renderFoodItems();
   updateHomeDashboard();
 
-  // PWA Install prompt handling
-  let deferredPrompt;
+  // PWA Install prompt handling disabled to keep mobile view uncluttered
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault();
-    deferredPrompt = e;
-    const banner = document.getElementById("pwa-banner");
-    if (banner) banner.style.display = "flex";
   });
-
-  const btnInstall = document.getElementById("btn-pwa-install");
-  if (btnInstall) {
-    btnInstall.addEventListener("click", async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === "accepted") {
-          console.log("User accepted PWA installation");
-        }
-        deferredPrompt = null;
-        document.getElementById("pwa-banner").style.display = "none";
-      }
-    });
-  }
-
-  const btnDismissPwa = document.getElementById("btn-pwa-dismiss");
-  if (btnDismissPwa) {
-    btnDismissPwa.addEventListener("click", () => {
-      document.getElementById("pwa-banner").style.display = "none";
-    });
-  }
 
   // =========================================================================
   // Desktop Top Bar Controls (Workbench vs Mobile Phone View & Audio Toggle)
@@ -793,9 +767,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnShowQr = document.getElementById("btn-show-qr");
   if (btnShowQr) {
     btnShowQr.addEventListener("click", () => {
-      const devFab = document.getElementById("btn-toggle-dev-drawer");
-      if (devFab) {
-        devFab.click();
+      if (typeof window.openDevStudio === "function") {
+        window.openDevStudio();
         const tabQr = document.querySelector(".dev-tab[data-tab='tab-qr']");
         if (tabQr) tabQr.click();
       }

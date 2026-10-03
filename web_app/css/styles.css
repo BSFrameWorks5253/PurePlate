@@ -2085,55 +2085,18 @@ ul { list-style: none; }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* ── PWA Banner ── */
+/* ── PWA Banner (Hidden to keep mobile UI clean) ── */
 .pwa-install-banner {
-  position: fixed; bottom: var(--nav-height); left: 0; right: 0; z-index: 500;
-  background: var(--bg-surface); border-top: 1px solid var(--border-subtle);
-  padding: 12px var(--screen-pad); display: flex; align-items: center;
-  justify-content: space-between; gap: 12px;
-  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.4);
-}
-.pwa-content { display: flex; align-items: center; gap: 10px; flex: 1; }
-.pwa-icon { font-size: 28px; }
-.pwa-text strong { font-size: 13px; font-weight: 700; display: block; }
-.pwa-text span   { font-size: 11px; color: var(--text-muted); }
-.pwa-actions { display: flex; gap: 8px; align-items: center; }
-.btn-pwa-dismiss { font-size: 11.5px; color: var(--text-muted); padding: 6px 10px; }
-.btn-pwa-install {
-  background: var(--brand-teal); color: #000;
-  font-size: 11.5px; font-weight: 800; padding: 7px 13px; border-radius: 10px;
+  display: none !important;
 }
 
 /* ============================================================
    ANDROID DEV MODE & DEV STUDIO STYLING
    ============================================================ */
 
-/* Floating Android Action Button */
+/* Floating Android Action Button (Hidden to keep mobile UI clean) */
 .android-dev-fab {
-  position: fixed;
-  bottom: calc(var(--nav-height) + 16px);
-  right: 16px;
-  z-index: 800;
-  background: linear-gradient(135deg, #162035, #0a1120);
-  border: 2px solid var(--brand-teal);
-  border-radius: 28px;
-  padding: 8px 14px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 16px rgba(0, 201, 167, 0.25);
-  cursor: pointer;
-  transition: all 0.2s var(--ease-spring);
-}
-.android-dev-fab:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 6px 24px rgba(0, 201, 167, 0.35);
-}
-.dev-fab-icon { font-size: 18px; }
-.dev-fab-label {
-  font-size: 11.5px;
-  font-weight: 800;
-  color: var(--brand-teal);
+  display: none !important;
 }
 
 /* Dev Drawer Backdrop & Card */

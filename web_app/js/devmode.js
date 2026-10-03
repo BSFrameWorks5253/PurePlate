@@ -61,16 +61,10 @@
   });
 
   function initDevModeUi() {
-    // Inject Dev FAB & Dev Drawer HTML into body
+    // Inject Dev Drawer HTML into body (without intrusive floating button)
     const devContainer = document.createElement("div");
     devContainer.id = "android-dev-suite";
     devContainer.innerHTML = `
-      <!-- Floating Dev Button -->
-      <button id="btn-toggle-dev-drawer" class="android-dev-fab" title="Open Android Dev & Diagnostics Studio">
-        <span class="dev-fab-icon">🤖</span>
-        <span class="dev-fab-label">Dev Studio</span>
-      </button>
-
       <!-- Dev Drawer Backdrop & Panel -->
       <div id="dev-drawer-backdrop" class="dev-drawer-backdrop">
         <div class="dev-drawer-card">
@@ -334,18 +328,36 @@
   }
 
   function setupDevListeners() {
-    const fab = document.getElementById("btn-toggle-dev-drawer");
     const backdrop = document.getElementById("dev-drawer-backdrop");
     const btnClose = document.getElementById("btn-close-dev-drawer");
 
-    // Drawer toggle
-    if (fab) fab.addEventListener("click", () => backdrop.classList.add("active"));
-    if (btnClose) btnClose.addEventListener("click", () => backdrop.classList.remove("active"));
+    window.openDevStudio = function () {
+      if (backdrop) backdrop.classList.add("active");
+    };
+    window.closeDevStudio = function () {
+      if (backdrop) backdrop.classList.remove("active");
+    };
+
+    if (btnClose) btnClose.addEventListener("click", () => window.closeDevStudio());
     if (backdrop) {
       backdrop.addEventListener("click", (e) => {
-        if (e.target === backdrop) backdrop.classList.remove("active");
+        if (e.target === backdrop) window.closeDevStudio();
       });
     }
+
+    // Keyboard shortcut (Ctrl+Shift+D or Alt+D) for developers
+    window.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "d") || (e.altKey && e.key.toLowerCase() === "d")) {
+        e.preventDefault();
+        if (backdrop) {
+          if (backdrop.classList.contains("active")) {
+            window.closeDevStudio();
+          } else {
+            window.openDevStudio();
+          }
+        }
+      }
+    });
 
     // Tab navigation
     const tabs = document.querySelectorAll(".dev-tab");
