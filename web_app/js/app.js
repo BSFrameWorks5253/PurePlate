@@ -34,9 +34,32 @@ document.addEventListener("DOMContentLoaded", () => {
   const mapEngine = new window.PurePlateMap();
   const quizEngine = new window.PurePlateQuiz();
 
-  // Navigation Controller
-  function navigateToScreen(targetScreenId) {
+  // =========================================================================
+  // Navigation Controller with History, Route Progress Bar, and Deep Linking
+  // =========================================================================
+  const routeProgressBar = document.getElementById("route-progress-bar");
+
+  function triggerRouteProgress() {
+    if (!routeProgressBar) return;
+    routeProgressBar.classList.remove("finished");
+    routeProgressBar.classList.add("loading");
+    setTimeout(() => {
+      routeProgressBar.classList.remove("loading");
+      routeProgressBar.classList.add("finished");
+      setTimeout(() => {
+        routeProgressBar.classList.remove("finished");
+      }, 300);
+    }, 180);
+  }
+
+  function navigateToScreen(targetScreenId, pushHistory = true) {
+    if (currentActiveScreen === targetScreenId && document.getElementById(targetScreenId)?.classList.contains("active")) {
+      return;
+    }
+
     if (window.soundEngine) window.soundEngine.playClick();
+    triggerRouteProgress();
+
     const screens = document.querySelectorAll(".app-screen");
     screens.forEach((s) => s.classList.remove("active"));
 
@@ -56,6 +79,12 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
+    // Push State to Browser History for seamless native Back button support
+    if (pushHistory && window.history && window.history.pushState) {
+      const hash = targetScreenId.replace("screen-", "");
+      window.history.pushState({ screen: targetScreenId }, "", `#${hash}`);
+    }
+
     // Special screen triggers
     if (targetScreenId === "screen-camera") {
       setupCameraScreenForProtocol(activeSelectedFoodProtocol);
@@ -71,7 +100,11 @@ document.addEventListener("DOMContentLoaded", () => {
       updateHomeDashboard();
     }
 
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // Smooth reset scroll position
+    window.scrollTo({ top: 0, behavior: "instant" });
+    const screenViewport = document.querySelector(".screens-viewport");
+    if (screenViewport) screenViewport.scrollTop = 0;
+    if (target) target.scrollTop = 0;
   }
 
   // Setup Bottom Navigation Bar Clicks
@@ -81,6 +114,31 @@ document.addEventListener("DOMContentLoaded", () => {
       const target = btn.getAttribute("data-target");
       if (target) navigateToScreen(target);
     });
+  });
+
+  // Native Browser History & Hardware Back Button Handling
+  window.addEventListener("popstate", (e) => {
+    // If bottom sheet is open, close it first without leaving page
+    const sheet = document.getElementById("instruction-sheet-backdrop");
+    if (sheet && (sheet.classList.contains("active") || sheet.classList.contains("visible"))) {
+      closeInstructionSheet();
+      return;
+    }
+
+    // If auth modal is open, close it
+    const authModal = document.getElementById("auth-modal");
+    if (authModal && authModal.classList.contains("active")) {
+      authModal.classList.remove("active");
+      return;
+    }
+
+    if (e.state && e.state.screen) {
+      navigateToScreen(e.state.screen, false);
+    } else {
+      const hash = window.location.hash.replace("#", "");
+      const screenId = hash ? `screen-${hash}` : "screen-home";
+      navigateToScreen(document.getElementById(screenId) ? screenId : "screen-home", false);
+    }
   });
 
   // Home Hub Quick Tile Actions (From DOCS Screen 1 Blueprint)
@@ -99,15 +157,27 @@ document.addEventListener("DOMContentLoaded", () => {
     cardNavLearn.addEventListener("click", () => navigateToScreen("screen-learning"));
   }
 
-  // Back Buttons
+  // Back Buttons with History Awareness
   const btnBackHome = document.getElementById("btn-back-home");
   if (btnBackHome) {
-    btnBackHome.addEventListener("click", () => navigateToScreen("screen-home"));
+    btnBackHome.addEventListener("click", () => {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        navigateToScreen("screen-home");
+      }
+    });
   }
 
   const btnBackSelection = document.getElementById("btn-back-selection");
   if (btnBackSelection) {
-    btnBackSelection.addEventListener("click", () => navigateToScreen("screen-selection"));
+    btnBackSelection.addEventListener("click", () => {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        navigateToScreen("screen-selection");
+      }
+    });
   }
 
   // =========================================================================
@@ -230,7 +300,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if (science) science.innerText = protocol.science;
 
     if (toolsList) {
-      toolsList.innerHTML = protocol.tools.map((t) => `<li>${t}</li>`).join("");
+      toolsList.innerHTML = protocol.tools
+        .map(
+          (t) => `
+        <li>
+          <span class="tool-check-icon">✓</span>
+          <span>${t}</span>
+        </li>
+      `
+        )
+        .join("");
     }
 
     if (sheetBackdrop) {
@@ -564,16 +643,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // Network Connectivity Monitoring
   // =========================================================================
   function updateNetworkStatus() {
-    const badge = document.getElementById("network-status");
-    const text = document.getElementById("network-text");
-
-    if (navigator.onLine) {
-      if (badge) badge.className = "network-badge";
-      if (text) text.innerText = "Live Sync";
-    } else {
-      if (badge) badge.className = "network-badge offline";
-      if (text) text.innerText = "Offline Mode";
+    // Update live indicator text in compact location bar
+    const liveIndicator = document.querySelector(".live-indicator");
+    if (!navigator.onLine) {
+      if (liveIndicator) liveIndicator.style.color = "var(--brand-red)";
       window.showAppToast("Device offline. Tests will be saved locally.", "warning");
+    } else {
+      if (liveIndicator) liveIndicator.style.color = "var(--brand-green)";
     }
   }
 
@@ -970,5 +1046,16 @@ document.addEventListener("DOMContentLoaded", () => {
         closeAuthModal();
       }
     });
+  }
+
+  // Initialize deep-linked routing or default state
+  const initialHash = window.location.hash.replace("#", "");
+  if (initialHash) {
+    const targetScreen = `screen-${initialHash}`;
+    if (document.getElementById(targetScreen)) {
+      navigateToScreen(targetScreen, false);
+    }
+  } else if (window.history && window.history.replaceState) {
+    window.history.replaceState({ screen: "screen-home" }, "", "#home");
   }
 });

@@ -242,11 +242,21 @@ class PurePlateCamera {
       this.mediaStream = stream;
       if (this.videoEl) {
         this.videoEl.srcObject = stream;
-        this.videoEl.setAttribute("playsinline", "");
-        this.videoEl.setAttribute("autoplay", "");
+        this.videoEl.setAttribute("playsinline", "true");
+        this.videoEl.setAttribute("webkit-playsinline", "true");
+        this.videoEl.playsInline = true;
         this.videoEl.muted = true;
+        this.videoEl.autoplay = true;
         this.videoEl.style.display = "block";
-        await this.videoEl.play();
+
+        try {
+          await this.videoEl.play();
+        } catch (playErr) {
+          console.warn("[PurePlate Camera] play() awaiting loadedmetadata:", playErr);
+          this.videoEl.onloadedmetadata = () => {
+            this.videoEl.play().catch((e) => console.warn("play retry failed:", e));
+          };
+        }
       }
 
       if (this.canvasEl) {

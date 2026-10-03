@@ -107,6 +107,7 @@
 
     <!-- Top Status & Brand Header (DOCS Screen 1 Specification) -->
     <header class="app-header">
+      <div class="route-progress-bar" id="route-progress-bar"></div>
       <div class="header-content">
         <div class="brand-row">
           <div class="brand-mark">
@@ -124,21 +125,17 @@
               <span id="mb-user-icon">👤</span>
               <span class="sync-pulse-indicator" title="Cloud Sync Active"></span>
             </button>
-            <div class="network-badge" id="network-status" title="Network Status">
-              <span class="pulse-dot"></span>
-              <span id="network-text">Live Sync</span>
-            </div>
+            <button class="mb-auth-btn" id="btn-detect-loc" title="Detect GPS Location">
+              <span>📍</span>
+            </button>
           </div>
         </div>
 
-        <!-- Status Bar: Detected Region Widget (DOCS Screen 1: "📍 Athwa, Surat") -->
-        <div class="location-bar" id="location-bar">
-          <span class="loc-icon">📍</span>
-          <span class="loc-label">Active Region:</span>
-          <span class="loc-value" id="current-region-display">Athwa, Surat</span>
-          <button class="loc-refresh-btn" id="btn-detect-loc" title="Auto-detect GPS Location">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-          </button>
+        <!-- Location Region Compact Bar -->
+        <div class="location-bar-compact" id="location-bar">
+          <span class="loc-icon-sm">📍</span>
+          <span class="loc-value-sm" id="current-region-display">Athwa, Surat</span>
+          <span class="live-indicator"><span class="pulse-dot-sm"></span>Live</span>
         </div>
       </div>
     </header>
@@ -344,59 +341,6 @@
           <!-- Populated by JS -->
         </div>
 
-        <!-- The "Instruction Card" (Slide-up Bottom Sheet from DOCS Blueprint) -->
-        <div class="bottom-sheet-backdrop" id="instruction-sheet-backdrop">
-          <div class="instruction-sheet" id="instruction-sheet">
-            <div class="sheet-grabber"></div>
-
-            <div class="sheet-header">
-              <div class="sheet-icon-title">
-                <span class="sheet-item-icon" id="sheet-icon">🥛</span>
-                <div>
-                  <h3 id="sheet-title">Milk Starch Test</h3>
-                  <span class="sheet-adulterant" id="sheet-adulterant">Target: Added Starch / Detergent</span>
-                </div>
-              </div>
-              <button class="sheet-close" id="btn-close-sheet" title="Close">✕</button>
-            </div>
-
-            <div class="sheet-body">
-              <!-- Required Tools Box (From DOCS Screen 2) -->
-              <div class="tools-required-box">
-                <div class="tools-title">
-                  <span>🧪</span>
-                  <strong>You will need:</strong>
-                </div>
-                <ul class="tools-list" id="sheet-tools-list">
-                  <li>1 small transparent glass cup</li>
-                  <li>Tincture of Iodine solution (2-3 drops)</li>
-                  <li>3-5 ml milk sample (boiled &amp; cooled)</li>
-                </ul>
-              </div>
-
-              <!-- Science Principle -->
-              <div class="test-science-brief">
-                <span class="science-tag">Science Principle</span>
-                <p id="sheet-science-desc">
-                  Iodine reacts with amylose starch molecules to form a characteristic deep blue/purple charge-transfer complex. Pure milk remains creamy white or pale yellow.
-                </p>
-              </div>
-
-              <!-- Safety Advisory -->
-              <div class="safety-advisory">
-                <span>⚠️</span>
-                <span>Safe at-home protocol. For students, perform under adult supervision.</span>
-              </div>
-            </div>
-
-            <!-- Action Button: Bright Green "Launch Interactive Test" (From DOCS Screen 2) -->
-            <div class="sheet-footer">
-              <button class="btn-primary-action" id="btn-launch-camera-test">
-                <span>Launch Interactive Test</span>
-                <span class="btn-icon-right">📸 ➔</span>
-              </button>
-            </div>
-          </div>
         </div>
 
       </section>
@@ -673,8 +617,8 @@
         </div>
 
         <!-- Fullscreen Map Viewport -->
-        <div class="map-viewport-wrapper">
-          <div id="pureplate-leaflet-map"></div>
+        <div class="map-viewport-wrapper" id="map-viewport-wrapper">
+          <div id="pureplate-leaflet-map" style="width:100%;height:100%;min-height:380px;"></div>
 
           <!-- Map Legend Overlay (DOCS Screen 4 Specification) -->
           <div class="map-legend-box">
@@ -861,6 +805,76 @@
         <span class="nav-label">Learn &amp; Win</span>
       </button>
     </nav>
+
+    <!-- ============================================================
+         THE "INSTRUCTION CARD" MODAL (DOCS Screen 2 & Image 1 Refinement)
+         ============================================================ -->
+    <div class="bottom-sheet-backdrop" id="instruction-sheet-backdrop">
+      <div class="instruction-sheet" id="instruction-sheet">
+        <div class="sheet-grabber"></div>
+
+        <div class="sheet-header">
+          <div class="sheet-icon-title">
+            <div class="sheet-item-icon-box">
+              <span class="sheet-item-icon" id="sheet-icon">🥛</span>
+            </div>
+            <div class="sheet-text-wrap">
+              <h3 id="sheet-title">Milk Starch &amp; Thickener Test</h3>
+              <span class="sheet-adulterant" id="sheet-adulterant">Target: Added Starch / Potato Flour</span>
+            </div>
+          </div>
+          <button class="sheet-close" id="btn-close-sheet" title="Close">✕</button>
+        </div>
+
+        <div class="sheet-body">
+          <!-- Required Tools Box -->
+          <div class="tools-required-box">
+            <div class="tools-title">
+              <span class="tools-icon-pill">🧪</span>
+              <strong>You will need:</strong>
+            </div>
+            <ul class="tools-list" id="sheet-tools-list">
+              <li>
+                <span class="tool-check-icon">✓</span>
+                <span>1 small transparent glass cup</span>
+              </li>
+              <li>
+                <span class="tool-check-icon">✓</span>
+                <span>Tincture of Iodine solution (2-3 drops)</span>
+              </li>
+              <li>
+                <span class="tool-check-icon">✓</span>
+                <span>5 ml milk sample (boiled &amp; cooled)</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Science Principle -->
+          <div class="test-science-brief">
+            <div class="science-tag-row">
+              <span class="science-tag">SCIENCE PRINCIPLE</span>
+            </div>
+            <p id="sheet-science-desc">
+              Iodine (triiodide ion) slips inside the helical structure of amylose in starch, creating a charge-transfer complex that turns the liquid deep blue or purple. Pure milk does not react and stays white or pale yellowish.
+            </p>
+          </div>
+
+          <!-- Safety Advisory -->
+          <div class="safety-advisory">
+            <span class="safety-icon">⚠️</span>
+            <span>Safe at-home protocol. For students, perform under adult supervision.</span>
+          </div>
+        </div>
+
+        <!-- Action Button: Vibrant Green "Launch Interactive Test" -->
+        <div class="sheet-footer">
+          <button class="btn-primary-action" id="btn-launch-camera-test">
+            <span>Launch Interactive Test</span>
+            <span class="btn-icon-right">📸 ➔</span>
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- Global Toast Container -->
     <div class="app-toast-container" id="toast-container"></div>

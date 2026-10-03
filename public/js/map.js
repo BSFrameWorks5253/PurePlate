@@ -30,6 +30,13 @@ class PurePlateMap {
     const mapEl = document.getElementById("pureplate-leaflet-map");
     if (!mapEl || this.map) return;
 
+    // Ensure Leaflet is available
+    if (typeof L === "undefined") {
+      console.warn("[PurePlate Map] Leaflet not loaded yet, retrying...");
+      setTimeout(() => this.initMap(), 500);
+      return;
+    }
+
     // Load dynamic map configuration from secure .env API if available
     let customTileUrl = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
     let customAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
@@ -56,91 +63,104 @@ class PurePlateMap {
     this.map = L.map("pureplate-leaflet-map", {
       center: [this.centerLat, this.centerLng],
       zoom: this.currentZoom,
-      zoomControl: false
+      zoomControl: false,
+      preferCanvas: true
     });
 
     // Add zoom control at bottom right
     L.control.zoom({ position: "bottomright" }).addTo(this.map);
 
-    // Multi-Provider Base Layers (OpenFreeMap Vector Tiles & OpenStreetMap Raster)
+    // Multi-Provider Base Layers:
+    // CartoDB Voyager (clean, ultra-high-definition raster tiles)
+    this.cartoVoyager = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: "abcd",
+      maxZoom: 20
+    });
+
+    // CartoDB Dark Matter
+    this.cartoDark = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: "abcd",
+      maxZoom: 20
+    });
+
+    // Standard OpenStreetMap
     this.osmLayer = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 19
     });
 
-    // OpenFreeMap MapLibre GL Vector Tile Layers (No API key required, crisp Retina vector maps)
-    this.openFreeMapLiberty = null;
-    this.openFreeMapPositron = null;
-    if (typeof L.maplibreGL === "function") {
-      try {
-        this.openFreeMapLiberty = L.maplibreGL({
-          style: openFreeMapStyle,
-          attribution: '&copy; <a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        });
-        this.openFreeMapPositron = L.maplibreGL({
-          style: "https://tiles.openfreemap.org/styles/positron",
-          attribution: '&copy; <a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        });
-      } catch (err) {
-        console.warn("[PurePlate Map] OpenFreeMap vector layer init error:", err);
-      }
-    }
-
-    // Add default configured layer based on active theme
     const activeTheme = document.documentElement.getAttribute("data-theme") || "light";
-    if (activeTheme === "dark") {
-      if (this.openFreeMapPositron) {
-        this.openFreeMapPositron.addTo(this.map);
-      } else {
-        this.osmLayer.addTo(this.map);
-      }
-    } else {
-      if (this.openFreeMapLiberty) {
-        this.openFreeMapLiberty.addTo(this.map);
-      } else {
-        this.osmLayer.addTo(this.map);
-      }
-    }
+    this.currentBaseLayer = activeTheme === "dark" ? this.cartoDark : this.cartoVoyager;
+    this.currentBaseLayer.addTo(this.map);
 
-    // Layer Switcher Control (OpenFreeMap Liberty / Positron + OSM Standard)
-    const baseMaps = {};
-    if (this.openFreeMapLiberty) {
-      baseMaps["🗺️ OpenFreeMap Liberty"] = this.openFreeMapLiberty;
-      baseMaps["🕊️ OpenFreeMap Positron"] = this.openFreeMapPositron;
-    }
-    baseMaps["🌍 OpenStreetMap Standard"] = this.osmLayer;
+    // Layer Switcher Control
+    const baseMaps = {
+      "🗺️ CartoDB Voyager (Clear)": this.cartoVoyager,
+      "🌙 CartoDB Dark Matter": this.cartoDark,
+      "🌍 OpenStreetMap Standard": this.osmLayer
+    };
 
     L.control.layers(baseMaps, null, { position: "topleft", collapsed: true }).addTo(this.map);
 
     this.markersLayer = L.layerGroup().addTo(this.map);
     this.radarCirclesLayer = L.layerGroup().addTo(this.map);
 
-    // Invalidate size when screen becomes active
-    setTimeout(() => {
-      this.map.invalidateSize();
-    }, 400);
+    // Watch for when the map screen becomes visible and invalidate size
+    this._setupVisibilityWatcher();
+
+    // Trigger multiple invalidations to ensure proper tile coverage after layout transitions
+    requestAnimationFrame(() => { if (this.map) this.map.invalidateSize(); });
+    setTimeout(() => { if (this.map) this.map.invalidateSize(true); }, 200);
+    setTimeout(() => { if (this.map) this.map.invalidateSize(true); }, 500);
+    setTimeout(() => { if (this.map) this.map.invalidateSize(true); }, 1000);
+  }
+
+  _setupVisibilityWatcher() {
+    // Use MutationObserver to detect when heatmap screen becomes active
+    const screenEl = document.getElementById("screen-heatmap");
+    if (!screenEl) return;
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === "class" && screenEl.classList.contains("active")) {
+          requestAnimationFrame(() => {
+            if (this.map) {
+              this.map.invalidateSize(true);
+              this.renderIncidents();
+            }
+          });
+          setTimeout(() => {
+            if (this.map) this.map.invalidateSize(true);
+          }, 350);
+        }
+      });
+    });
+
+    observer.observe(screenEl, { attributes: true });
   }
 
   setTheme(theme) {
     if (!this.map) return;
     if (theme === "dark") {
-      if (this.openFreeMapLiberty && this.map.hasLayer(this.openFreeMapLiberty)) {
-        this.map.removeLayer(this.openFreeMapLiberty);
+      if (this.cartoVoyager && this.map.hasLayer(this.cartoVoyager)) {
+        this.map.removeLayer(this.cartoVoyager);
       }
-      if (this.openFreeMapPositron && !this.map.hasLayer(this.openFreeMapPositron)) {
-        this.openFreeMapPositron.addTo(this.map);
+      if (this.cartoDark && !this.map.hasLayer(this.cartoDark)) {
+        this.cartoDark.addTo(this.map);
       }
     } else {
-      if (this.openFreeMapPositron && this.map.hasLayer(this.openFreeMapPositron)) {
-        this.map.removeLayer(this.openFreeMapPositron);
+      if (this.cartoDark && this.map.hasLayer(this.cartoDark)) {
+        this.map.removeLayer(this.cartoDark);
       }
-      if (this.openFreeMapLiberty && !this.map.hasLayer(this.openFreeMapLiberty)) {
-        this.openFreeMapLiberty.addTo(this.map);
+      if (this.cartoVoyager && !this.map.hasLayer(this.cartoVoyager)) {
+        this.cartoVoyager.addTo(this.map);
       }
     }
     setTimeout(() => {
-      this.map.invalidateSize();
-    }, 200);
+      if (this.map) this.map.invalidateSize();
+    }, 150);
   }
 
   setupFilterChips() {
@@ -173,7 +193,7 @@ class PurePlateMap {
 
   locateUserGps() {
     if (navigator.geolocation) {
-      if (window.showAppToast) window.showAppToast("Detecting GPS position...", "info");
+      if (window.showAppToast) window.showAppToast("Detecting GPS coordinates...", "info");
       
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -183,26 +203,31 @@ class PurePlateMap {
           this.centerLng = lng;
 
           if (this.map) {
-            this.map.setView([lat, lng], 15);
-            L.circleMarker([lat, lng], {
-              radius: 8,
+            this.map.flyTo([lat, lng], 15, { duration: 1.2 });
+            if (this.userLocationMarker) {
+              this.map.removeLayer(this.userLocationMarker);
+            }
+            this.userLocationMarker = L.circleMarker([lat, lng], {
+              radius: 9,
               fillColor: "#0284c7",
               color: "#ffffff",
               weight: 3,
               opacity: 1,
               fillOpacity: 1
-            }).addTo(this.map).bindPopup("📍 <strong>Your Current Location</strong>").openPopup();
+            }).addTo(this.map).bindPopup("📍 <strong>Your Live Location</strong>").openPopup();
           }
 
           const regEl = document.getElementById("current-region-display");
           if (regEl) regEl.innerText = `GPS: ${lat.toFixed(3)}, ${lng.toFixed(3)}`;
 
-          if (window.showAppToast) window.showAppToast("Location updated successfully!", "success");
+          if (window.showAppToast) window.showAppToast("📍 Location locked successfully!", "success");
         },
         (err) => {
           console.warn("GPS error:", err);
-          if (window.showAppToast) window.showAppToast("GPS permission denied. Using default Surat region.", "warning");
-        }
+          if (window.showAppToast) window.showAppToast("GPS permission denied. Using Surat center.", "warning");
+          if (this.map) this.map.flyTo([this.centerLat, this.centerLng], 14);
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
       );
     }
   }
@@ -358,8 +383,13 @@ class PurePlateMap {
   }
 
   refresh() {
+    if (!this.map) {
+      this.initMap();
+    }
     if (this.map) {
-      this.map.invalidateSize();
+      this.map.invalidateSize(true);
+      setTimeout(() => { if (this.map) this.map.invalidateSize(true); }, 150);
+      setTimeout(() => { if (this.map) this.map.invalidateSize(true); }, 400);
       this.renderIncidents();
       this.renderRecentFeed();
     }

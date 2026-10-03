@@ -46,7 +46,7 @@
   --border-teal:    rgba(13, 148, 136, 0.35);
 
   /* Dimensions & Spacing */
-  --screen-pad:    16px;
+  --screen-pad:    clamp(12px, 3.8vw, 20px);
   --card-radius:   18px;
   --btn-radius:    14px;
   --nav-height:    70px;
@@ -277,10 +277,37 @@ ul { list-style: none; }
   top: 0;
   z-index: 100;
   background: var(--bg-nav);
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
   border-bottom: 1px solid var(--border-subtle);
-  padding: 14px var(--screen-pad) 10px;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) var(--screen-pad) 10px;
+  padding-left: max(var(--screen-pad), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--screen-pad), env(safe-area-inset-right, 0px));
   flex-shrink: 0;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+
+/* ── Top Route Progress Bar ── */
+.route-progress-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2.5px;
+  background: linear-gradient(90deg, var(--brand-teal), #38bdf8, #818cf8);
+  width: 0%;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1000;
+  transition: width 0.24s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+  box-shadow: 0 0 10px rgba(0, 240, 192, 0.8);
+}
+.route-progress-bar.loading {
+  opacity: 1;
+  width: 75%;
+}
+.route-progress-bar.finished {
+  width: 100%;
+  opacity: 1;
+  transition: width 0.15s ease, opacity 0.25s ease 0.1s;
 }
 
 .brand-row {
@@ -338,29 +365,38 @@ ul { list-style: none; }
 }
 .network-badge.offline .pulse-dot { background: var(--brand-red); }
 
-/* Status Bar: Detected Location Widget */
-.location-bar {
+/* ── Compact Location Bar (replaces old bulky location-bar) ── */
+.location-bar-compact {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 10px;
-  background: rgba(59, 130, 246, 0.08);
-  border: 1px solid rgba(59, 130, 246, 0.18);
-  padding: 8px 12px;
-  border-radius: 12px;
-  font-size: 12px;
+  margin-top: 8px;
+  padding: 6px 12px;
+  background: linear-gradient(90deg, rgba(59,130,246,0.07) 0%, rgba(13,148,136,0.07) 100%);
+  border-radius: 20px;
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  font-size: 11.5px;
 }
-.loc-icon  { font-size: 14px; }
-.loc-label { color: var(--text-muted); font-weight: 500; }
-.loc-value { color: #60a5fa; font-weight: 700; flex: 1; }
-.loc-refresh-btn {
-  width: 26px; height: 26px; border-radius: 8px;
-  background: rgba(59, 130, 246, 0.14);
-  display: flex; align-items: center; justify-content: center;
-  color: #60a5fa;
-  transition: all 0.2s;
+.loc-icon-sm { font-size: 13px; flex-shrink: 0; }
+.loc-value-sm { color: #60a5fa; font-weight: 700; flex: 1; }
+[data-theme="dark"] .loc-value-sm { color: #38bdf8; }
+.live-indicator {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10px; font-weight: 800;
+  color: var(--brand-green); letter-spacing: 0.3px;
 }
-.loc-refresh-btn:hover { background: rgba(59, 130, 246, 0.25); }
+.pulse-dot-sm {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--brand-green);
+  animation: pulse-glow 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+/* Old location-bar kept for JS compatibility but hidden */
+.location-bar {
+  display: none !important;
+}
+
 
 /* ── 7. Screens Viewport ── */
 .screens-viewport {
@@ -372,24 +408,27 @@ ul { list-style: none; }
 .app-screen {
   display: none;
   flex-direction: column;
-  min-height: calc(100dvh - var(--nav-height) - 120px);
+  min-height: calc(100dvh - var(--nav-height) - 100px);
   overflow-y: auto;
   overflow-x: hidden;
   padding: var(--screen-pad);
-  padding-bottom: 24px;
+  padding-left: max(var(--screen-pad), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--screen-pad), env(safe-area-inset-right, 0px));
+  padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 201, 167, 0.2) transparent;
+  scrollbar-color: rgba(0, 201, 167, 0.25) transparent;
+  -webkit-overflow-scrolling: touch;
 }
-.app-screen::-webkit-scrollbar { width: 4px; }
-.app-screen::-webkit-scrollbar-thumb { background: rgba(0, 201, 167, 0.2); border-radius: 2px; }
+.app-screen::-webkit-scrollbar { width: 3px; }
+.app-screen::-webkit-scrollbar-thumb { background: rgba(0, 201, 167, 0.25); border-radius: 2px; }
 
 .app-screen.active {
   display: flex;
-  animation: screen-in 0.28s var(--ease-smooth) both;
+  animation: screen-in 0.32s var(--ease-smooth) both;
 }
 
 @keyframes screen-in {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -403,10 +442,12 @@ ul { list-style: none; }
   display: flex;
   background: var(--bg-nav);
   border-top: 1px solid var(--border-subtle);
-  backdrop-filter: blur(20px);
-  height: var(--nav-height);
-  padding: 0 6px;
-  padding-bottom: env(safe-area-inset-bottom, 0);
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  height: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
+  padding: 0 max(4px, env(safe-area-inset-left, 0px));
+  padding-right: max(4px, env(safe-area-inset-right, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   flex-shrink: 0;
 }
 
@@ -421,23 +462,39 @@ ul { list-style: none; }
   border-radius: 12px;
   color: var(--text-muted);
   position: relative;
-  transition: all 0.2s var(--ease-smooth);
+  transition: color 0.2s ease, transform 0.2s var(--ease-spring);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
-
+.nav-item:active {
+  transform: scale(0.9);
+}
 .nav-item.active {
+  color: var(--brand-teal);
+}
+.nav-item.active .nav-icon {
+  transform: scale(1.15);
+  filter: drop-shadow(0 2px 8px var(--brand-teal-glow));
+}
+.nav-item .nav-icon {
+  font-size: 22px; line-height: 1;
+  transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.24s ease;
+}
+.nav-item.active .nav-label {
+  font-weight: 800;
   color: var(--brand-teal);
 }
 .nav-item.active::before {
   content: '';
   position: absolute;
   top: 4px;
-  width: 20px; height: 3px;
-  background: var(--brand-teal);
-  border-radius: 0 0 3px 3px;
-  box-shadow: 0 2px 8px rgba(0, 201, 167, 0.5);
+  width: 22px; height: 3px;
+  background: linear-gradient(90deg, var(--brand-teal), #38bdf8);
+  border-radius: 99px;
+  box-shadow: 0 2px 10px rgba(0, 201, 167, 0.6);
 }
 
-.nav-icon  { font-size: 22px; line-height: 1; }
 .nav-label { font-size: 10px; font-weight: 700; letter-spacing: 0.2px; }
 
 /* ── 9. Screen Top Nav ── */
@@ -452,15 +509,25 @@ ul { list-style: none; }
 .btn-back {
   width: 38px; height: 38px;
   background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
   border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
   color: var(--text-primary);
   flex-shrink: 0;
   margin-top: 2px;
-  border: 1px solid var(--border-subtle);
-  transition: all 0.2s;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
-.btn-back:hover { background: var(--bg-card-hover); }
+.btn-back:hover {
+  background: var(--bg-card-2);
+  transform: translateX(-2px);
+  border-color: var(--brand-teal);
+  color: var(--brand-teal);
+}
+.btn-back:active {
+  transform: scale(0.92);
+}
 
 .screen-top-title { flex: 1; }
 .screen-top-title h2 {
@@ -1070,16 +1137,17 @@ ul { list-style: none; }
   transform: translateX(3px); color: var(--brand-teal);
 }
 
-/* Bottom Sheet / Instruction Card Modal */
+/* ── Modern Instruction Card Bottom Sheet Modal (Image 1 Refinement) ── */
 .bottom-sheet-backdrop {
-  position: fixed; inset: 0; z-index: 500;
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(10px);
-  display: none; align-items: flex-end;
-  opacity: 0; transition: opacity 0.25s;
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  display: none; align-items: flex-end; justify-content: center;
+  opacity: 0; transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 [data-theme="dark"] .bottom-sheet-backdrop {
-  background: rgba(4, 8, 16, 0.78);
+  background: rgba(4, 8, 16, 0.82);
 }
 .bottom-sheet-backdrop.active,
 .bottom-sheet-backdrop.visible {
@@ -1087,20 +1155,23 @@ ul { list-style: none; }
 }
 
 .instruction-sheet {
-  width: 100%; max-width: 440px; margin: 0 auto;
-  background: var(--bg-surface);
-  border-radius: 24px 24px 0 0;
-  border-top: 1px solid var(--border-subtle);
-  border-left: 1px solid var(--border-subtle);
-  border-right: 1px solid var(--border-subtle);
-  max-height: 88dvh;
+  width: 100%; max-width: 480px; margin: 0 auto;
+  background: #ffffff;
+  border-radius: 28px 28px 0 0;
+  border-top: 1px solid rgba(226, 232, 240, 0.9);
+  border-left: 1px solid rgba(226, 232, 240, 0.9);
+  border-right: 1px solid rgba(226, 232, 240, 0.9);
+  max-height: 90dvh;
   overflow-y: auto;
-  box-shadow: 0 -16px 40px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 -20px 50px -10px rgba(0, 0, 0, 0.2);
   transform: translateY(100%);
-  transition: transform 0.35s var(--ease-spring);
+  transition: transform 0.38s cubic-bezier(0.2, 0.9, 0.3, 1);
+  overscroll-behavior: contain;
 }
 [data-theme="dark"] .instruction-sheet {
-  box-shadow: 0 -16px 50px rgba(0, 0, 0, 0.7), var(--glass-specular);
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.8), var(--glass-specular);
 }
 .bottom-sheet-backdrop.active .instruction-sheet,
 .bottom-sheet-backdrop.visible .instruction-sheet {
@@ -1108,92 +1179,182 @@ ul { list-style: none; }
 }
 
 .sheet-grabber {
-  width: 44px; height: 4px;
-  background: var(--border-subtle); border-radius: 2px;
-  margin: 12px auto 0;
+  width: 38px; height: 4.5px;
+  background: #cbd5e1; border-radius: 99px;
+  margin: 12px auto 4px;
+}
+[data-theme="dark"] .sheet-grabber {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .sheet-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 20px 12px;
-  border-bottom: 1px solid var(--border-subtle);
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid #f1f5f9;
 }
-.sheet-icon-title { display: flex; align-items: center; gap: 12px; }
-.sheet-item-icon { font-size: 34px; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.1)); }
-.sheet-header h3 { font-size: 17px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.2px; }
-.sheet-adulterant { font-size: 11.5px; color: var(--text-muted); font-weight: 500; }
+[data-theme="dark"] .sheet-header {
+  border-color: rgba(255, 255, 255, 0.07);
+}
+.sheet-icon-title { display: flex; align-items: center; gap: 14px; }
+.sheet-item-icon-box {
+  width: 48px; height: 48px; border-radius: 14px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(6, 182, 212, 0.08));
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.sheet-item-icon { font-size: 26px; }
+.sheet-text-wrap h3 {
+  font-size: 18px; font-weight: 800;
+  font-family: 'Outfit', sans-serif;
+  color: #0f172a; letter-spacing: -0.3px; line-height: 1.25;
+}
+[data-theme="dark"] .sheet-text-wrap h3 {
+  color: #f8fafc;
+}
+.sheet-adulterant {
+  font-size: 12px; color: #64748b;
+  font-weight: 600; margin-top: 2px; display: block;
+}
+[data-theme="dark"] .sheet-adulterant {
+  color: #94a3b8;
+}
+
 .sheet-close {
-  width: 32px; height: 32px; border-radius: 50%;
-  background: var(--bg-card-2); color: var(--text-secondary);
-  display: flex; align-items: center; justify-content: center; font-size: 14px;
-  border: 1px solid var(--border-subtle);
-  transition: all 0.2s;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: #f1f5f9; color: #475569;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-spring);
 }
-.sheet-close:hover { background: var(--border-subtle); color: var(--text-primary); }
+[data-theme="dark"] .sheet-close {
+  background: rgba(255, 255, 255, 0.07);
+  color: #94a3b8;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.sheet-close:hover {
+  background: #e2e8f0; color: #0f172a;
+  transform: scale(1.08);
+}
+[data-theme="dark"] .sheet-close:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
 
-.sheet-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+.sheet-body {
+  padding: 18px 20px;
+  display: flex; flex-direction: column; gap: 14px;
+}
 
+/* 1. You will need Box */
 .tools-required-box {
-  background: var(--bg-card-2); border-radius: 14px; padding: 15px;
-  border: 1px solid var(--border-subtle);
+  background: #f8fafc;
+  border-radius: 18px; padding: 16px 18px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
-.tools-title { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 13.5px; font-weight: 800; color: var(--text-primary); }
-.tools-list { display: flex; flex-direction: column; gap: 7px; }
+[data-theme="dark"] .tools-required-box {
+  background: rgba(30, 41, 59, 0.5);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+.tools-title {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 12px; font-size: 13.5px; font-weight: 800;
+  color: #0f172a;
+}
+[data-theme="dark"] .tools-title {
+  color: #f1f5f9;
+}
+.tools-icon-pill { font-size: 15px; }
+.tools-list {
+  display: flex; flex-direction: column; gap: 9px;
+  padding: 0; margin: 0; list-style: none;
+}
 .tools-list li {
-  font-size: 12px; color: var(--text-secondary);
-  padding-left: 18px; position: relative; line-height: 1.45;
+  font-size: 13px; font-weight: 500; color: #334155;
+  display: flex; align-items: flex-start; gap: 10px;
+  line-height: 1.45;
 }
-.tools-list li::before {
-  content: '✓'; color: var(--brand-teal); font-weight: 800;
-  position: absolute; left: 2px;
+[data-theme="dark"] .tools-list li {
+  color: #cbd5e1;
+}
+.tool-check-icon {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: rgba(16, 185, 129, 0.16); color: #059669;
+  font-weight: 900; font-size: 11px;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1.5px;
+}
+[data-theme="dark"] .tool-check-icon {
+  background: rgba(16, 185, 129, 0.22); color: #34d399;
 }
 
+/* 2. Science Principle Box */
 .test-science-brief {
-  background: #eff6ff; border-radius: 14px; padding: 15px;
+  background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+  border-radius: 18px; padding: 16px 18px;
   border: 1px solid #bfdbfe;
 }
 [data-theme="dark"] .test-science-brief {
-  background: rgba(59, 130, 246, 0.08);
-  border-color: rgba(59, 130, 246, 0.2);
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.2), rgba(15, 118, 110, 0.15));
+  border-color: rgba(59, 130, 246, 0.25);
 }
+.science-tag-row { margin-bottom: 9px; }
 .science-tag {
-  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+  font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px;
   color: #1d4ed8; background: #dbeafe;
-  padding: 3px 8px; border-radius: 10px; display: inline-block; margin-bottom: 8px;
+  padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center;
+  border: 1px solid rgba(59, 130, 246, 0.2);
 }
 [data-theme="dark"] .science-tag {
-  color: #60a5fa; background: rgba(59, 130, 246, 0.16);
+  color: #60a5fa; background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(59, 130, 246, 0.3);
 }
-.test-science-brief p { font-size: 12px; color: #1e40af; line-height: 1.6; }
-[data-theme="dark"] .test-science-brief p { color: #cbd5e1; }
+.test-science-brief p {
+  font-size: 12.5px; color: #1e3a8a; line-height: 1.62;
+  font-weight: 500; margin: 0;
+}
+[data-theme="dark"] .test-science-brief p {
+  color: #cbd5e1;
+}
 
+/* 3. Safety Advisory Box */
 .safety-advisory {
-  display: flex; align-items: flex-start; gap: 8px;
-  font-size: 12px; color: #92400e;
-  background: #fffbeb; border-radius: 12px;
-  padding: 11px 14px; border: 1px solid #fde68a;
+  display: flex; align-items: center; gap: 11px;
+  font-size: 12px; font-weight: 600; color: #92400e;
+  background: #fffbeb; border-radius: 16px;
+  padding: 13px 16px; border: 1px solid #fef08a;
+  line-height: 1.45;
 }
 [data-theme="dark"] .safety-advisory {
   background: rgba(245, 158, 11, 0.1);
   border-color: rgba(245, 158, 11, 0.22);
   color: #fde047;
 }
+.safety-icon { font-size: 16px; flex-shrink: 0; }
 
-.sheet-footer { padding: 14px 20px 22px; }
+.sheet-footer { padding: 14px 20px 24px; }
 
-/* Launch Interactive Test Button (Bright Green from DOCS Screen 2) */
+/* 4. Action Button: Bright Green "Launch Interactive Test" */
 .btn-primary-action {
   display: flex; align-items: center; justify-content: center; gap: 10px;
-  width: 100%; padding: 16px;
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: #fff; font-size: 15px; font-weight: 800;
-  border-radius: var(--btn-radius);
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
-  transition: all 0.22s var(--ease-spring);
+  width: 100%; padding: 16px 24px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff; font-size: 15.5px; font-weight: 800;
+  border-radius: 18px; border: none; cursor: pointer;
+  box-shadow: 0 10px 25px -4px rgba(16, 185, 129, 0.45), 0 4px 10px rgba(16, 185, 129, 0.2);
+  transition: all 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
+  letter-spacing: -0.2px;
 }
 .btn-primary-action:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(16, 185, 129, 0.5);
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 14px 30px -4px rgba(16, 185, 129, 0.55), 0 6px 14px rgba(16, 185, 129, 0.25);
+}
+.btn-primary-action:active {
+  transform: scale(0.98);
 }
 .btn-icon-right { font-size: 16px; }
 
@@ -1769,7 +1930,13 @@ ul { list-style: none; }
 
 #screen-heatmap {
   padding: 0;
-  display: flex; flex-direction: column;
+}
+#screen-heatmap.active {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - var(--nav-height) - 68px);
+  overflow: hidden;
+  padding: 0;
 }
 
 #screen-heatmap .screen-top-nav {
@@ -1810,13 +1977,16 @@ ul { list-style: none; }
 
 .map-viewport-wrapper {
   flex: 1; position: relative;
-  min-height: 300px;
+  min-height: 380px;
 }
 
 #pureplate-leaflet-map {
-  width: 100%; height: 100%;
-  min-height: 300px;
+  width: 100% !important; 
+  height: 100% !important;
+  min-height: 380px;
   background: #e2e8f0;
+  position: absolute !important;
+  inset: 0;
 }
 [data-theme="dark"] #pureplate-leaflet-map {
   background: #080d1a;
@@ -1824,6 +1994,7 @@ ul { list-style: none; }
 .leaflet-tile-pane {
   transition: opacity 0.25s ease;
 }
+
 
 /* Custom Glassmorphic Leaflet Controls */
 .leaflet-control-layers {
@@ -2437,73 +2608,163 @@ ul { list-style: none; }
    RESPONSIVE LAYOUTS & MEDIA QUERIES
    ============================================================ */
 
-/* Desktop Screens >820px */
-@media (min-width: 820px) {
-  body { padding-top: 0; }
-  .desktop-top-bar { display: flex; }
+/* ============================================================
+   RESPONSIVE DESIGN SYSTEM — ALL PHONE SIZES & SCREENS
+   ============================================================ */
 
-  /* Expanded Desktop Mode (Workbench Style) */
-  .app-frame.frame-expanded {
-    max-width: min(1200px, 94vw);
-    min-height: calc(100dvh - 86px);
-    border-radius: 20px;
-    border: 1px solid var(--border-subtle);
-    margin: 14px auto;
-    box-shadow: 0 16px 60px rgba(0, 0, 0, 0.7), var(--shadow-glow);
+/* ── 1. Small Phones (≤375px: iPhone SE, Mini, Galaxy A-series, Fold cover) ── */
+@media (max-width: 375px) {
+  :root {
+    --screen-pad: 11px;
+    --card-radius: 14px;
+    --nav-height: 64px;
   }
 
-  .app-frame.frame-expanded .screens-viewport {
-    display: block;
+  .brand-title { font-size: 18px; }
+  .brand-tagline { font-size: 10px; }
+  .logo-shield { font-size: 24px; }
+  .mb-auth-btn { width: 30px; height: 30px; font-size: 13px; }
+  .header-badges { gap: 5px; }
+
+  /* Compact location bar */
+  .location-bar-compact {
+    padding: 5px 10px;
+    font-size: 11px;
+    gap: 6px;
+  }
+  .loc-value-sm {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  .app-frame.frame-expanded #screen-home {
-    max-width: 920px;
-    margin: 0 auto;
-    width: 100%;
+  /* Purity Gauge Hero Card */
+  .purity-gauge-card {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+  .gauge-ring-outer {
+    width: 72px; height: 72px;
+  }
+  .gauge-score-value {
+    font-size: 20px;
+  }
+  .gauge-title {
+    font-size: 13.5px;
+  }
+  .gauge-description {
+    font-size: 11px;
   }
 
-  .app-frame.frame-expanded #screen-home .action-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
+  /* Action Cards on Home */
+  .action-grid {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .action-tile {
+    padding: 13px 10px;
+    min-height: 155px;
+    gap: 7px;
+  }
+  .tile-icon { font-size: 28px; }
+  .tile-title { font-size: 13.5px; }
+  .tile-desc { font-size: 10.5px; -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* Stats Row */
+  .stats-row { gap: 6px; margin-bottom: 12px; }
+  .stat-pill { padding: 9px 3px; min-width: 0; }
+  .stat-val { font-size: 16px; }
+  .stat-lbl { font-size: 8.5px; }
+
+  /* Food Cards Grid */
+  .food-card {
+    padding: 11px 10px;
+    gap: 10px;
+  }
+  .food-card-icon { font-size: 26px; }
+  .food-card-name { font-size: 13.5px; }
+  .food-card-adulterant { font-size: 11px; }
+
+  /* Camera Choice Buttons */
+  .choice-buttons-grid {
+    gap: 8px;
+  }
+  .color-verdict-btn {
+    padding: 11px 8px;
+    gap: 6px;
+  }
+  .swatch-circle {
+    width: 36px; height: 36px;
+  }
+  .color-btn-title {
+    font-size: 12px;
+  }
+  .color-btn-desc {
+    font-size: 10px;
   }
 
-  .app-frame.frame-expanded #screen-selection {
-    max-width: 920px;
-    margin: 0 auto;
-    width: 100%;
+  /* Camera viewport */
+  .camera-lens-container {
+    max-height: 48vh;
+  }
+  .camera-lens-toolbar {
+    gap: 4px;
+    left: 4px; right: 4px; bottom: 4px;
+  }
+  .cam-lens-btn {
+    font-size: 10px;
+    padding: 6px 6px;
   }
 
-  .app-frame.frame-expanded #screen-selection .food-cards-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
+  /* Instruction Sheet Modal */
+  .instruction-sheet {
+    border-radius: 24px 24px 0 0;
+  }
+  .sheet-header {
+    padding: 13px 14px 11px;
+  }
+  .sheet-item-icon-box {
+    width: 42px; height: 42px;
+  }
+  .sheet-text-wrap h3 {
+    font-size: 16px;
+  }
+  .sheet-body {
+    padding: 13px 14px;
+    gap: 10px;
+  }
+  .tools-required-box,
+  .test-science-brief,
+  .safety-advisory {
+    padding: 12px 13px;
+    border-radius: 14px;
+  }
+  .sheet-footer {
+    padding: 10px 14px max(14px, env(safe-area-inset-bottom, 14px));
+  }
+  .btn-primary-action {
+    padding: 14px 16px;
+    font-size: 14.5px;
   }
 
-  .app-frame.frame-expanded .test-wizard-container {
-    max-width: 540px;
-    margin: 0 auto;
+  /* Bottom Navigation */
+  .app-bottom-nav {
+    padding: 0 2px;
   }
-
-  .app-frame.frame-expanded #screen-heatmap {
-    max-width: 1020px;
-    margin: 0 auto;
-    width: 100%;
+  .nav-item {
+    padding: 6px 2px;
+    gap: 2px;
   }
-
-  .app-frame.frame-expanded #screen-heatmap .map-viewport-wrapper {
-    min-height: 460px;
-  }
-
-  .app-frame.frame-expanded #screen-learning {
-    max-width: 860px;
-    margin: 0 auto;
-    width: 100%;
-  }
+  .nav-icon { font-size: 20px; }
+  .nav-label { font-size: 9px; letter-spacing: 0; }
 }
 
-/* Mobile Screens <819px */
-@media (max-width: 819px) {
-  body { align-items: stretch; }
+/* ── 2. Standard Mobile Phones (376px to 479px: iPhone 13-16, Galaxy S-series, Pixel) ── */
+@media (min-width: 376px) and (max-width: 479px) {
+  :root {
+    --screen-pad: 15px;
+    --nav-height: 68px;
+  }
   .app-frame {
     max-width: 100%;
     border-radius: 0 !important;
@@ -2512,6 +2773,175 @@ ul { list-style: none; }
     margin: 0 !important;
   }
   .desktop-top-bar { display: none !important; }
+}
+
+/* ── 3. Large Phones & Foldables (480px to 767px: Pro Max, Fold Unfolded) ── */
+@media (min-width: 480px) and (max-width: 767px) {
+  :root {
+    --screen-pad: 18px;
+  }
+  body {
+    background-color: var(--bg-app);
+  }
+  .app-frame {
+    max-width: 520px;
+    margin: 0 auto;
+    border-left: 1px solid var(--border-subtle);
+    border-right: 1px solid var(--border-subtle);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  }
+  .desktop-top-bar { display: none !important; }
+
+  .food-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .action-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+}
+
+/* ── 4. Tablets & Medium Desktops (768px to 1024px: iPads, Small Laptops) ── */
+@media (min-width: 768px) and (max-width: 1024px) {
+  :root {
+    --screen-pad: 22px;
+  }
+  body { padding-top: 0; }
+  .desktop-top-bar { display: flex; }
+
+  .app-frame.frame-expanded {
+    max-width: min(880px, 92vw);
+    min-height: calc(100dvh - 84px);
+    border-radius: 22px;
+    border: 1px solid var(--border-subtle);
+    margin: 14px auto;
+    box-shadow: 0 16px 50px rgba(0, 0, 0, 0.4), var(--shadow-glow);
+  }
+
+  .app-frame.frame-expanded #screen-home .action-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .app-frame.frame-expanded #screen-selection .food-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .app-frame.frame-expanded #screen-heatmap .map-viewport-wrapper {
+    min-height: 480px;
+  }
+}
+
+/* ── 5. Large Desktops & Workstations (≥1025px) ── */
+@media (min-width: 1025px) {
+  body { padding-top: 0; }
+  .desktop-top-bar { display: flex; }
+
+  .app-frame.frame-expanded {
+    max-width: min(1140px, 92vw);
+    min-height: calc(100dvh - 86px);
+    border-radius: 24px;
+    border: 1px solid var(--border-subtle);
+    margin: 16px auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), var(--shadow-glow);
+  }
+
+  .app-frame.frame-expanded .screens-viewport {
+    display: block;
+  }
+  .app-frame.frame-expanded #screen-home {
+    max-width: 960px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .app-frame.frame-expanded #screen-home .action-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .app-frame.frame-expanded #screen-selection {
+    max-width: 960px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .app-frame.frame-expanded #screen-selection .food-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .app-frame.frame-expanded .test-wizard-container {
+    max-width: 560px;
+    margin: 0 auto;
+  }
+  .app-frame.frame-expanded #screen-heatmap {
+    max-width: 1040px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .app-frame.frame-expanded #screen-heatmap .map-viewport-wrapper {
+    min-height: 520px;
+  }
+  .app-frame.frame-expanded #screen-learning {
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}
+
+/* ── 6. Floating Dialog Modal on Tablets & Desktops (≥640px) ── */
+@media (min-width: 640px) {
+  .bottom-sheet-backdrop {
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .instruction-sheet {
+    border-radius: 24px !important;
+    border: 1px solid rgba(226, 232, 240, 0.9) !important;
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.35) !important;
+    transform: translateY(20px) scale(0.96);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.3s ease;
+    max-height: 85vh;
+  }
+  [data-theme="dark"] .instruction-sheet {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.8) !important;
+  }
+  .bottom-sheet-backdrop.active .instruction-sheet,
+  .bottom-sheet-backdrop.visible .instruction-sheet {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* ── 7. Landscape Phone Orientations (Short Height ≤520px) ── */
+@media (max-height: 520px) and (orientation: landscape) {
+  .app-header {
+    padding: 6px var(--screen-pad);
+  }
+  .brand-title { font-size: 17px; }
+  .brand-tagline { display: none; }
+  .location-bar-compact { margin-top: 4px; padding: 4px 8px; }
+
+  .app-bottom-nav {
+    height: 52px;
+  }
+  .nav-item {
+    padding: 4px;
+    flex-direction: row;
+    gap: 5px;
+  }
+  .nav-icon { font-size: 16px; }
+  .nav-label { font-size: 10px; }
+
+  .camera-lens-container {
+    max-height: 52vh;
+  }
+  .instruction-sheet {
+    max-height: 92dvh;
+  }
 }
 
 /* ============================================================
