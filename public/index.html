@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>PurePlate — Citizen Food Safety Network</title>
+
+  <!-- Enterprise Security & Privacy Controls -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Permissions-Policy" content="camera=(self), geolocation=(self), accelerometer=(self), gyroscope=(self)">
+
+  <!-- PWA Meta Tags for iOS & Android -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="PurePlate">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+
+  <!-- Google Fonts: Outfit & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Leaflet CSS & JS for Heat Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Canvas Confetti for Gamification celebration -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- ============================================================
+       TOP GLOBAL DESKTOP HEADER BAR (Visible on Laptop / Desktop screens >820px)
+       ============================================================ -->
+  <header class="desktop-top-bar" id="desktop-top-bar">
+    <div class="dt-brand">
+      <div class="dt-logo-wrap">
+        <span class="dt-logo">🛡️</span>
+      </div>
+      <div class="dt-titles">
+        <div class="dt-title-row">
+          <span class="dt-name">PurePlate</span>
+          <span class="dt-badge">Citizen Network</span>
+        </div>
+        <span class="dt-sub">Food Adulteration Testing & Regional Security Grid • Surat, India</span>
+      </div>
+    </div>
+
+    <!-- Center Viewport Switcher -->
+    <div class="dt-center-controls">
+      <div class="view-mode-toggle" id="view-mode-toggle">
+        <button class="v-mode-btn" id="btn-mode-mobile" title="Switch to Mobile Phone View">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="5" y="2" width="14" height="20" rx="3"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          <span>Phone View</span>
+        </button>
+        <button class="v-mode-btn active" id="btn-mode-desktop" title="Switch to Expanded Desktop Workbench">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <span>Expanded Desktop</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Controls -->
+    <div class="dt-right-actions">
+      <button class="dt-btn" id="btn-toggle-theme" title="Toggle Theme (Light / Dark)">
+        <span id="theme-toggle-icon">☀️</span>
+        <span id="theme-toggle-label">Light Mode</span>
+      </button>
+
+      <button class="dt-btn" id="btn-toggle-sound" title="Toggle Sound Feedback">
+        <span id="sound-icon">🔊</span>
+        <span id="sound-label">Audio On</span>
+      </button>
+
+      <button class="dt-btn dt-btn-auth" id="dt-user-btn" title="Sign In with Email to Sync Data Across Devices">
+        <span class="auth-avatar" id="dt-user-avatar">👤</span>
+        <span class="auth-label" id="dt-user-email">Sign In / Sync</span>
+        <span class="sync-pulse-indicator" title="Cloud Sync Active"></span>
+      </button>
+
+      <button class="dt-btn dt-btn-accent" id="btn-show-qr" title="Scan to open on your phone">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Mobile QR</span>
+      </button>
+
+      <div class="dt-network-pill">
+        <span class="pulse-dot"></span>
+        <span>Surat Node: Online</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       APP CONTAINER / FRAME
+       ============================================================ -->
+  <div id="app-container" class="app-frame frame-expanded">
+
+    <!-- Top Status & Brand Header (DOCS Screen 1 Specification) -->
+    <header class="app-header">
+      <div class="header-content">
+        <div class="brand-row">
+          <div class="brand-mark">
+            <span class="logo-shield">🛡️</span>
+            <div class="brand-names">
+              <h1 class="brand-title">PurePlate</h1>
+              <span class="brand-tagline">Citizen Food Safety Network</span>
+            </div>
+          </div>
+          <div class="header-badges">
+            <button class="mb-auth-btn" id="mb-theme-btn" title="Toggle Theme (Light / Dark)">
+              <span id="mb-theme-icon">☀️</span>
+            </button>
+            <button class="mb-auth-btn" id="mb-user-btn" title="Sign In with Email to Sync Data Across Devices">
+              <span id="mb-user-icon">👤</span>
+              <span class="sync-pulse-indicator" title="Cloud Sync Active"></span>
+            </button>
+            <div class="network-badge" id="network-status" title="Network Status">
+              <span class="pulse-dot"></span>
+              <span id="network-text">Live Sync</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status Bar: Detected Region Widget (DOCS Screen 1: "📍 Athwa, Surat") -->
+        <div class="location-bar" id="location-bar">
+          <span class="loc-icon">📍</span>
+          <span class="loc-label">Active Region:</span>
+          <span class="loc-value" id="current-region-display">Athwa, Surat</span>
+          <button class="loc-refresh-btn" id="btn-detect-loc" title="Auto-detect GPS Location">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Screens Viewport Container -->
+    <main class="screens-viewport">
+
+      <!-- ============================================================
+           SCREEN 1: THE "HOME HUB" (DASHBOARD)
+           From DOCS Screen 1 Blueprint:
+           - PurePlate Logo + Tagline
+           - Status Bar with detected region
+           - Main Action Buttons: 2 large, colorful grid tiles
+             * Test Food Quality (Milk bottle/microscope icon) -> Screen 2
+             * View Safety Heat Map (Map pin radar icon) -> Screen 4
+           - Footer navigation
+           ============================================================ -->
+      <section id="screen-home" class="app-screen active">
+
+        <!-- Live Alert Bulletin -->
+        <div class="community-ticker-card">
+          <div class="ticker-header">
+            <span class="ticker-pulse">🚨</span>
+            <span class="ticker-title">Surat Food Quality Bulletin</span>
+            <span class="ticker-time">Updated 5m ago</span>
+          </div>
+          <p class="ticker-content" id="ticker-msg">
+            3 spikes of starch-diluted milk reported near Athwa Lines today. Community tests enabled!
+          </p>
+        </div>
+
+        <!-- Surat Food Purity Index Hero Card -->
+        <div class="purity-gauge-card">
+          <div class="gauge-visual-wrap">
+            <div class="gauge-ring-outer">
+              <svg class="gauge-svg" viewBox="0 0 120 120">
+                <circle class="gauge-track" cx="60" cy="60" r="50"></circle>
+                <circle class="gauge-fill" id="gauge-fill-circle" cx="60" cy="60" r="50"></circle>
+              </svg>
+              <div class="gauge-center-content">
+                <span class="gauge-percentage" id="hero-gauge-pct">88.4%</span>
+                <span class="gauge-caption">Purity Score</span>
+              </div>
+            </div>
+          </div>
+          <div class="gauge-meta-wrap">
+            <div class="gauge-badge-row">
+              <span class="purity-status-pill status-safe">
+                <span class="purity-pulse-dot"></span>
+                <span>SURAT CITY: VERIFIED STABLE</span>
+              </span>
+            </div>
+            <h3 class="gauge-title">Community Food Safety Grid</h3>
+            <p class="gauge-description">
+              Based on <strong id="hero-verified-count">1,482</strong> verified citizen reagent tests across 7 municipal wards.
+            </p>
+            <div class="gauge-wards-row">
+              <span class="ward-chip active">📍 Athwa: 86%</span>
+              <span class="ward-chip active">📍 Pal: 93%</span>
+              <span class="ward-chip active">📍 Adajan: 90%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Stats Row -->
+        <div class="stats-row">
+          <div class="stat-pill">
+            <span class="stat-val" id="stat-tests-count">1,482</span>
+            <span class="stat-lbl">Tests Run</span>
+          </div>
+          <div class="stat-pill success">
+            <span class="stat-val" id="stat-purity-rate">88.4%</span>
+            <span class="stat-lbl">Purity Index</span>
+          </div>
+          <div class="stat-pill warning">
+            <span class="stat-val" id="stat-alert-zones">3</span>
+            <span class="stat-lbl">Watch Zones</span>
+          </div>
+        </div>
+
+        <!-- Section Heading -->
+        <div class="section-title-wrap">
+          <h2 class="section-heading">Quick Actions</h2>
+          <span class="section-sub">Empowering citizens through verified home science</span>
+        </div>
+
+        <!-- 2 Large Colorful Grid Tiles (From DOCS Screen 1 Blueprint) -->
+        <div class="action-grid">
+          <!-- Tile 1: Test Food Quality -->
+          <div class="action-tile action-test" id="card-nav-test" role="button" tabindex="0">
+            <div class="tile-sheen"></div>
+            <div class="tile-bg-accent"></div>
+            <div class="tile-top-row">
+              <div class="tile-icon-wrap">
+                <span class="tile-emoji">🥛🔬</span>
+              </div>
+              <span class="tile-tech-tag">⚡ AI VISION 2.0</span>
+            </div>
+            <div class="tile-text">
+              <h3 class="tile-title">Test Food Quality</h3>
+              <p class="tile-desc">Interactive AI Camera Wizard for Milk, Spices, Honey & Oils.</p>
+            </div>
+            <div class="tile-action-row">
+              <span class="action-chip">Launch Wizard</span>
+              <span class="arrow-circle">➔</span>
+            </div>
+          </div>
+
+          <!-- Tile 2: View Safety Heat Map -->
+          <div class="action-tile action-map" id="card-nav-map" role="button" tabindex="0">
+            <div class="tile-sheen"></div>
+            <div class="tile-bg-accent map-accent"></div>
+            <div class="tile-top-row">
+              <div class="tile-icon-wrap">
+                <span class="tile-emoji">🗺️📡</span>
+              </div>
+              <span class="tile-tech-tag map-tag">🛰️ RETINA MAP</span>
+            </div>
+            <div class="tile-text">
+              <h3 class="tile-title">View Safety Heat Map</h3>
+              <p class="tile-desc">Explore crowdsourced adulteration spikes & safe verified zones.</p>
+            </div>
+            <div class="tile-action-row">
+              <span class="action-chip">View Live Map</span>
+              <span class="arrow-circle">➔</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kids' School-To-Home Detective Lab Banner (DOCS Module 3) -->
+        <div class="kids-portal-banner" id="card-nav-learn" role="button" tabindex="0">
+          <div class="banner-gold-sheen"></div>
+          <span class="kids-trophy">🎓⭐</span>
+          <div class="kids-banner-info">
+            <span class="kids-tag">School-To-Home Initiative</span>
+            <h4>Food Safety Detective Lab</h4>
+            <p>Earn badges, unlock school leaderboard points & master food chemistry!</p>
+          </div>
+          <button class="btn-kids-enter">Play &amp; Learn</button>
+        </div>
+
+        <!-- Live Community Activity Feed (DOCS: Recent public logs) -->
+        <div class="recent-feed-section">
+          <div class="feed-header">
+            <h4>Live Community Activity</h4>
+            <span class="feed-badge">Real-time</span>
+          </div>
+          <div class="feed-list" id="home-feed-list">
+            <!-- Dynamically populated via JS -->
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ============================================================
+           SCREEN 2: SELECTION & SETUP
+           From DOCS Screen 2 Blueprint:
+           - Header: "What are we testing today?" with back arrow to return Home
+           - Search Bar: "Search food item (e.g., Honey, Turmeric)..."
+           - Quick Select Categories:
+             * 🥛 Milk & Dairy
+             * 🌶️ Spices & Condiments
+             * 🍯 Honey & Sweeteners
+           - The "Instruction Card": Pops open at bottom when user taps item
+             "You will need: 1 small glass cup, Iodine solution, and a dropped sample of milk."
+           - Action Button: Bright green "Launch Interactive Test" button
+           ============================================================ -->
+      <section id="screen-selection" class="app-screen">
+
+        <!-- Top Nav Bar -->
+        <div class="screen-top-nav">
+          <button class="btn-back" id="btn-back-home" title="Return to Dashboard">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </button>
+          <div class="screen-top-title">
+            <div class="title-with-badge">
+              <h2>What are we testing today?</h2>
+              <span class="catalog-counter-pill" id="catalog-count-pill">7 Protocols</span>
+            </div>
+            <p>Select a staple food item to open its testing protocol</p>
+          </div>
+        </div>
+
+        <!-- Search Bar (DOCS: "Search food item (e.g., Honey, Turmeric)...") -->
+        <div class="search-box-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="food-search-input" placeholder="Search food item (e.g., Honey, Turmeric, Milk)..." autocomplete="off">
+          <span class="search-kbd-chip"><kbd>Ctrl</kbd><kbd>K</kbd></span>
+          <button class="clear-search-btn" id="btn-clear-search" style="display:none;">✕</button>
+        </div>
+
+        <!-- Quick Select Categories Tabs (From DOCS Screen 2) -->
+        <div class="categories-scroll" id="categories-tabs">
+          <button class="cat-pill active" data-cat="all">All Foods</button>
+          <button class="cat-pill" data-cat="dairy">🥛 Milk &amp; Dairy</button>
+          <button class="cat-pill" data-cat="spices">🌶️ Spices &amp; Condiments</button>
+          <button class="cat-pill" data-cat="sweeteners">🍯 Honey &amp; Sweeteners</button>
+          <button class="cat-pill" data-cat="oils">🫒 Oils &amp; Ghee</button>
+        </div>
+
+        <!-- Food Protocols Grid (Rendered dynamically via data.js) -->
+        <div class="food-cards-grid" id="food-items-grid">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- The "Instruction Card" (Slide-up Bottom Sheet from DOCS Blueprint) -->
+        <div class="bottom-sheet-backdrop" id="instruction-sheet-backdrop">
+          <div class="instruction-sheet" id="instruction-sheet">
+            <div class="sheet-grabber"></div>
+
+            <div class="sheet-header">
+              <div class="sheet-icon-title">
+                <span class="sheet-item-icon" id="sheet-icon">🥛</span>
+                <div>
+                  <h3 id="sheet-title">Milk Starch Test</h3>
+                  <span class="sheet-adulterant" id="sheet-adulterant">Target: Added Starch / Detergent</span>
+                </div>
+              </div>
+              <button class="sheet-close" id="btn-close-sheet" title="Close">✕</button>
+            </div>
+
+            <div class="sheet-body">
+              <!-- Required Tools Box (From DOCS Screen 2) -->
+              <div class="tools-required-box">
+                <div class="tools-title">
+                  <span>🧪</span>
+                  <strong>You will need:</strong>
+                </div>
+                <ul class="tools-list" id="sheet-tools-list">
+                  <li>1 small transparent glass cup</li>
+                  <li>Tincture of Iodine solution (2-3 drops)</li>
+                  <li>3-5 ml milk sample (boiled &amp; cooled)</li>
+                </ul>
+              </div>
+
+              <!-- Science Principle -->
+              <div class="test-science-brief">
+                <span class="science-tag">Science Principle</span>
+                <p id="sheet-science-desc">
+                  Iodine reacts with amylose starch molecules to form a characteristic deep blue/purple charge-transfer complex. Pure milk remains creamy white or pale yellow.
+                </p>
+              </div>
+
+              <!-- Safety Advisory -->
+              <div class="safety-advisory">
+                <span>⚠️</span>
+                <span>Safe at-home protocol. For students, perform under adult supervision.</span>
+              </div>
+            </div>
+
+            <!-- Action Button: Bright Green "Launch Interactive Test" (From DOCS Screen 2) -->
+            <div class="sheet-footer">
+              <button class="btn-primary-action" id="btn-launch-camera-test">
+                <span>Launch Interactive Test</span>
+                <span class="btn-icon-right">📸 ➔</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ============================================================
+           SCREEN 3: THE "LIVE CAMERA SCANNER & VERDICT"
+           From DOCS Screen 3 & Block Logic:
+           - Header: "Milk Starch Test" with step progress bar (Step 1, Step 2, Step 3)
+           - Phase 1: Preparation view ("Take a small sample of milk in a transparent cup...") + Next button
+           - Phase 2: Reactant addition & Camera Viewport
+             * Large square camera viewport
+             * UI Overlay: Semi-transparent circular targeting ring over center
+             * Scanning laser bar & Gyroscope angle sensor (for Water Trail test)
+           - Phase 3: "Visual Choice" Dialogue: "What color do you see?"
+             * Button A (Left): Solid White / Light Yellow box labeled "Stayed White (Pure)"
+             * Button B (Right): Solid Deep Blue / Purple box labeled "Turned Blue (Adulterated)"
+             * Full-width dynamic button labeled "Analyze & Generate Log"
+           - Phase 4: Output Status & Submit to Map
+             * If Failed: "Result: Adulterated. Starch detected!" in RED + "Submit to PurePlate Community Network"
+             * If Passed: "Result: Pure. No starch detected." in GREEN + "Close & Return to Dashboard"
+           ============================================================ -->
+      <section id="screen-camera" class="app-screen">
+
+        <!-- Top Nav with Step Progress Bar -->
+        <div class="screen-top-nav">
+          <button class="btn-back" id="btn-back-selection" title="Return to Selection">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </button>
+          <div class="screen-top-title">
+            <h2 id="cam-screen-title">Milk Starch Test</h2>
+            <!-- Step Progress Bar (DOCS: Step 1, Step 2 of 3, Step 3) -->
+            <div class="wizard-steps-indicator">
+              <span class="step-dot active" id="dot-step-1">1</span>
+              <span class="step-connector" id="connector-step-1"></span>
+              <span class="step-dot" id="dot-step-2">2</span>
+              <span class="step-connector" id="connector-step-2"></span>
+              <span class="step-dot" id="dot-step-3">3</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="test-wizard-container">
+
+          <!-- Step Instruction Banner (Dynamically updated across Phases 1-3) -->
+          <div class="wizard-instruction-card" id="wizard-instruction-card">
+            <div class="instruction-badge-row">
+              <span class="badge-step-pill" id="badge-step-number">Step 1 of 3</span>
+              <span class="badge-guide-status" id="badge-guide-status">Preparation</span>
+            </div>
+            <p class="instruction-text" id="wizard-instruction-text">
+              Step 1: Take a small sample of milk in a transparent cup, boil it, and let it cool down. Click Next when ready.
+            </p>
+            <!-- Phase 1 Next Button (From DOCS Block Logic: Btn_NextStep.Click) -->
+            <div id="phase1-action-row" class="wizard-step-action-row">
+              <button class="btn-step-next" id="btn-wizard-next-step">
+                <span>Next Step: Add Reagent &amp; Scan</span>
+                <span>➔</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Phase 2: Live Camera Viewport (From DOCS Screen 3) -->
+          <div class="camera-viewport-card" id="camera-section-wrap" style="display:none;">
+            <div class="camera-lens-container" id="camera-lens-box">
+              <!-- Actual Video Element -->
+              <video id="live-camera-video" playsinline autoplay muted></video>
+              <!-- Fallback Simulated Sample Canvas -->
+              <canvas id="camera-capture-canvas" style="display:none;"></canvas>
+
+              <!-- UI Targeting Overlays (DOCS: Circular Targeting Ring) -->
+              <div class="reticle-overlay">
+                <div class="corner-bracket top-left"></div>
+                <div class="corner-bracket top-right"></div>
+                <div class="corner-bracket bottom-left"></div>
+                <div class="corner-bracket bottom-right"></div>
+
+                <!-- Circular Target Ring over center to align cup sample -->
+                <div class="circular-target-ring" id="circular-reticle">
+                  <div class="reticle-compass-tick tick-0">0°</div>
+                  <div class="reticle-compass-tick tick-90">90°</div>
+                  <div class="reticle-compass-tick tick-180">180°</div>
+                  <div class="reticle-compass-tick tick-270">270°</div>
+                  <div class="target-crosshair"></div>
+                  <div class="reticle-pulse-center"></div>
+                  <span class="reticle-label">ALIGN CUP SAMPLE</span>
+                </div>
+
+                <!-- Scanning laser animation -->
+                <div class="scanner-laser" id="scanner-laser"></div>
+              </div>
+
+              <!-- Gyroscope / Angle Level Sensor Overlay (For Milk Water Trail Test) -->
+              <div class="gyro-sensor-overlay" id="gyro-sensor-overlay" style="display:none;">
+                <div class="gyro-bubble-track">
+                  <span class="gyro-bubble-pip" id="gyro-bubble-pip"></span>
+                </div>
+                <span class="gyro-icon">📐</span>
+                <span id="gyro-angle-text">Surface Angle: 45° (Optimal)</span>
+              </div>
+
+              <!-- Camera Controls Bar -->
+              <div class="camera-lens-toolbar">
+                <button class="cam-lens-btn" id="btn-toggle-camera" title="Toggle Real / Test Mode">
+                  <span id="cam-mode-icon">📹</span>
+                  <span id="cam-mode-text">Camera Active</span>
+                </button>
+                <button class="cam-lens-btn" id="btn-switch-lens" title="Flip Camera">
+                  🔄 Flip Lens
+                </button>
+                <button class="cam-lens-btn" id="btn-upload-photo" title="Snap or Pick Sample Photo">
+                  📷 Photo
+                </button>
+                <input type="file" id="camera-file-input" accept="image/*" capture="environment" style="display:none;">
+              </div>
+
+              <!-- Quick Demo Samples Switcher -->
+              <div class="simulation-quickbar">
+                <span class="sim-caption">Demo Samples:</span>
+                <button class="btn-sim-pick pure" id="btn-sim-pure" title="Simulate Pure Sample">Pure Milk</button>
+                <button class="btn-sim-pick adulterated" id="btn-sim-adulterated" title="Simulate Adulterated Sample">Starch Contaminated</button>
+              </div>
+            </div>
+
+            <!-- Detected Hue Extractor Bar -->
+            <div class="color-extractor-bar" id="color-picker-row">
+              <span class="color-prompt-label">Detected Hue:</span>
+              <div class="color-swatch-chip" id="detected-color-chip">
+                <span class="swatch-color" id="swatch-color-box"></span>
+                <span class="swatch-hex" id="swatch-color-hex">#FAF8F5</span>
+              </div>
+              <span class="color-confidence" id="color-confidence-text">Tap anywhere on sample to probe</span>
+            </div>
+          </div>
+
+          <!-- Phase 3: The "Visual Choice" Dialogue (From DOCS Screen 3) -->
+          <div class="visual-choice-card" id="visual-choice-section" style="display:none;">
+            <h4 class="choice-prompt-title">What color do you see?</h4>
+            <p class="choice-subtext">Tap the color matching your test sample to verify purity:</p>
+
+            <div class="choice-buttons-grid">
+              <!-- Button A (Left): Solid White / Light Yellow box labeled "Stayed White (Pure)" -->
+              <button class="color-verdict-btn btn-choice-pure" id="btn-choice-pure">
+                <div class="swatch-circle pure-white-swatch"></div>
+                <div class="choice-label-wrap">
+                  <span class="choice-title">Stayed White / Yellow</span>
+                  <span class="choice-desc">Stayed White (Pure)</span>
+                </div>
+                <span class="check-tick">✓</span>
+              </button>
+
+              <!-- Button B (Right): Solid Deep Blue / Purple box labeled "Turned Blue (Adulterated)" -->
+              <button class="color-verdict-btn btn-choice-adulterated" id="btn-choice-adulterated">
+                <div class="swatch-circle blue-purple-swatch"></div>
+                <div class="choice-label-wrap">
+                  <span class="choice-title">Turned Blue / Purple</span>
+                  <span class="choice-desc">Turned Blue (Adulterated)</span>
+                </div>
+                <span class="check-tick">⚠️</span>
+              </button>
+            </div>
+
+            <!-- Full-width dynamic button labeled "Analyze & Generate Log" -->
+            <button class="btn-analyze-log disabled" id="btn-analyze-generate" disabled>
+              <span>Analyze &amp; Generate Log</span>
+              <span class="btn-spinner" id="analyze-spinner" style="display:none;"></span>
+            </button>
+          </div>
+
+          <!-- Phase 4: Output Status & Submit to Map (From DOCS Phase 3 & 4 Block Logic) -->
+          <div class="verdict-result-card" id="verdict-result-card" style="display:none;">
+
+            <!-- Status Output Stamp: Red if Adulterated, Green if Pure -->
+            <div class="verdict-stamp" id="verdict-stamp">
+              <span class="stamp-icon" id="verdict-icon">⚠️</span>
+              <div class="stamp-texts">
+                <h3 id="verdict-status-title">Result: Adulterated. Starch detected!</h3>
+                <span id="verdict-subtitle">Sample chemical reaction confirmed adulterant presence</span>
+              </div>
+            </div>
+
+            <!-- Verification Details Box -->
+            <div class="verdict-details-box">
+              <div class="detail-row">
+                <span class="d-label">Food Tested:</span>
+                <span class="d-val" id="res-food-name">Milk &amp; Dairy</span>
+              </div>
+              <div class="detail-row">
+                <span class="d-label">Chemical Agent:</span>
+                <span class="d-val" id="res-adulterant">Added Starch / Potato Flour</span>
+              </div>
+              <div class="detail-row">
+                <span class="d-label">Health Risk:</span>
+                <span class="d-val danger-text" id="res-health-impact">Gastrointestinal issues, nutrient dilution</span>
+              </div>
+              <div class="detail-row">
+                <span class="d-label">Detected Region:</span>
+                <span class="d-val" id="res-location-val">Athwa, Surat</span>
+              </div>
+            </div>
+
+            <!-- Sample Source Vendor Selector (DOCS Module 2 Specification) -->
+            <div class="vendor-source-wrap" id="vendor-source-wrap">
+              <label for="vendor-type-select">Sample Source (Optional):</label>
+              <select id="vendor-type-select">
+                <option value="Local Loose Milk Vendor">Local Loose Milk Vendor / Dairy</option>
+                <option value="Supermarket Brand Packet">Supermarket Brand Packaged Milk</option>
+                <option value="Street Market Bazaar">Local Market / Bazaar</option>
+                <option value="Home Delivery Service">Home Delivery Service</option>
+              </select>
+            </div>
+
+            <!-- Submission Action Buttons (From DOCS Block Logic: Btn_SubmitToMap & Btn_CloseTest) -->
+            <div class="verdict-actions-row">
+              <!-- When Failed: Btn_SubmitToMap -> Store in CloudDB, Alert notification -->
+              <button class="btn-submit-map" id="btn-submit-to-map">
+                <span>Submit to PurePlate Community Network</span>
+                <span class="map-push-icon">🌐</span>
+              </button>
+              <!-- When Passed / Done: Btn_CloseTest -> Return to Main Menu -->
+              <button class="btn-close-test" id="btn-close-test">
+                <span>Close &amp; Return to Dashboard</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ============================================================
+           SCREEN 4: THE "PUREPLATE COMMUNITY HEAT MAP"
+           From DOCS Screen 4 Blueprint:
+           - Header: "Regional Food Security Tracker"
+           - Fullscreen interactive map centered on city/neighborhood
+           - High-density report zones feature soft, semi-transparent red radar circles
+           - Clean zones show green checkmark shields
+           - Detailed Dropdown Feed: A pull-up sheet at bottom of map:
+             * ⚠️ 10 mins ago: Adulterated Milk logged near Athwa Lines.
+             * ✅ 1 hour ago: Pure Turmeric verified near Pal.
+           ============================================================ -->
+      <section id="screen-heatmap" class="app-screen">
+
+        <!-- Header -->
+        <div class="screen-top-nav">
+          <div class="screen-top-title">
+            <h2>Regional Food Security Tracker</h2>
+            <p>Live crowdsourced adulteration heat map for Surat &amp; surrounding areas</p>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button class="btn-locate-gps" id="btn-locate-user-map" title="Center on my location">
+              <span>🎯 My GPS</span>
+            </button>
+            <button class="btn-locate-gps" id="btn-export-incidents" title="Export Community Reports to CSV" style="color:#60a5fa;">
+              <span>📥 CSV</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Chips Bar -->
+        <div class="map-filters-row">
+          <button class="filter-chip active" data-filter="all">All Food Types</button>
+          <button class="filter-chip" data-filter="fail">⚠️ Contamination Spikes</button>
+          <button class="filter-chip" data-filter="pass">🛡️ Pure Zones</button>
+          <button class="filter-chip" data-filter="milk">🥛 Milk Only</button>
+          <button class="filter-chip" data-filter="spices">🌶️ Spices</button>
+        </div>
+
+        <!-- Fullscreen Map Viewport -->
+        <div class="map-viewport-wrapper">
+          <div id="pureplate-leaflet-map"></div>
+
+          <!-- Map Legend Overlay (DOCS Screen 4 Specification) -->
+          <div class="map-legend-box">
+            <div class="legend-row">
+              <span class="legend-dot red-pulse"></span>
+              <span>Spike (&gt;3 fails in 7 days)</span>
+            </div>
+            <div class="legend-row">
+              <span class="legend-dot green-shield"></span>
+              <span>Verified Pure Zone</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Dropdown Feed: Pull-up sheet at bottom of map (From DOCS Screen 4) -->
+        <div class="map-feed-sheet">
+          <div class="feed-sheet-head">
+            <div class="feed-sheet-title">
+              <span class="pulse-indicator"></span>
+              <strong>Recent Neighborhood Logs</strong>
+            </div>
+            <span class="feed-count-badge" id="feed-count-badge">8 recent logs</span>
+          </div>
+
+          <div class="feed-items-scroll" id="map-feed-items">
+            <!-- Populated dynamically via JS:
+                 ⚠️ 10 mins ago: Adulterated Milk logged near Athwa Lines.
+                 ✅ 1 hour ago: Pure Turmeric verified near Pal.
+            -->
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ============================================================
+           SCREEN 5: KIDS' LEARNING PORTAL & GAMIFICATION
+           From DOCS Module 3:
+           - Digital badges ("Food Safety Detective", "Milk Master", "Spice Sleuth")
+           - Daily Quiz modules (+50 PTS)
+           - Drag-and-drop / fast-match ingredient mini-game
+           - School Leaderboard (Delhi Public School, Ryan International, etc.)
+           ============================================================ -->
+      <section id="screen-learning" class="app-screen">
+
+        <!-- Top Nav -->
+        <div class="screen-top-nav">
+          <div class="screen-top-title">
+            <h2>School-To-Home Detective Lab</h2>
+            <p>Gamified science curriculum: test foods, solve quizzes &amp; earn badges</p>
+          </div>
+        </div>
+
+        <!-- Student Profile & XP Progress -->
+        <div class="student-profile-card">
+          <div class="student-avatar-col">
+            <div class="student-avatar">🕵️‍♂️</div>
+            <div class="student-rank-badge">Level 3 Detective</div>
+          </div>
+          <div class="student-score-col">
+            <div class="student-name-row">
+              <h4>Junior Food Inspector</h4>
+              <span class="pts-badge"><span id="user-points-val">420</span> Points</span>
+            </div>
+            <div class="xp-bar-wrap">
+              <div class="xp-bar-fill" style="width: 70%;"></div>
+            </div>
+            <span class="xp-caption">80 pts to Level 4 "Senior Food Scientist"</span>
+          </div>
+        </div>
+
+        <!-- Digital Badges Showcase (DOCS: "Food Safety Detective" badge) -->
+        <div class="badges-showcase-section">
+          <h4 class="showcase-title">Your Earned Digital Badges</h4>
+          <div class="badges-row" id="badges-container">
+            <div class="badge-item unlocked">
+              <div class="badge-icon-disc">🔍</div>
+              <span class="badge-name">Food Safety Detective</span>
+              <span class="badge-status">Unlocked</span>
+            </div>
+            <div class="badge-item unlocked">
+              <div class="badge-icon-disc">🥛</div>
+              <span class="badge-name">Milk Master</span>
+              <span class="badge-status">Unlocked</span>
+            </div>
+            <div class="badge-item unlocked">
+              <div class="badge-icon-disc">🌶️</div>
+              <span class="badge-name">Spice Sleuth</span>
+              <span class="badge-status">Unlocked</span>
+            </div>
+            <div class="badge-item locked" id="badge-chemist">
+              <div class="badge-icon-disc">🧪</div>
+              <span class="badge-name">Chemical Sleuth</span>
+              <span class="badge-status">Complete Quiz</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Science Quiz Module (DOCS: "Quiz modules") -->
+        <div class="interactive-quiz-card" id="quiz-module-box">
+          <div class="quiz-card-head">
+            <span class="quiz-tag">Daily Science Quiz</span>
+            <span class="quiz-pts-tag">+50 PTS</span>
+          </div>
+          <div id="quiz-dynamic-content">
+            <h3 class="quiz-question" id="quiz-question-text">
+              What color does milk turn when Iodine is added if starch or potato flour was mixed in as an adulterant?
+            </h3>
+            <div class="quiz-options-list" id="quiz-options-list">
+              <!-- Dynamically populated via JS -->
+            </div>
+            <div class="quiz-feedback-box" id="quiz-feedback-box" style="display:none;"></div>
+          </div>
+        </div>
+
+        <!-- Fast Match Adulterants Mini-Game (DOCS: "drag-and-drop ingredient matching games") -->
+        <div class="matching-game-card">
+          <div class="matching-header">
+            <h4>🎮 Fast Match: Spot The Common Adulterant</h4>
+            <span class="match-hint">Tap a food item on the left, then tap its common adulterant on the right!</span>
+          </div>
+          <div class="match-game-board" id="match-game-board">
+            <!-- Dynamically populated via JS -->
+          </div>
+          <div class="match-score-footer" id="match-score-footer">
+            <span id="match-status-msg">Matches: 0 / 4</span>
+            <button class="btn-reset-match" id="btn-reset-match">Reset Game</button>
+          </div>
+        </div>
+
+        <!-- Surat Schools Food Safety Leaderboard (DOCS: "school's leaderboard") -->
+        <div class="leaderboard-section">
+          <div class="lead-head">
+            <h4>🏆 Surat Schools Food Safety Leaderboard</h4>
+            <span class="lead-sub">Ranked by total verified community tests</span>
+          </div>
+          <div class="lead-table">
+            <div class="lead-row rank-1">
+              <span class="rank-pos">🥇 1</span>
+              <div class="school-info">
+                <strong>Delhi Public School, Surat</strong>
+                <span>482 tests completed • 12,450 pts</span>
+              </div>
+              <span class="rank-shield">🛡️ Active</span>
+            </div>
+            <div class="lead-row rank-2">
+              <span class="rank-pos">🥈 2</span>
+              <div class="school-info">
+                <strong>Ryan International School, Adajan</strong>
+                <span>391 tests completed • 9,820 pts</span>
+              </div>
+              <span class="rank-shield">🛡️ Active</span>
+            </div>
+            <div class="lead-row rank-3">
+              <span class="rank-pos">🥉 3</span>
+              <div class="school-info">
+                <strong>Tapti Valley International School</strong>
+                <span>315 tests completed • 8,140 pts</span>
+              </div>
+              <span class="rank-shield">🛡️ Active</span>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Bottom App Navigation Bar (DOCS Home Hub: Home, Tests, Map, Learn) -->
+    <nav class="app-bottom-nav">
+      <button class="nav-item active" data-target="screen-home" id="nav-btn-home">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Home</span>
+      </button>
+      <button class="nav-item" data-target="screen-selection" id="nav-btn-test">
+        <span class="nav-icon">🔬</span>
+        <span class="nav-label">Tests</span>
+      </button>
+      <button class="nav-item" data-target="screen-heatmap" id="nav-btn-map">
+        <span class="nav-icon">🗺️</span>
+        <span class="nav-label">Heat Map</span>
+      </button>
+      <button class="nav-item" data-target="screen-learning" id="nav-btn-learn">
+        <span class="nav-icon">🎓</span>
+        <span class="nav-label">Learn &amp; Win</span>
+      </button>
+    </nav>
+
+    <!-- Global Toast Container -->
+    <div class="app-toast-container" id="toast-container"></div>
+
+    <!-- ============================================================
+         AUTH & MULTI-DEVICE DATA SYNC MODAL
+         ============================================================ -->
+    <div id="auth-modal" class="auth-modal-backdrop">
+      <div class="auth-modal-sheet">
+        <button class="modal-close-btn" id="btn-close-auth-modal" title="Close Modal">&times;</button>
+
+        <!-- View 1: Logged Out (Sign In / Register) -->
+        <div id="auth-state-logged-out" class="auth-view-content">
+          <div class="auth-sheet-header">
+            <div class="auth-icon-wrap">🛡️</div>
+            <h3>PurePlate Cloud Sync</h3>
+            <p>Sign in with your email to sync your food safety test logs, detective XP, and badges across all your devices.</p>
+          </div>
+
+          <!-- Segmented Tabs -->
+          <div class="auth-tabs-row">
+            <button class="auth-tab-btn active" id="tab-btn-login">Sign In</button>
+            <button class="auth-tab-btn" id="tab-btn-register">Create Account</button>
+          </div>
+
+          <!-- Form 1: Sign In -->
+          <form id="form-auth-login" class="auth-form active">
+            <div class="input-field-group">
+              <label for="login-email">Email Address</label>
+              <div class="input-with-icon">
+                <span class="field-icon">✉️</span>
+                <input type="email" id="login-email" placeholder="student@example.com" required autocomplete="email">
+              </div>
+            </div>
+
+            <div class="input-field-group">
+              <label for="login-password">Password</label>
+              <div class="input-with-icon">
+                <span class="field-icon">🔒</span>
+                <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+                <button type="button" class="btn-toggle-pwd" id="btn-toggle-login-pwd" title="Toggle visibility">👁️</button>
+              </div>
+            </div>
+
+            <div class="auth-options-row">
+              <label class="remember-label">
+                <input type="checkbox" id="login-remember" checked>
+                <span>Remember me on this device</span>
+              </label>
+            </div>
+
+            <button type="submit" class="btn-auth-submit" id="btn-submit-login">
+              <span class="btn-text">Sign In &amp; Sync Now</span>
+              <span class="btn-loader" style="display:none;"></span>
+            </button>
+
+            <!-- Quick Demo Evaluator Button -->
+            <div class="demo-account-box">
+              <span class="demo-box-label">Exhibition Evaluator / Quick Demo:</span>
+              <button type="button" class="btn-quick-demo-fill" id="btn-fill-demo">
+                ⚡ Use Demo: student@dpssurat.edu
+              </button>
+            </div>
+          </form>
+
+          <!-- Form 2: Register -->
+          <form id="form-auth-register" class="auth-form" style="display:none;">
+            <div class="input-field-group">
+              <label for="reg-name">Your Full Name</label>
+              <div class="input-with-icon">
+                <span class="field-icon">👤</span>
+                <input type="text" id="reg-name" placeholder="e.g. Aarav Patel" required>
+              </div>
+            </div>
+
+            <div class="input-field-group">
+              <label for="reg-school">School / Institution</label>
+              <div class="input-with-icon">
+                <span class="field-icon">🏫</span>
+                <input type="text" id="reg-school" placeholder="e.g. Delhi Public School, Surat" required>
+              </div>
+            </div>
+
+            <div class="input-field-group">
+              <label for="reg-email">Email Address</label>
+              <div class="input-with-icon">
+                <span class="field-icon">✉️</span>
+                <input type="email" id="reg-email" placeholder="student@dpssurat.edu" required autocomplete="email">
+              </div>
+            </div>
+
+            <div class="input-field-group">
+              <label for="reg-password">Create Password (min. 6 chars)</label>
+              <div class="input-with-icon">
+                <span class="field-icon">🔒</span>
+                <input type="password" id="reg-password" placeholder="••••••••" minlength="6" required autocomplete="new-password">
+                <button type="button" class="btn-toggle-pwd" id="btn-toggle-reg-pwd" title="Toggle visibility">👁️</button>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-auth-submit btn-accent-submit" id="btn-submit-reg">
+              <span class="btn-text">Create Account &amp; Join Surat Grid</span>
+              <span class="btn-loader" style="display:none;"></span>
+            </button>
+          </form>
+        </div>
+
+        <!-- View 2: Logged In Account Dashboard -->
+        <div id="auth-state-logged-in" class="auth-view-content" style="display: none;">
+          <div class="logged-in-profile-card">
+            <div class="lip-avatar">🎓</div>
+            <div class="lip-info">
+              <h3 id="account-modal-name">Student Inspector</h3>
+              <span class="lip-email" id="account-modal-email">student@dpssurat.edu</span>
+              <span class="lip-school" id="account-modal-school">Delhi Public School, Surat</span>
+            </div>
+            <div class="lip-badge-pill" id="account-modal-pts">550 XP</div>
+          </div>
+
+          <div class="sync-status-card">
+            <div class="ssc-row">
+              <div class="ssc-icon">☁️</div>
+              <div class="ssc-text">
+                <strong>Multi-Device Cloud Sync</strong>
+                <span class="auth-sync-time">Active &amp; Connected</span>
+              </div>
+              <button class="btn-force-sync" id="btn-force-sync" title="Sync now">
+                🔄 Sync Now
+              </button>
+            </div>
+            <div class="ssc-details">
+              <span>• Test logs automatically backup to central server</span>
+              <span>• Detective rank &amp; points mirror on all your screens</span>
+              <span>• Real-time community adulteration alerts enabled</span>
+            </div>
+          </div>
+
+          <div class="auth-logout-row">
+            <button class="btn-logout" id="btn-account-logout">
+              <span>Log Out of this Device</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end #app-container -->
+
+  <!-- App Scripts (Strict Load Order) -->
+  <script src="js/data.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/sound.js"></script>
+  <script src="js/camera.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/quiz.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/devmode.js"></script>
+
+  <!-- Service Worker Registration for PWA Offline Functionality -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('[PurePlate] ServiceWorker registered with scope:', reg.scope))
+          .catch(err => console.warn('[PurePlate] ServiceWorker registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0d9488;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.95" />
+      <stop offset="100%" style="stop-color:#f1f5f9;stop-opacity:0.9" />
+    </linearGradient>
+  </defs>
+  <!-- Background Rounded Squircle -->
+  <rect width="512" height="512" rx="128" fill="url(#grad1)" />
+  <!-- Protective Shield -->
+  <path d="M256 96 L376 148 C376 260 326 348 256 396 C186 348 136 260 136 148 Z" fill="url(#shieldGrad)" />
+  <!-- Flask / Microscope / Milk Drops Silhouette inside -->
+  <path d="M256 160 C242 160 232 172 232 186 L232 230 L196 294 C184 316 200 342 226 342 L286 342 C312 342 328 316 316 294 L280 230 L280 186 C280 172 270 160 256 160 Z" fill="#0d9488" />
+  <!-- Pure checkmark -->
+  <circle cx="340" cy="330" r="42" fill="#10b981" />
+  <path d="M324 330 L336 342 L356 318" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+</svg>

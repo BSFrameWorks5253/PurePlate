@@ -3,18 +3,11 @@
   "version": 2,
   "cleanUrls": true,
   "trailingSlash": false,
+  "outputDirectory": "public",
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "/api/index.js"
-    },
-    {
-      "source": "/",
-      "destination": "/web_app/index.html"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/web_app/$1"
     }
   ],
   "headers": [

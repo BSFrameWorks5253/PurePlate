@@ -4,8 +4,8 @@
   "description": "**Science Exhibition & Innovation Project**",
   "main": "serve.js",
   "scripts": {
-    "build": "echo \"PurePlate static site ready in web_app\"",
-    "dev": "echo \"PurePlate ready in web_app\"",
+    "build": "node -e \"const fs=require('fs'); if(fs.existsSync('web_app')) fs.cpSync('web_app', 'public', {recursive:true, force:true}); console.log('PurePlate public build complete.');\"",
+    "dev": "node serve.js",
     "start": "node serve.js",
     "deploy": "wrangler deploy",
     "deploy:vercel": "vercel --prod",
