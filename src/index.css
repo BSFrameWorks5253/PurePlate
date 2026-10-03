@@ -3060,9 +3060,23 @@ button:active {
     border: 1px solid var(--border-subtle);
     margin: 16px auto;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), var(--shadow-glow);
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .app-frame.frame-expanded .screens-viewport {
+  .app-frame.frame-mobile {
+    max-width: 440px !important;
+    width: 100% !important;
+    min-height: calc(100dvh - 96px);
+    border-radius: 38px !important;
+    border: 8px solid rgba(15, 23, 42, 0.85) !important;
+    margin: 16px auto !important;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.45), var(--shadow-glow) !important;
+    overflow: hidden;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .app-frame.frame-expanded .screens-viewport,
+  .app-frame.frame-mobile .screens-viewport {
     display: block;
   }
   .app-frame.frame-expanded #screen-home {

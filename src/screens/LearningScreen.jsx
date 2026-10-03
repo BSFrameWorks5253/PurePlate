@@ -22,6 +22,9 @@ export default function LearningScreen({ showToast }) {
   const [selectedFood, setSelectedFood] = useState(null);
   const [matchedPairs, setMatchedPairs] = useState([]);
   const [mismatchedKey, setMismatchedKey] = useState(null);
+  const [shuffledAdulterants, setShuffledAdulterants] = useState(() => {
+    return [...ADULTERANT_MATCH_DATA].sort(() => Math.random() - 0.5);
+  });
 
   const currentQuiz = SCIENCE_QUIZ_DATA[quizIndex % SCIENCE_QUIZ_DATA.length];
 
@@ -100,6 +103,7 @@ export default function LearningScreen({ showToast }) {
     soundEngine.playClick();
     setSelectedFood(null);
     setMatchedPairs([]);
+    setShuffledAdulterants([...ADULTERANT_MATCH_DATA].sort(() => Math.random() - 0.5));
   };
 
   const xpPercent = Math.min(100, Math.floor((profile.points % 1000) / 10));
@@ -240,7 +244,7 @@ export default function LearningScreen({ showToast }) {
           {/* Adulterants Column (Shuffled) */}
           <div className="match-col adulterants-col">
             <div className="col-head-label">COMMON ADULTERANT</div>
-            {ADULTERANT_MATCH_DATA.map((item) => {
+            {shuffledAdulterants.map((item) => {
               const isMatched = matchedPairs.includes(item.id);
               const isMismatch = mismatchedKey === item.id;
               return (

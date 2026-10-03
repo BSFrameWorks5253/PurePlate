@@ -1,6 +1,7 @@
 import React from 'react';
 import soundEngine from '../services/sound.js';
 import storage from '../services/storage.js';
+import { FOOD_PROTOCOLS } from '../data/protocols.js';
 
 export default function HomeScreen({
   onNavigate,
@@ -10,6 +11,15 @@ export default function HomeScreen({
   const totalCount = 1482 + incidents.length;
   const failCount = incidents.filter(i => i.status === 'fail').length;
   const purityPct = Math.max(75, Math.min(96, Math.round(((incidents.length - failCount) / Math.max(1, incidents.length)) * 100)));
+
+  const handleFeedItemClick = (inc) => {
+    soundEngine.playClick();
+    const matched = FOOD_PROTOCOLS.find(p => 
+      inc.food.toLowerCase().includes(p.foodName.toLowerCase().split(' ')[0]) ||
+      p.title.toLowerCase().includes(inc.food.toLowerCase())
+    ) || FOOD_PROTOCOLS[0];
+    onSelectFood(matched);
+  };
 
   return (
     <section id="screen-home" className="app-screen active">
@@ -112,7 +122,7 @@ export default function HomeScreen({
           </div>
           <div className="tile-text">
             <h3 className="tile-title">Test Food Quality</h3>
-            <p className="tile-desc">Interactive AI Camera Wizard for Milk, Spices, Honey & Oils.</p>
+            <p className="tile-desc">Interactive AI Camera Wizard for Milk, Spices, Honey &amp; Oils.</p>
           </div>
           <div className="tile-action-row">
             <span className="action-chip">Launch Wizard</span>
@@ -141,13 +151,43 @@ export default function HomeScreen({
           </div>
           <div className="tile-text">
             <h3 className="tile-title">View Safety Heat Map</h3>
-            <p className="tile-desc">Explore crowdsourced adulteration spikes & safe verified zones.</p>
+            <p className="tile-desc">Explore crowdsourced adulteration spikes &amp; safe verified zones.</p>
           </div>
           <div className="tile-action-row">
             <span className="action-chip">View Live Map</span>
             <span className="arrow-circle">➔</span>
           </div>
         </div>
+      </div>
+
+      {/* Popular Staple Quick-Test Chips */}
+      <div className="section-title-wrap" style={{ marginTop: '18px' }}>
+        <h3 className="section-heading" style={{ fontSize: '1.05rem' }}>Popular Staple Protocols</h3>
+        <span className="section-sub">1-Tap launch for home testing protocols</span>
+      </div>
+      <div className="quick-tests-strip" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px', marginBottom: '14px' }}>
+        {FOOD_PROTOCOLS.slice(0, 4).map((item) => (
+          <div
+            key={item.id}
+            className="food-card"
+            style={{ margin: 0, padding: '12px 14px', cursor: 'pointer' }}
+            onClick={() => {
+              soundEngine.playClick();
+              onSelectFood(item);
+            }}
+          >
+            <span style={{ fontSize: '24px', flexShrink: 0 }}>{item.icon}</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 800, fontSize: '13px', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {item.title}
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                Target: {item.adulterant}
+              </div>
+            </div>
+            <span style={{ color: 'var(--brand-teal)', fontWeight: 800, fontSize: '14px' }}>➔</span>
+          </div>
+        ))}
       </div>
 
       {/* Kids' School-To-Home Detective Lab Banner */}
@@ -166,7 +206,7 @@ export default function HomeScreen({
         <div className="kids-banner-info">
           <span className="kids-tag">School-To-Home Initiative</span>
           <h4>Food Safety Detective Lab</h4>
-          <p>Earn badges, unlock school leaderboard points & master food chemistry!</p>
+          <p>Earn badges, unlock school leaderboard points &amp; master food chemistry!</p>
         </div>
         <button className="btn-kids-enter">Play &amp; Learn</button>
       </div>
@@ -179,7 +219,13 @@ export default function HomeScreen({
         </div>
         <div className="feed-list" id="home-feed-list">
           {incidents.slice(0, 5).map((inc) => (
-            <div key={inc.id} className="feed-item">
+            <div
+              key={inc.id}
+              className="feed-item"
+              style={{ cursor: 'pointer' }}
+              onClick={() => handleFeedItemClick(inc)}
+              title="Click to test this food"
+            >
               <div className="feed-icon-box">
                 {inc.food.toLowerCase().includes('milk') ? '🥛' :
                  inc.food.toLowerCase().includes('turmeric') ? '🌶️' :
@@ -198,6 +244,8 @@ export default function HomeScreen({
                   <span>📍 {inc.neighborhood}</span>
                   <span>•</span>
                   <span>{inc.timestamp || 'Recent'}</span>
+                  <span>•</span>
+                  <span style={{ color: 'var(--brand-teal)', fontWeight: 600 }}>Test Now ➔</span>
                 </div>
               </div>
             </div>

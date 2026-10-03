@@ -14,8 +14,19 @@ export default function CameraScreen({
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [simMode, setSimMode] = useState('pure'); // 'pure' or 'adulterated'
   const [facingMode, setFacingMode] = useState('environment');
-  const [detectedHex, setDetectedHex] = useState('#FAF8F5');
-  const [colorConfidence, setColorConfidence] = useState('Align sample inside targeting ring');
+  
+  // Visual guide extraction with safe fallbacks
+  const visualGuide = protocol?.visualGuide || {
+    pureTitle: "Stayed Natural Color / Pale White",
+    pureDesc: "Pure sample without chemical adulteration",
+    pureColorHex: "#FAF8F5",
+    adulteratedTitle: "Turned Deep Blue / Magenta Spike",
+    adulteratedDesc: "Chemical adulteration confirmed",
+    adulteratedColorHex: "#1E1B4B"
+  };
+
+  const [detectedHex, setDetectedHex] = useState(visualGuide.pureColorHex);
+  const [colorConfidence, setColorConfidence] = useState(`Base Hue (${visualGuide.pureColorHex})`);
   const [selectedChoice, setSelectedChoice] = useState(null); // 'pure' or 'adulterated'
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [vendorType, setVendorType] = useState('Local Loose Milk Vendor');
@@ -29,7 +40,30 @@ export default function CameraScreen({
 
   const isSlopeTest = protocol?.id === 'milk_water_trail';
 
-  // Cleanup camera on unmount or phase change
+  // Helper to parse hex to RGB
+  const hexToRgb = (hex) => {
+    let clean = hex.replace('#', '');
+    if (clean.length === 3) {
+      clean = clean.split('').map(c => c + c).join('');
+    }
+    const num = parseInt(clean, 16);
+    return {
+      r: (num >> 16) & 255,
+      g: (num >> 8) & 255,
+      b: num & 255
+    };
+  };
+
+  // Color distance formula (Euclidean)
+  const colorDist = (c1, c2) => {
+    return Math.sqrt(
+      Math.pow(c1.r - c2.r, 2) +
+      Math.pow(c1.g - c2.g, 2) +
+      Math.pow(c1.b - c2.b, 2)
+    );
+  };
+
+  // Cleanup camera on unmount
   useEffect(() => {
     return () => {
       stopCamera();
@@ -53,11 +87,18 @@ export default function CameraScreen({
     };
   }, []);
 
+  // Initialize simulation on canvas when switching to phase 2
+  useEffect(() => {
+    if (phase === 2 && !isCameraActive) {
+      drawSimulation(simMode);
+    }
+  }, [phase, simMode, protocol]);
+
   const startCamera = async () => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       drawSimulation(simMode);
       setIsCameraActive(false);
-      showToast('Camera not available. Simulation mode enabled.', 'info');
+      showToast('Camera not available on this device. Interactive lab simulation active.', 'info');
       return;
     }
 
@@ -82,15 +123,13 @@ export default function CameraScreen({
         videoRef.current.play().catch(() => {});
       }
       setIsCameraActive(true);
-      showToast('📹 Camera live. Align sample inside the circular ring.', 'info');
-
-      // Start optical sampling loop
+      showToast('📹 Camera live. Align sample inside circular targeting reticle.', 'info');
       startSamplingLoop();
     } catch (err) {
       console.warn('Camera error:', err);
       drawSimulation(simMode);
       setIsCameraActive(false);
-      showToast('Camera permission denied. Using interactive test mode.', 'warning');
+      showToast('Camera access denied. Interactive lab simulation active.', 'warning');
     }
   };
 
@@ -129,7 +168,7 @@ export default function CameraScreen({
     }
   };
 
-  // Draw simulated lab sample on canvas
+  // Draw simulated lab sample on canvas dynamically based on protocol
   const drawSimulation = (mode) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -139,6 +178,7 @@ export default function CameraScreen({
     const w = canvas.width;
     const h = canvas.height;
 
+    // Background sterile lab bench
     const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
     bgGrad.addColorStop(0, '#f8fafc');
     bgGrad.addColorStop(1, '#e2e8f0');
@@ -149,38 +189,38 @@ export default function CameraScreen({
     const cy = h / 2;
     const radius = 95;
 
-    // Cup shadow & rim
+    // Cup shadow & outer glass rim
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
     ctx.fill();
     ctx.lineWidth = 4;
-    ctx.strokeStyle = 'rgba(148, 163, 184, 0.8)';
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.7)';
     ctx.stroke();
 
-    // Liquid inside
+    // Liquid inner circle
     ctx.beginPath();
     ctx.arc(cx, cy, radius - 6, 0, 2 * Math.PI);
 
+    const targetHex = mode === 'pure' ? visualGuide.pureColorHex : visualGuide.adulteratedColorHex;
+    const liquidGrad = ctx.createRadialGradient(cx - 20, cy - 20, 10, cx, cy, radius - 6);
+
     if (mode === 'pure') {
-      const milkGrad = ctx.createRadialGradient(cx - 20, cy - 20, 10, cx, cy, radius - 6);
-      milkGrad.addColorStop(0, '#ffffff');
-      milkGrad.addColorStop(0.7, '#f8fafc');
-      milkGrad.addColorStop(1, '#fef3c7');
-      ctx.fillStyle = milkGrad;
-      ctx.fill();
-      setDetectedHex('#FAF8F5');
-      setColorConfidence('Pure Sample Hue (#FAF8F5)');
+      liquidGrad.addColorStop(0, '#ffffff');
+      liquidGrad.addColorStop(0.6, targetHex);
+      liquidGrad.addColorStop(1, targetHex);
+      setDetectedHex(targetHex);
+      setColorConfidence(`Pure Sample Hue (${targetHex})`);
     } else {
-      const starchGrad = ctx.createRadialGradient(cx - 15, cy - 15, 10, cx, cy, radius - 6);
-      starchGrad.addColorStop(0, '#312e81');
-      starchGrad.addColorStop(0.5, '#1e1b4b');
-      starchGrad.addColorStop(1, '#4338ca');
-      ctx.fillStyle = starchGrad;
-      ctx.fill();
-      setDetectedHex('#1E1B4B');
-      setColorConfidence('⚠️ Chemical Reaction Spike (#1E1B4B)');
+      liquidGrad.addColorStop(0, '#ffffff');
+      liquidGrad.addColorStop(0.3, targetHex);
+      liquidGrad.addColorStop(1, targetHex);
+      setDetectedHex(targetHex);
+      setColorConfidence(`⚠️ Chemical Shift Spike (${targetHex})`);
     }
+
+    ctx.fillStyle = liquidGrad;
+    ctx.fill();
   };
 
   const startSamplingLoop = () => {
@@ -215,8 +255,19 @@ export default function CameraScreen({
           const hex = `#${((1 << 24) + (avgR << 16) + (avgG << 8) + avgB).toString(16).slice(1).toUpperCase()}`;
           setDetectedHex(hex);
 
-          const isShift = (avgB > avgR * 1.1 && avgB > avgG) || (avgB > 75 && avgR < 70);
-          setColorConfidence(isShift ? `⚠️ Chemical Shift Detected (${hex})` : `Standard Base Hue (${hex})`);
+          // Compare color distance to pure vs adulterated
+          const currentRgb = { r: avgR, g: avgG, b: avgB };
+          const pureRgb = hexToRgb(visualGuide.pureColorHex);
+          const adultRgb = hexToRgb(visualGuide.adulteratedColorHex);
+
+          const dPure = colorDist(currentRgb, pureRgb);
+          const dAdult = colorDist(currentRgb, adultRgb);
+
+          if (dAdult < dPure && dAdult < 160) {
+            setColorConfidence(`⚠️ Chemical Reaction Match (${hex})`);
+          } else {
+            setColorConfidence(`Natural Specimen Hue (${hex})`);
+          }
         }
       } catch (e) {}
     }, 150);
@@ -228,6 +279,39 @@ export default function CameraScreen({
     stopCamera();
     drawSimulation(mode);
     setSelectedChoice(mode);
+  };
+
+  // Interactive Color probe when user taps/clicks canvas
+  const handleCanvasClick = (e) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.round(((e.clientX - rect.left) / rect.width) * canvas.width);
+    const y = Math.round(((e.clientY - rect.top) / rect.height) * canvas.height);
+
+    try {
+      const ctx = canvas.getContext('2d');
+      const pixel = ctx.getImageData(x, y, 1, 1).data;
+      const hex = `#${((1 << 24) + (pixel[0] << 16) + (pixel[1] << 8) + pixel[2]).toString(16).slice(1).toUpperCase()}`;
+      setDetectedHex(hex);
+
+      const tappedRgb = { r: pixel[0], g: pixel[1], b: pixel[2] };
+      const pureRgb = hexToRgb(visualGuide.pureColorHex);
+      const adultRgb = hexToRgb(visualGuide.adulteratedColorHex);
+
+      const dPure = colorDist(tappedRgb, pureRgb);
+      const dAdult = colorDist(tappedRgb, adultRgb);
+
+      if (dAdult < dPure) {
+        setSelectedChoice('adulterated');
+        setColorConfidence(`⚠️ Chemical Shift Match (${hex})`);
+        soundEngine.playWarning();
+      } else {
+        setSelectedChoice('pure');
+        setColorConfidence(`Natural Base Specimen (${hex})`);
+        soundEngine.playSuccess();
+      }
+    } catch (err) {}
   };
 
   const handlePhotoUpload = (e) => {
@@ -256,8 +340,24 @@ export default function CameraScreen({
           const avgB = Math.round(b / cnt);
           const hex = `#${((1 << 24) + (avgR << 16) + (avgG << 8) + avgB).toString(16).slice(1).toUpperCase()}`;
           setDetectedHex(hex);
-          setColorConfidence(`Photo Analyzed (${hex})`);
-          soundEngine.playSuccess();
+
+          // Auto classify photo based on Euclidean distance
+          const photoRgb = { r: avgR, g: avgG, b: avgB };
+          const pureRgb = hexToRgb(visualGuide.pureColorHex);
+          const adultRgb = hexToRgb(visualGuide.adulteratedColorHex);
+
+          const dPure = colorDist(photoRgb, pureRgb);
+          const dAdult = colorDist(photoRgb, adultRgb);
+
+          if (dAdult < dPure) {
+            setSelectedChoice('adulterated');
+            setColorConfidence(`⚠️ Chemical Shift Confirmed (${hex})`);
+            soundEngine.playWarning();
+          } else {
+            setSelectedChoice('pure');
+            setColorConfidence(`Natural Purity Confirmed (${hex})`);
+            soundEngine.playSuccess();
+          }
           showToast(`📸 Photo sampled: ${hex}`, 'success');
         } catch (err) {}
       };
@@ -298,7 +398,7 @@ export default function CameraScreen({
       food: protocol.title || protocol.foodName || 'Milk',
       testType: protocol.title || 'Chemical Test',
       status: isPass ? 'pass' : 'fail',
-      adulterant: isPass ? 'None Detected' : (protocol.adulterant || 'Added Starch / Potato Flour'),
+      adulterant: isPass ? 'None Detected' : (protocol.adulterant || 'Adulterant Spike'),
       vendorType: vendorType,
       locationName: storage.getUserRegion(),
       lat: 21.1738 + (Math.random() - 0.5) * 0.03,
@@ -331,11 +431,15 @@ export default function CameraScreen({
         <div className="screen-top-title">
           <h2 id="cam-screen-title">{protocol ? protocol.title : 'Food Safety Test'}</h2>
           <div className="wizard-steps-indicator">
-            <span className={`step-dot ${phase >= 1 ? 'active' : ''}`} id="dot-step-1">1</span>
-            <span className={`step-connector ${phase >= 2 ? 'active' : ''}`} id="connector-step-1"></span>
-            <span className={`step-dot ${phase >= 2 ? 'active' : ''}`} id="dot-step-2">2</span>
-            <span className={`step-connector ${phase >= 3 ? 'active' : ''}`} id="connector-step-2"></span>
-            <span className={`step-dot ${phase >= 3 ? 'active' : ''}`} id="dot-step-3">3</span>
+            <span className={`step-dot ${phase > 1 ? 'completed' : phase === 1 ? 'active' : ''}`} id="dot-step-1">
+              {phase > 1 ? '✓' : '1'}
+            </span>
+            <span className={`step-connector ${phase >= 2 ? 'completed' : ''}`} id="connector-step-1"></span>
+            <span className={`step-dot ${phase > 2 ? 'completed' : phase === 2 ? 'active' : ''}`} id="dot-step-2">
+              {phase > 2 ? '✓' : '2'}
+            </span>
+            <span className={`step-connector ${phase >= 3 ? 'completed' : ''}`} id="connector-step-2"></span>
+            <span className={`step-dot ${phase === 3 ? 'active' : ''}`} id="dot-step-3">3</span>
           </div>
         </div>
       </div>
@@ -351,7 +455,7 @@ export default function CameraScreen({
             <p className="instruction-text" id="wizard-instruction-text">
               {protocol.steps && protocol.steps[0]
                 ? protocol.steps[0]
-                : "Take a small sample of food in a transparent cup and prepare reagents."}
+                : "Take a small sample of food in a clean transparent cup and prepare reagents."}
             </p>
             <div id="phase1-action-row" className="wizard-step-action-row">
               <button className="btn-step-next" id="btn-wizard-next-step" onClick={handleNextToCamera}>
@@ -365,6 +469,19 @@ export default function CameraScreen({
         {/* Phase 2: Live Camera & Visual Choice */}
         {phase === 2 && (
           <>
+            {/* Step 2 Persistent Instruction Banner */}
+            <div className="wizard-instruction-card" style={{ marginBottom: '14px' }}>
+              <div className="instruction-badge-row">
+                <span className="badge-step-pill">Step 2 of 3</span>
+                <span className="badge-guide-status">Live Optical Inspection</span>
+              </div>
+              <p className="instruction-text">
+                {protocol.steps && (protocol.steps[1] || protocol.steps[2])
+                  ? (protocol.steps[1] || protocol.steps[2])
+                  : "Add reagent drops. Swirl gently and align your sample inside the circular targeting reticle."}
+              </p>
+            </div>
+
             <div className="camera-viewport-card" id="camera-section-wrap">
               <div className="camera-lens-container" id="camera-lens-box">
                 {/* Real video or Simulated canvas */}
@@ -379,7 +496,9 @@ export default function CameraScreen({
                 <canvas
                   ref={canvasRef}
                   id="camera-capture-canvas"
-                  style={{ display: !isCameraActive ? 'block' : 'none' }}
+                  style={{ display: !isCameraActive ? 'block' : 'none', cursor: 'crosshair' }}
+                  onClick={handleCanvasClick}
+                  title="Click to probe sample color"
                 />
 
                 {/* Reticle Overlay */}
@@ -393,10 +512,14 @@ export default function CameraScreen({
                     className="circular-target-ring"
                     id="circular-reticle"
                     style={{
-                      borderColor: selectedChoice === 'adulterated' ? '#a855f7' : '#10b981',
+                      borderColor: selectedChoice === 'adulterated'
+                        ? visualGuide.adulteratedColorHex
+                        : selectedChoice === 'pure'
+                        ? visualGuide.pureColorHex
+                        : '#10b981',
                       boxShadow: selectedChoice === 'adulterated'
-                        ? '0 0 24px rgba(168, 85, 247, 0.6)'
-                        : '0 0 24px rgba(16, 185, 129, 0.5)'
+                        ? `0 0 26px ${visualGuide.adulteratedColorHex}99`
+                        : '0 0 26px rgba(16, 185, 129, 0.5)'
                     }}
                   >
                     <div className="reticle-compass-tick tick-0">0°</div>
@@ -405,7 +528,7 @@ export default function CameraScreen({
                     <div className="reticle-compass-tick tick-270">270°</div>
                     <div className="target-crosshair"></div>
                     <div className="reticle-pulse-center"></div>
-                    <span className="reticle-label">ALIGN CUP SAMPLE</span>
+                    <span className="reticle-label">ALIGN SAMPLE CUP</span>
                   </div>
 
                   <div className="scanner-laser" id="scanner-laser"></div>
@@ -423,7 +546,7 @@ export default function CameraScreen({
                     </div>
                     <span className="gyro-icon">📐</span>
                     <span id="gyro-angle-text">
-                      Surface Angle: {surfaceAngle}° ({surfaceAngle >= 35 && surfaceAngle <= 50 ? 'Optimal' : 'Tilt to 45°'})
+                      Surface Angle: {surfaceAngle}° ({surfaceAngle >= 35 && surfaceAngle <= 50 ? 'Optimal (35°-45°)' : 'Tilt to 45°'})
                     </span>
                   </div>
                 )}
@@ -439,7 +562,9 @@ export default function CameraScreen({
                     id="btn-analyze-frame"
                     onClick={() => {
                       soundEngine.playClick();
-                      setSelectedChoice(selectedChoice === 'pure' ? 'adulterated' : 'pure');
+                      const next = selectedChoice === 'pure' ? 'adulterated' : 'pure';
+                      setSelectedChoice(next);
+                      if (!isCameraActive) drawSimulation(next);
                     }}
                   >
                     ⚡ Sample
@@ -467,25 +592,25 @@ export default function CameraScreen({
 
                 {/* Quick Simulation Demos */}
                 <div className="simulation-quickbar">
-                  <span className="sim-caption">Demo Samples:</span>
+                  <span className="sim-caption">Lab Demos:</span>
                   <button
                     className={`btn-sim-pick pure ${simMode === 'pure' && !isCameraActive ? 'active' : ''}`}
                     onClick={() => handleSimSelect('pure')}
                   >
-                    🥛 Pure Sample
+                    ✨ Pure Sample
                   </button>
                   <button
                     className={`btn-sim-pick adulterated ${simMode === 'adulterated' && !isCameraActive ? 'active' : ''}`}
                     onClick={() => handleSimSelect('adulterated')}
                   >
-                    🧪 Adulterated
+                    ⚠️ Adulterated
                   </button>
                 </div>
               </div>
 
               {/* Detected Hue Extractor Bar */}
               <div className="color-extractor-bar" id="color-picker-row">
-                <span className="color-prompt-label">Detected Hue:</span>
+                <span className="color-prompt-label">Optical Sample:</span>
                 <div className="color-swatch-chip" id="detected-color-chip">
                   <span className="swatch-color" id="swatch-color-box" style={{ backgroundColor: detectedHex }}></span>
                   <span className="swatch-hex" id="swatch-color-hex">{detectedHex}</span>
@@ -494,40 +619,58 @@ export default function CameraScreen({
               </div>
             </div>
 
-            {/* Visual Choice Dialogue */}
+            {/* Visual Choice Dialogue - 100% Dynamic Based on Protocol */}
             <div className="visual-choice-card" id="visual-choice-section">
-              <h4 className="choice-prompt-title">What color do you see?</h4>
-              <p className="choice-subtext">Tap the color matching your test sample to verify purity:</p>
+              <h4 className="choice-prompt-title">What reaction do you see?</h4>
+              <p className="choice-subtext">Tap the result matching your test specimen to verify purity:</p>
 
               <div className="choice-buttons-grid">
+                {/* Pure Option */}
                 <button
                   className={`color-verdict-btn btn-choice-pure ${selectedChoice === 'pure' ? 'selected' : ''}`}
                   id="btn-choice-pure"
                   onClick={() => {
                     soundEngine.playClick();
                     setSelectedChoice('pure');
+                    if (!isCameraActive) drawSimulation('pure');
                   }}
                 >
-                  <div className="swatch-circle pure-white-swatch"></div>
+                  <div
+                    className="swatch-circle"
+                    style={{
+                      backgroundColor: visualGuide.pureColorHex,
+                      border: '2px solid rgba(16, 185, 129, 0.6)',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    }}
+                  ></div>
                   <div className="choice-label-wrap">
-                    <span className="choice-title">Stayed White / Pale Yellow</span>
-                    <span className="choice-desc">Stayed White (Pure)</span>
+                    <span className="choice-title">{visualGuide.pureTitle}</span>
+                    <span className="choice-desc">{visualGuide.pureDesc} (Pure)</span>
                   </div>
                   <span className="check-tick">✓</span>
                 </button>
 
+                {/* Adulterated Option */}
                 <button
                   className={`color-verdict-btn btn-choice-adulterated ${selectedChoice === 'adulterated' ? 'selected' : ''}`}
                   id="btn-choice-adulterated"
                   onClick={() => {
                     soundEngine.playClick();
                     setSelectedChoice('adulterated');
+                    if (!isCameraActive) drawSimulation('adulterated');
                   }}
                 >
-                  <div className="swatch-circle blue-purple-swatch"></div>
+                  <div
+                    className="swatch-circle"
+                    style={{
+                      backgroundColor: visualGuide.adulteratedColorHex,
+                      border: '2px solid rgba(239, 68, 68, 0.6)',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    }}
+                  ></div>
                   <div className="choice-label-wrap">
-                    <span className="choice-title">Turned Blue / Violet</span>
-                    <span className="choice-desc">Turned Blue (Adulterated)</span>
+                    <span className="choice-title">{visualGuide.adulteratedTitle}</span>
+                    <span className="choice-desc">{visualGuide.adulteratedDesc} (Spike)</span>
                   </div>
                   <span className="check-tick">⚠️</span>
                 </button>
@@ -539,7 +682,7 @@ export default function CameraScreen({
                 disabled={!selectedChoice || isAnalyzing}
                 onClick={handleAnalyzeGenerate}
               >
-                <span>{isAnalyzing ? 'Analyzing Optical Density...' : 'Analyze & Generate Log'}</span>
+                <span>{isAnalyzing ? 'Analyzing Optical Density...' : 'Analyze & Generate Scientific Log'}</span>
               </button>
             </div>
           </>
@@ -555,8 +698,8 @@ export default function CameraScreen({
               <div className="stamp-texts">
                 <h3 id="verdict-status-title">
                   {selectedChoice === 'pure'
-                    ? 'Result: Pure. No adulteration detected.'
-                    : `Result: Adulterated. ${protocol.adulterant || 'Adulterant'} detected!`}
+                    ? 'Verdict: VERIFIED PURE. No adulteration detected.'
+                    : `Verdict: ADULTERATED. ${protocol.adulterant || 'Adulterant'} confirmed!`}
                 </h3>
                 <span id="verdict-subtitle">
                   {selectedChoice === 'pure'

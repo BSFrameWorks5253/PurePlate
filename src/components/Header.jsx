@@ -70,7 +70,7 @@ export default function Header({
                 soundEngine.playClick();
               }}
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <rect x="5" y="2" width="14" height="20" rx="3"/>
                 <line x1="12" y1="18" x2="12.01" y2="18"/>
               </svg>
@@ -85,7 +85,7 @@ export default function Header({
                 soundEngine.playClick();
               }}
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <rect x="2" y="3" width="20" height="14" rx="2"/>
                 <line x1="8" y1="21" x2="16" y2="21"/>
                 <line x1="12" y1="17" x2="12" y2="21"/>
@@ -114,7 +114,7 @@ export default function Header({
           </button>
 
           <button className="dt-btn dt-btn-accent" id="btn-show-qr" title="Scan to open on your phone" onClick={onOpenQR}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <rect x="3" y="3" width="7" height="7"/>
               <rect x="14" y="3" width="7" height="7"/>
               <rect x="14" y="14" width="7" height="7"/>
@@ -134,7 +134,17 @@ export default function Header({
            APP HEADER (Mobile & In-App View)
            ============================================================ */}
       <header className="app-header">
-        <div className="route-progress-bar" id="route-progress-bar" style={{ width: '100%' }}></div>
+        <div
+          className="route-progress-bar"
+          id="route-progress-bar"
+          style={{
+            width: currentScreen === 'screen-home' ? '25%' :
+                   currentScreen === 'screen-selection' ? '50%' :
+                   currentScreen === 'screen-camera' ? '75%' :
+                   currentScreen === 'screen-map' ? '90%' : '100%',
+            transition: 'width 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+          }}
+        ></div>
         <div className="header-content">
           <div className="brand-row">
             <div className="brand-mark">
