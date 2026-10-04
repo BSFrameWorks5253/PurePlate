@@ -7447,67 +7447,186 @@ button:active {
   text-align: center;
 }
 
-/* ── Demo / Offline Reveal Toggle ── */
-.demo-otp-section {
+/* ── Instant Session Passcode Card ── */
+.instant-code-card {
+  width: 100%;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(13, 148, 136, 0.08);
+  border: 1.5px dashed var(--brand-teal);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  margin: 6px 0;
+  gap: 10px;
+  margin: 10px 0;
 }
-.btn-demo-toggle {
+.instant-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.instant-badge {
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--brand-teal);
+  background: rgba(13, 148, 136, 0.15);
+  padding: 3px 8px;
+  border-radius: 8px;
+}
+.instant-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.instant-code-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 8px 14px;
+}
+.instant-digits {
+  font-family: 'SF Mono', Monaco, monospace;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 6px;
+  color: var(--brand-teal);
+}
+.btn-instant-fill {
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--brand-teal), #0284c7);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+  transition: all 0.2s ease;
+}
+.btn-instant-fill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(13, 148, 136, 0.45);
+}
+.instant-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* ── Login Webhook Configuration & Testing Section ── */
+.login-webhook-section {
+  margin-top: 20px;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 14px;
+}
+.btn-webhook-toggle {
   background: none;
   border: none;
   font-size: 12px;
   color: var(--text-muted);
   cursor: pointer;
   text-decoration: underline;
-  padding: 4px 8px;
+  padding: 6px 0;
   transition: color 0.2s ease;
+  display: block;
+  width: 100%;
+  text-align: center;
 }
-.btn-demo-toggle:hover {
+.btn-webhook-toggle:hover {
   color: var(--brand-teal);
 }
-.demo-otp-card {
-  width: 100%;
-  padding: 14px;
-  border-radius: 14px;
+.login-webhook-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 16px;
+  margin-top: 10px;
+  font-size: 12px;
+}
+.login-webhook-card h4 {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+}
+.login-webhook-card p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 0 0 10px 0;
+}
+.webhook-setup-brief {
   background: rgba(0, 0, 0, 0.03);
+  padding: 10px 12px;
+  border-radius: 12px;
   border: 1px dashed var(--border-subtle);
-  text-align: center;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 3px;
+  margin-bottom: 12px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.webhook-setup-brief code {
+  color: var(--brand-teal);
+  background: rgba(13, 148, 136, 0.1);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+.login-webhook-form {
+  display: flex;
+  flex-direction: column;
   gap: 8px;
 }
-.demo-desc {
-  font-size: 11px;
-  color: var(--text-muted);
-}
-.demo-code-pill {
-  font-family: monospace;
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: 6px;
-  color: var(--brand-teal);
-  background: var(--bg-surface);
-  padding: 6px 16px;
-  border-radius: 10px;
+.input-webhook-login {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--bg-input);
   border: 1px solid var(--border-subtle);
+  font-size: 12px;
+  color: var(--text-primary);
 }
-.btn-auto-fill-otp {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 8px;
-  background: rgba(13, 148, 136, 0.12);
-  color: var(--brand-teal);
-  border: 1px solid rgba(13, 148, 136, 0.2);
-  cursor: pointer;
+.webhook-btns-row {
+  display: flex;
+  gap: 8px;
 }
-.btn-auto-fill-otp:hover {
+.btn-save-webhook-login {
+  flex: 1;
+  padding: 9px 14px;
+  border-radius: 12px;
   background: var(--brand-teal);
   color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-save-webhook-login:hover {
+  background: #0f766e;
+}
+.btn-test-webhook {
+  flex: 1;
+  padding: 9px 14px;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-test-webhook:hover {
+  border-color: var(--brand-teal);
+  color: var(--brand-teal);
 }
 
 .btn-resend-otp {
