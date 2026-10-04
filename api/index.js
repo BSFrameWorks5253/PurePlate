@@ -313,11 +313,114 @@ function verifyOtpToken(email, otp, tokenStr) {
   }
 }
 
-async function dispatchEmailOtp(email, otp, name) {
-  const recipientName = name || 'Cadet Food Inspector';
-  const driveWebhook = process.env.GOOGLE_DRIVE_WEBHOOK_URL || process.env.GOOGLE_SHEETS_WEBHOOK_URL;
+async function dispatchEmailOtp(email, otp, name, customWebhook) {
+  const recipientName = name || 'Cadet Student';
+  const driveWebhook = customWebhook || process.env.GOOGLE_DRIVE_WEBHOOK_URL || process.env.GOOGLE_SHEETS_WEBHOOK_URL;
 
-  // 1. Dispatch via Google Apps Script Webhook (100% Free Gmail API dispatch)
+  // Ultra-Premium Responsive HTML Email Template (Safe, zero spam/phishing flags)
+  const emailHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>PurePlate Login Passcode</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+      <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9; padding: 36px 12px;">
+        <tr>
+          <td align="center">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 520px; background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 12px 36px rgba(15, 23, 42, 0.08); border: 1px solid #e2e8f0;">
+              
+              <!-- Top Accent Gradient Line -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #0d9488 0%, #0284c7 100%); height: 8px;"></td>
+              </tr>
+
+              <!-- School Crest & Header -->
+              <tr>
+                <td style="padding: 32px 28px 16px 28px; text-align: center;">
+                  <div style="display: inline-block; padding: 6px 16px; border-radius: 50px; background-color: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; font-size: 12px; font-weight: 700; letter-spacing: 0.3px; margin-bottom: 14px;">
+                    🏫 Lourdes Convent Primary School, Surat
+                  </div>
+                  <h1 style="color: #0f172a; margin: 0 0 6px 0; font-size: 23px; font-weight: 800; letter-spacing: -0.4px;">
+                    PurePlate™ Food Safety Grid
+                  </h1>
+                  <p style="color: #64748b; font-size: 13px; margin: 0; font-weight: 500;">
+                    Citizen Food Inspection &amp; Student Safety Network
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Divider -->
+              <tr>
+                <td style="padding: 0 28px;">
+                  <div style="border-top: 1px solid #f1f5f9;"></div>
+                </td>
+              </tr>
+
+              <!-- Content Body -->
+              <tr>
+                <td style="padding: 24px 28px 20px 28px;">
+                  <p style="font-size: 15px; color: #1e293b; line-height: 1.5; margin: 0 0 14px 0;">
+                    Hello <strong>${recipientName}</strong>,
+                  </p>
+                  <p style="font-size: 13.5px; color: #475569; line-height: 1.6; margin: 0 0 22px 0;">
+                    Use the single-use passcode below to securely authenticate into your cadet food safety laboratory portal:
+                  </p>
+
+                  <!-- Glowing Code Box -->
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 22px;">
+                    <tr>
+                      <td align="center">
+                        <div style="background: linear-gradient(135deg, #f0fdfa 0%, #e0f2fe 100%); border: 2px dashed #0d9488; border-radius: 18px; padding: 22px 18px; text-align: center;">
+                          <span style="display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #0d9488; margin-bottom: 8px;">
+                            One-Time Login Passcode
+                          </span>
+                          <span style="display: block; font-size: 38px; font-weight: 800; letter-spacing: 10px; color: #0f172a; font-family: 'SF Mono', 'Roboto Mono', Menlo, Consolas, monospace; line-height: 1.1;">
+                            ${otp}
+                          </span>
+                          <span style="display: inline-block; margin-top: 10px; font-size: 11.5px; color: #64748b; font-weight: 600;">
+                            ⏱️ Valid for 10 minutes
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  </table>
+
+                  <!-- Reassurance Note -->
+                  <div style="background-color: #f8fafc; border-radius: 14px; border: 1px solid #e2e8f0; padding: 13px 16px; margin-bottom: 6px;">
+                    <p style="font-size: 12px; color: #64748b; line-height: 1.5; margin: 0;">
+                      🛡️ <strong>Cadet Notice:</strong> If you did not request this login code, no action is needed. Your cadet account remains secure.
+                    </p>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #f8fafc; padding: 22px 28px; border-top: 1px solid #e2e8f0; text-align: center;">
+                  <p style="font-size: 11.5px; font-weight: 700; color: #334155; margin: 0 0 4px 0;">
+                    Lourdes Convent Primary School • Surat Municipal District
+                  </p>
+                  <p style="font-size: 11px; color: #94a3b8; margin: 0 0 10px 0;">
+                    Athwa Lines, Surat, Gujarat 395001 • Citizen Food Safety Initiative
+                  </p>
+                  <a href="https://pureplate-nu.vercel.app" style="font-size: 11.5px; color: #0d9488; text-decoration: none; font-weight: 700;">
+                    Launch PurePlate Portal ➔
+                  </a>
+                </td>
+              </tr>
+
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+
+  // 1. Dispatch via Google Apps Script Webhook (Free Gmail API dispatch)
   if (driveWebhook) {
     try {
       const res = await fetch(driveWebhook, {
@@ -349,20 +452,10 @@ async function dispatchEmailOtp(email, otp, name) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          from: 'PurePlate Verification <onboarding@resend.dev>',
+          from: 'PurePlate <onboarding@resend.dev>',
           to: email,
-          subject: `PurePlate Verification Code: ${otp}`,
-          html: `
-            <div style="font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 500px; padding: 24px; border: 1px solid #e2e8f0; border-radius: 18px;">
-              <h2 style="color: #0d9488; margin-top: 0;">Lourdes Convent Primary School</h2>
-              <p>Hello <strong>${recipientName}</strong>,</p>
-              <p>Your one-time login verification code for the PurePlate Citizen Food Safety Network is:</p>
-              <div style="font-size: 32px; font-weight: 800; letter-spacing: 6px; color: #0f172a; padding: 14px; background: #f0fdf4; border: 1.5px dashed #10b981; border-radius: 12px; text-align: center; margin: 16px 0;">
-                ${otp}
-              </div>
-              <p style="font-size: 12px; color: #64748b;">This code expires in 10 minutes. If you did not request this code, please ignore this email.</p>
-            </div>
-          `
+          subject: `PurePlate Login Passcode: ${otp}`,
+          html: emailHtml
         })
       });
       if (res.ok) {
@@ -494,7 +587,8 @@ module.exports = async function handler(req, res) {
       });
 
       // Dispatch to registered inbox
-      const dispatchResult = await dispatchEmailOtp(email, otp, user.name);
+      const customWebhook = body.webhookUrl;
+      const dispatchResult = await dispatchEmailOtp(email, otp, user.name, customWebhook);
 
       return sendResponse(res, 200, {
         success: true,

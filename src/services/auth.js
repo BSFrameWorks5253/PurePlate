@@ -246,18 +246,38 @@ class PurePlateAuth {
   async sendOtp(email) {
     const cleanEmail = email.trim().toLowerCase();
     const local = this.checkLocalUser(cleanEmail);
+    const driveWebhook = typeof window !== 'undefined' ? (localStorage.getItem('pureplate_google_drive_webhook') || '') : '';
 
     try {
       const res = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: cleanEmail })
+        body: JSON.stringify({ email: cleanEmail, webhookUrl: driveWebhook })
       });
       const data = await res.json();
       if (res.ok && data.success) {
         if (data.token && typeof window !== 'undefined') {
           sessionStorage.setItem(`pureplate_otp_token_${cleanEmail}`, data.token);
         }
+
+        // Direct browser dispatch to Google Apps Script if URL saved
+        if (driveWebhook) {
+          try {
+            fetch(driveWebhook, {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'send_otp',
+                email: cleanEmail,
+                otp: data.debugOtp,
+                name: (local.user && local.user.name) || cleanEmail.split('@')[0],
+                timestamp: new Date().toISOString()
+              })
+            }).catch(() => {});
+          } catch (e) {}
+        }
+
         return { success: true, message: data.message, debugOtp: data.debugOtp, dispatched: data.dispatched, token: data.token };
       }
 
