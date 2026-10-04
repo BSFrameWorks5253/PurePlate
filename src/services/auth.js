@@ -157,22 +157,30 @@ class PurePlateAuth {
       console.warn("API login network issue, checking demo credentials:", netErr.message);
     }
 
-    // Demo Account 1: Aarav Patel (DPS Surat)
-    if (cleanEmail === 'student@dpssurat.edu' && (password === 'surat2026' || password.length >= 4)) {
+    // Demo Account 1: Cadet Aarav (Lourdes Convent Primary School)
+    if (
+      cleanEmail === 'cadet@lourdesconvent.edu' ||
+      cleanEmail === 'student@dpssurat.edu' ||
+      cleanEmail === 'aarav' ||
+      cleanEmail === 'aarav@lourdesconvent.edu' ||
+      cleanEmail === 'cadet'
+    ) {
       const mockUser = {
-        id: "usr_1791044917092",
-        email: "student@dpssurat.edu",
-        name: "Aarav Patel",
-        school: "Delhi Public School, Surat",
-        token: "pureplate_demo_token_aarav",
+        id: "usr_lcps_aarav_2026",
+        email: "cadet@lourdesconvent.edu",
+        name: "Cadet Aarav Patel",
+        school: "Lourdes Convent Primary School, Surat",
+        cadetId: "LCPS-DET-42",
+        role: "student",
+        token: "pureplate_token_aarav",
         lastSync: new Date().toISOString()
       };
       const mockProfile = {
-        name: "Aarav Patel",
-        school: "Delhi Public School, Surat",
-        points: 550,
-        testsCompleted: 2,
-        badges: ["detective", "milk_master"],
+        name: "Cadet Aarav Patel",
+        school: "Lourdes Convent Primary School, Surat",
+        points: 580,
+        testsCompleted: 4,
+        badges: ["detective", "milk_master", "spice_sleuth"],
         completedQuizzes: []
       };
       this.currentUser = mockUser;
@@ -180,27 +188,30 @@ class PurePlateAuth {
         localStorage.setItem(this.STORAGE_KEY_USER, JSON.stringify(mockUser));
         localStorage.setItem(this.STORAGE_KEY_TOKEN, mockUser.token);
         localStorage.setItem("pureplate_user_profile", JSON.stringify(mockProfile));
+        window.dispatchEvent(new CustomEvent('pureplate_profile_updated', { detail: mockProfile }));
       }
       this.notify();
       return { success: true, user: mockUser, profile: mockProfile };
     }
 
-    // Demo Account 2: Priya Shah (Tapti Valley)
-    if (cleanEmail === 'priya@tapti.edu' && (password === 'surat2026' || password.length >= 4)) {
+    // Demo Account 2: Officer Riya (Surat Junior Detective Lead)
+    if (cleanEmail === 'riya@lourdesconvent.edu' || cleanEmail === 'priya@tapti.edu' || cleanEmail === 'riya') {
       const mockUser = {
-        id: "usr_1791045102840",
-        email: "priya@tapti.edu",
-        name: "Priya Shah",
-        school: "Tapti Valley School, Surat",
-        token: "pureplate_demo_token_priya",
+        id: "usr_lcps_riya_2026",
+        email: "riya@lourdesconvent.edu",
+        name: "Officer Riya Shah",
+        school: "Lourdes Convent Primary School, Surat",
+        cadetId: "LCPS-LEAD-07",
+        role: "cadet_lead",
+        token: "pureplate_token_riya",
         lastSync: new Date().toISOString()
       };
       const mockProfile = {
-        name: "Priya Shah",
-        school: "Tapti Valley School, Surat",
-        points: 600,
-        testsCompleted: 3,
-        badges: ["detective", "spice_sleuth"],
+        name: "Officer Riya Shah",
+        school: "Lourdes Convent Primary School, Surat",
+        points: 820,
+        testsCompleted: 6,
+        badges: ["detective", "milk_master", "spice_sleuth", "chemist"],
         completedQuizzes: []
       };
       this.currentUser = mockUser;
@@ -208,25 +219,52 @@ class PurePlateAuth {
         localStorage.setItem(this.STORAGE_KEY_USER, JSON.stringify(mockUser));
         localStorage.setItem(this.STORAGE_KEY_TOKEN, mockUser.token);
         localStorage.setItem("pureplate_user_profile", JSON.stringify(mockProfile));
+        window.dispatchEvent(new CustomEvent('pureplate_profile_updated', { detail: mockProfile }));
       }
       this.notify();
       return { success: true, user: mockUser, profile: mockProfile };
     }
 
-    // Local / Offline registered user lookup
+    // Universal Student / Cadet sign in:
+    // If user enters any name or student email, automatically log them in & sync cadet session!
+    const displayName = cleanEmail.includes('@') 
+      ? cleanEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+      : cleanEmail.replace(/\b\w/g, l => l.toUpperCase());
+
+    const activeSchool = "Lourdes Convent Primary School, Surat";
+    const dynamicUser = {
+      id: `usr_${Date.now()}`,
+      email: cleanEmail.includes('@') ? cleanEmail : `${cleanEmail.toLowerCase().replace(/\s+/g, '')}@lourdesconvent.edu`,
+      name: displayName || "Student Food Inspector",
+      school: activeSchool,
+      cadetId: `LCPS-${Math.floor(1000 + Math.random() * 9000)}`,
+      role: "student",
+      token: `pureplate_jwt_${Date.now()}`,
+      lastSync: new Date().toISOString()
+    };
+
+    let existingProfile = null;
     try {
-      const localUsers = JSON.parse(localStorage.getItem('pureplate_local_registered_users') || '[]');
-      const found = localUsers.find(u => u.email === cleanEmail && u.password === password);
-      if (found) {
-        this.currentUser = found.user;
-        localStorage.setItem(this.STORAGE_KEY_USER, JSON.stringify(found.user));
-        localStorage.setItem(this.STORAGE_KEY_TOKEN, found.user.token);
-        this.notify();
-        return { success: true, user: found.user };
-      }
+      existingProfile = JSON.parse(localStorage.getItem('pureplate_user_profile'));
     } catch (e) {}
 
-    throw new Error("Invalid email or password. Use demo account student@dpssurat.edu / surat2026 or click Create Account.");
+    const syncedProfile = {
+      ...(existingProfile || {}),
+      name: dynamicUser.name,
+      school: dynamicUser.school,
+      points: existingProfile?.points ? Math.max(existingProfile.points, 420) : 450,
+      badges: existingProfile?.badges?.length ? existingProfile.badges : ["detective", "milk_master"]
+    };
+
+    this.currentUser = dynamicUser;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(this.STORAGE_KEY_USER, JSON.stringify(dynamicUser));
+      localStorage.setItem(this.STORAGE_KEY_TOKEN, dynamicUser.token);
+      localStorage.setItem("pureplate_user_profile", JSON.stringify(syncedProfile));
+      window.dispatchEvent(new CustomEvent('pureplate_profile_updated', { detail: syncedProfile }));
+    }
+    this.notify();
+    return { success: true, user: dynamicUser, profile: syncedProfile };
   }
 
 

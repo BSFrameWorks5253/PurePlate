@@ -14,7 +14,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// Curated Crisp Tile Layer Providers (100% Free, Ultra High Resolution, Zero Watermark)
+// Curated Crisp Tile Layer Provider (High Resolution Esri World Street Map)
 const TILE_PROVIDERS = {
   streets: {
     id: 'streets',
@@ -26,45 +26,13 @@ const TILE_PROVIDERS = {
       maxZoom: 19
     }
   },
-  voyager: {
-    id: 'voyager',
-    name: 'Carto Voyager',
-    icon: '🏙️',
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-    options: {
-      attribution: '&copy; CartoDB &copy; OpenStreetMap',
-      subdomains: 'abcd',
-      maxZoom: 20
-    }
-  },
-  osm: {
-    id: 'osm',
-    name: 'OpenStreetMap',
-    icon: '📍',
-    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    options: {
-      attribution: '&copy; OpenStreetMap contributors',
-      maxZoom: 19
-    }
-  },
   darkmatter: {
     id: 'darkmatter',
     name: 'Night Matrix',
     icon: '🌙',
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
     options: {
-      attribution: '&copy; CartoDB &copy; OpenStreetMap',
-      subdomains: 'abcd',
-      maxZoom: 20
-    }
-  },
-  satellite: {
-    id: 'satellite',
-    name: 'Satellite',
-    icon: '🛰️',
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    options: {
-      attribution: 'Tiles &copy; Esri &mdash; Earthstar Geographics',
+      attribution: 'Tiles &copy; Esri &mdash; World Street Map',
       maxZoom: 19
     }
   }
@@ -958,56 +926,6 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
         </div>
 
         <p className="map-subheading">Live crowdsourced adulteration heat map &amp; pure zones across Surat municipal wards</p>
-
-        {/* Secondary Utility Toolbar */}
-        <div className="map-util-toolbar">
-          <div className="map-tile-switchers">
-            {Object.values(TILE_PROVIDERS).map((p) => (
-              <button
-                key={p.id}
-                className={`tile-chip ${activeTileKey === p.id ? 'active' : ''}`}
-                onClick={() => {
-                  soundEngine.playClick();
-                  setActiveTileKey(p.id);
-                  if (mapEngine !== 'leaflet') setMapEngine('leaflet');
-                }}
-              >
-                <span>{p.icon} {p.name}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="map-extra-tools">
-            <button
-              className="map-tool-btn"
-              title="Toggle Engine"
-              onClick={() => {
-                soundEngine.playClick();
-                const nextEngine = mapEngine === 'leaflet' ? 'google' : 'leaflet';
-                setMapEngine(nextEngine);
-                showToast(`Switched engine to ${nextEngine === 'google' ? 'Google Maps' : 'Leaflet Vector'}`, 'info');
-              }}
-            >
-              <span>🔄 {mapEngine === 'google' ? 'Leaflet' : 'Google'}</span>
-            </button>
-            <button
-              className="map-tool-btn"
-              title="Configure Google Maps API Key"
-              onClick={() => {
-                soundEngine.playClick();
-                setApiKeyModalOpen(true);
-              }}
-            >
-              <span>🔑 API Key</span>
-            </button>
-            <button className="map-tool-btn" title="Export CSV" onClick={handleExportCsv}>
-              <span>📥 CSV</span>
-            </button>
-            <button className="map-tool-btn" title="Export JSON" onClick={handleExportJson}>
-              <span>📦 JSON</span>
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Real-Time Safety Metrics Strip */}
@@ -1071,28 +989,6 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
           style={{ width: '100%', height: '100%' }}
         ></div>
 
-        {/* Floating Layer Selector (Leaflet) */}
-        {mapEngine === 'leaflet' && (
-          <div className="map-floating-overlay-top-left">
-            <div className="map-layer-selector">
-              {Object.values(TILE_PROVIDERS).map((prov) => (
-                <button
-                  key={prov.id}
-                  className={`layer-opt-btn ${activeTileKey === prov.id ? 'active' : ''}`}
-                  onClick={() => {
-                    soundEngine.playClick();
-                    setActiveTileKey(prov.id);
-                    showToast(`Switched map layer to ${prov.name}`, 'info');
-                  }}
-                  title={`Switch to ${prov.name}`}
-                >
-                  <span>{prov.icon}</span>
-                  <span>{prov.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Floating Glassmorphic Legend Box (Desktop) */}
         <div className="map-legend-box">
@@ -1171,54 +1067,7 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
           >
             <span>🎯</span>
           </button>
-          <button 
-            className={`mobile-fab ${mobileLayersOpen ? 'active' : ''}`}
-            title="Switch Map Layer"
-            onClick={() => {
-              soundEngine.playClick();
-              setMobileLayersOpen(!mobileLayersOpen);
-            }}
-          >
-            <span>🗺️</span>
-          </button>
-          <button 
-            className="mobile-fab" 
-            title="Toggle Engine"
-            onClick={() => {
-              soundEngine.playClick();
-              const nextEngine = mapEngine === 'leaflet' ? 'google' : 'leaflet';
-              setMapEngine(nextEngine);
-              showToast(`Engine: ${nextEngine === 'google' ? 'Google Maps' : 'Detailed Streets'}`, 'info');
-            }}
-          >
-            <span>🔄</span>
-          </button>
         </div>
-
-        {/* ── Mobile Layer Picker Popover ── */}
-        {mobileLayersOpen && (
-          <div className="mobile-layers-popover" onClick={(e) => e.stopPropagation()}>
-            <div className="mlp-title">Map Tile Layer</div>
-            <div className="mlp-grid">
-              {Object.values(TILE_PROVIDERS).map((p) => (
-                <button
-                  key={p.id}
-                  className={`mlp-btn ${activeTileKey === p.id ? 'active' : ''}`}
-                  onClick={() => {
-                    soundEngine.playClick();
-                    setActiveTileKey(p.id);
-                    setMobileLayersOpen(false);
-                    if (mapEngine !== 'leaflet') setMapEngine('leaflet');
-                    showToast(`Layer: ${p.name}`, 'info');
-                  }}
-                >
-                  <span className="mlp-icon">{p.icon}</span>
-                  <span className="mlp-name">{p.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* ── Mobile Floating Apple Maps Bottom Safety Drawer ── */}
         <div className={`map-mobile-drawer ${mobileDrawerOpen ? 'expanded' : 'collapsed'}`}>
@@ -1616,80 +1465,6 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
         document.body
       )}
 
-      {/* Google Maps API Key Modal - Portaled to document.body */}
-      {apiKeyModalOpen && typeof document !== 'undefined' && createPortal(
-        <div className="auth-modal-backdrop active" onClick={() => setApiKeyModalOpen(false)}>
-          <div className="auth-modal-sheet" style={{ maxWidth: '440px' }} onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close-btn" onClick={() => setApiKeyModalOpen(false)} aria-label="Close modal">
-              &times;
-            </button>
-            <div style={{ textAlign: 'left', padding: '10px 4px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                <span style={{ fontSize: '28px' }}>🗺️</span>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>Google Maps Platform</h3>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Configure Google Maps JavaScript API</span>
-                </div>
-              </div>
-              <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: '10px 0 16px' }}>
-                PurePlate uses Leaflet with CartoDB &amp; ESRI satellite vector tiles by default. If you have an official Google Maps API Key, you can configure it here.
-              </p>
-
-              <form onSubmit={handleSaveApiKey}>
-                <div style={{ marginBottom: '16px' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px', color: 'var(--text-primary)' }}>
-                    Google Maps API Key:
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="AIzaSy..."
-                    value={apiKeyInput}
-                    onChange={(e) => setApiKeyInput(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px',
-                      borderRadius: '12px',
-                      border: '1px solid var(--border-subtle)',
-                      background: 'var(--bg-input)',
-                      color: 'var(--text-primary)',
-                      fontFamily: 'monospace',
-                      fontSize: '0.85rem'
-                    }}
-                  />
-                  <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '6px' }}>
-                    Tip: Leaving this blank keeps the ultra-fast Leaflet vector engine active.
-                  </span>
-                </div>
-
-                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                  <button
-                    type="button"
-                    className="btn-locate-user"
-                    onClick={() => {
-                      setApiKeyInput('');
-                      localStorage.removeItem('pureplate_google_maps_api_key');
-                      setApiKey('');
-                      setApiKeyModalOpen(false);
-                      setMapEngine('leaflet');
-                      showToast('API Key cleared. Using Leaflet vector engine.', 'info');
-                    }}
-                  >
-                    Clear Key
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn-primary-action"
-                    style={{ width: 'auto', padding: '10px 20px', borderRadius: '12px', fontSize: '13px' }}
-                  >
-                    Save &amp; Apply
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
     </section>
   );
 }

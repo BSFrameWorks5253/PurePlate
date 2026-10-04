@@ -66,7 +66,7 @@ export default function BottomNav({ activeScreen, setActiveScreen }) {
     <nav className="bottom-nav-bar" id="app-bottom-nav" aria-label="Main Navigation">
       <div className="bottom-nav-dock">
         {tabs.map((tab) => {
-          const isActive = activeScreen === tab.id || (tab.id === 'screen-selection' && activeScreen === 'screen-camera');
+          const isActive = activeScreen === tab.id || (tab.id === 'screen-selection' && (activeScreen === 'screen-camera' || activeScreen === 'screen-procedure'));
           return (
             <button
               key={tab.id}

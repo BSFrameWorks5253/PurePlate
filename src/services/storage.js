@@ -20,10 +20,11 @@ class PurePlateStorage {
       );
     }
 
-    if (!localStorage.getItem(this.STORAGE_KEY_USER_PROFILE)) {
+    const existingProfile = localStorage.getItem(this.STORAGE_KEY_USER_PROFILE);
+    if (!existingProfile) {
       const defaultProfile = {
         name: "Junior Food Inspector",
-        school: "Delhi Public School, Surat",
+        school: "Lourdes Convent Primary School, Surat",
         points: 420,
         testsCompleted: 3,
         badges: ["detective", "milk_master", "spice_sleuth"],
@@ -33,6 +34,14 @@ class PurePlateStorage {
         this.STORAGE_KEY_USER_PROFILE,
         JSON.stringify(defaultProfile)
       );
+    } else {
+      try {
+        const parsed = JSON.parse(existingProfile);
+        if (parsed.school && parsed.school.includes('Delhi Public School')) {
+          parsed.school = "Lourdes Convent Primary School, Surat";
+          localStorage.setItem(this.STORAGE_KEY_USER_PROFILE, JSON.stringify(parsed));
+        }
+      } catch (e) {}
     }
 
     if (!localStorage.getItem(this.STORAGE_KEY_REGION)) {
@@ -266,6 +275,12 @@ class PurePlateStorage {
     link.download = `pureplate_database_${new Date().toISOString().slice(0, 10)}.json`;
     link.click();
     URL.revokeObjectURL(url);
+  }
+
+  setUserProfile(profile) {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(this.STORAGE_KEY_USER_PROFILE, JSON.stringify(profile));
+    window.dispatchEvent(new CustomEvent('pureplate_profile_updated', { detail: profile }));
   }
 
   resetDatabase() {

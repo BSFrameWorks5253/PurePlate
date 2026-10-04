@@ -136,9 +136,20 @@ export default function SelectionScreen({
                   <span className="food-card-badge">{item.category.toUpperCase()}</span>
                 </div>
                 <span className="food-card-adulterant">Target: {item.adulterant}</span>
-                <div className="food-card-meta">
-                  <span>🧪 {item.tools.length} Tools</span>
-                  <span>⏱️ 2 Mins</span>
+                <div className="food-card-action-row">
+                  <div className="food-card-meta">
+                    <span>🧪 {item.tools.length} Tools</span>
+                    <span>⏱️ 2 Mins</span>
+                  </div>
+                  <button
+                    className="btn-card-start-test"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCardClick(item);
+                    }}
+                  >
+                    Start Test ➔
+                  </button>
                 </div>
               </div>
               <div className="food-card-arrow">➔</div>

@@ -1,0 +1,7 @@
+remove api key button google button and csv button also also make the ui proper the ui is little blurry 
+also make the loggo more better with the best loading screens sekleton loading screens 
+also the login isnt working make the login work with the student sync as well also make the login screen like a proper screen not a pop up also remove the Carto Voyager OpenStreetMap Night Matrix Satellite from the map screen 
+change the scool name to Lourdes Convent Primary School
+make the app in the first screen and then if i open a different page the url should be added / that page name like this
+https://pureplate-nu.vercel.app/map
+also in the test in the start test eg Milk Starch & Thickener Test in that there will be a full step by step procedure and instructions in that page the user can follow and do the test  also there should be a tutorial as well in that page the app will explain each steps to the user like in games we have a tutorial mode 

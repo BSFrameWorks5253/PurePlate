@@ -5,12 +5,25 @@ import storage from '../services/storage.js';
 import soundEngine from '../services/sound.js';
 
 export default function LearningScreen({ showToast }) {
-  const [profile, setProfile] = useState(storage.getUserProfile() || {
-    name: 'Junior Food Inspector',
-    school: 'Delhi Public School, Surat',
-    points: 420,
-    badges: ['detective', 'milk_master', 'spice_sleuth']
+  const [profile, setProfile] = useState(() => {
+    const p = storage.getUserProfile();
+    return p || {
+      name: 'Junior Food Inspector',
+      school: 'Lourdes Convent Primary School, Surat',
+      points: 420,
+      badges: ['detective', 'milk_master', 'spice_sleuth']
+    };
   });
+
+  // Keep profile synchronized whenever login/auth updates
+  React.useEffect(() => {
+    const handleProfileUpdate = (e) => {
+      if (e.detail) setProfile(e.detail);
+      else setProfile(storage.getUserProfile());
+    };
+    window.addEventListener('pureplate_profile_updated', handleProfileUpdate);
+    return () => window.removeEventListener('pureplate_profile_updated', handleProfileUpdate);
+  }, []);
 
   // Quiz State
   const [quizIndex, setQuizIndex] = useState(0);
@@ -264,7 +277,7 @@ export default function LearningScreen({ showToast }) {
             <div className="lb-list">
               <div className="lb-item rank-1">
                 <span className="lb-rank">🥇 1</span>
-                <div className="lb-name">Delhi Public School, Surat</div>
+                <div className="lb-name">Lourdes Convent Primary School, Surat</div>
                 <span className="lb-points">4,820 pts</span>
               </div>
               <div className="lb-item rank-2">

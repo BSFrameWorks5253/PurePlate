@@ -2,37 +2,118 @@ import React, { useState, useEffect } from 'react';
 import Header from './components/Header.jsx';
 import BottomNav from './components/BottomNav.jsx';
 import InstructionSheet from './components/InstructionSheet.jsx';
-import AuthModal from './components/AuthModal.jsx';
 import QRModal from './components/QRModal.jsx';
 import Toast from './components/Toast.jsx';
 import WelcomeScreen from './components/WelcomeScreen.jsx';
 
 import HomeScreen from './screens/HomeScreen.jsx';
 import SelectionScreen from './screens/SelectionScreen.jsx';
+import ProcedureScreen from './screens/ProcedureScreen.jsx';
 import CameraScreen from './screens/CameraScreen.jsx';
 import MapScreen from './screens/MapScreen.jsx';
 import LearningScreen from './screens/LearningScreen.jsx';
+import LoginScreen from './screens/LoginScreen.jsx';
 
 import { FOOD_PROTOCOLS } from './data/protocols.js';
 import storage from './services/storage.js';
 import soundEngine from './services/sound.js';
 
+// Route Helper Functions
+const getScreenFromPath = (path) => {
+  if (!path) return 'screen-home';
+  const clean = path.replace(/\/$/, '').toLowerCase();
+  if (clean === '/map') return 'screen-map';
+  if (clean === '/test') return 'screen-selection';
+  if (clean === '/academy' || clean === '/learn') return 'screen-learning';
+  if (clean === '/login') return 'screen-login';
+  if (clean === '/procedure') return 'screen-procedure';
+  if (clean === '/camera') return 'screen-camera';
+  return 'screen-home';
+};
+
+const getPathFromScreen = (screenId, protocolId) => {
+  switch (screenId) {
+    case 'screen-map':
+      return '/map';
+    case 'screen-selection':
+      return '/test';
+    case 'screen-learning':
+      return '/academy';
+    case 'screen-login':
+      return '/login';
+    case 'screen-procedure':
+      return protocolId ? `/procedure?test=${protocolId}` : '/procedure';
+    case 'screen-camera':
+      return '/camera';
+    case 'screen-home':
+    default:
+      return '/';
+  }
+};
+
 export default function App() {
-  const [activeScreen, setActiveScreen] = useState('screen-home');
+  // Initialize screen from browser URL if available
+  const [activeScreen, setActiveScreen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return getScreenFromPath(window.location.pathname);
+    }
+    return 'screen-home';
+  });
+
   const [viewMode, setViewMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.innerWidth < 821 ? 'mobile' : 'desktop';
     }
     return 'desktop';
   });
+
   const [theme, setTheme] = useState('light');
   const [region, setRegion] = useState(storage.getUserRegion());
-  const [selectedProtocol, setSelectedProtocol] = useState(FOOD_PROTOCOLS[0]);
+  
+  // Selected protocol initialization (supports ?test=query parameter)
+  const [selectedProtocol, setSelectedProtocol] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const testParam = params.get('test');
+      if (testParam) {
+        const found = FOOD_PROTOCOLS.find((p) => p.id === testParam);
+        if (found) return found;
+      }
+    }
+    return FOOD_PROTOCOLS[0];
+  });
+
   const [isInstructionOpen, setIsInstructionOpen] = useState(false);
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isQROpen, setIsQROpen] = useState(false);
   const [toasts, setToasts] = useState([]);
   const [showSplash, setShowSplash] = useState(true);
+
+  // Sync browser URL with HTML5 History API
+  const syncBrowserUrl = (screenId, protocolId) => {
+    if (typeof window === 'undefined') return;
+    const targetPath = getPathFromScreen(screenId, protocolId);
+    if (window.location.pathname + window.location.search !== targetPath) {
+      window.history.pushState({ screenId, protocolId }, '', targetPath);
+    }
+  };
+
+  // Listen to browser Back / Forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      const scr = getScreenFromPath(window.location.pathname);
+      setActiveScreen(scr);
+
+      const params = new URLSearchParams(window.location.search);
+      const testParam = params.get('test');
+      if (testParam) {
+        const found = FOOD_PROTOCOLS.find((p) => p.id === testParam);
+        if (found) setSelectedProtocol(found);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // Toast notification manager
   const showToast = (message, type = 'info') => {
@@ -79,29 +160,33 @@ export default function App() {
   };
 
   // Screen Navigation handlers
-  const handleNavigate = (screenId) => {
+  const handleNavigate = (screenId, extraProtocol = null) => {
     soundEngine.playClick();
+    const proto = extraProtocol || selectedProtocol;
+    if (extraProtocol) {
+      setSelectedProtocol(extraProtocol);
+    }
     setActiveScreen(screenId);
+    syncBrowserUrl(screenId, screenId === 'screen-procedure' ? proto?.id : null);
     window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
+  // When a user selects a protocol (e.g. Milk Starch & Thickener Test)
+  // Navigate directly to the interactive Procedure & Tutorial Screen!
   const handleOpenProtocol = (protocol) => {
     setSelectedProtocol(protocol);
-    setIsInstructionOpen(true);
+    handleNavigate('screen-procedure', protocol);
   };
 
   const handleLaunchCamera = (protocol) => {
     setSelectedProtocol(protocol);
     setIsInstructionOpen(false);
-    setActiveScreen('screen-camera');
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    handleNavigate('screen-camera', protocol);
   };
 
-
-  // Keyboard shortcuts for Mac / Desktop power users (1=Home, 2=Test, 3=Map, 4=Academy)
+  // Keyboard shortcuts (1=Home, 2=Test, 3=Map, 4=Academy)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Don't trigger if user is typing in an input or textarea
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
       if (e.key === '1') handleNavigate('screen-home');
       if (e.key === '2') handleNavigate('screen-selection');
@@ -110,11 +195,11 @@ export default function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [selectedProtocol]);
 
   return (
     <>
-      {/* ── Premium Welcome Splash Screen ── */}
+      {/* ── Welcome Splash Screen ── */}
       {showSplash && (
         <WelcomeScreen onFinish={() => setShowSplash(false)} />
       )}
@@ -135,7 +220,7 @@ export default function App() {
           setViewMode={setViewMode}
           theme={theme}
           setTheme={setTheme}
-          onOpenAuth={() => setIsAuthOpen(true)}
+          onOpenAuth={() => handleNavigate('screen-login')}
           onOpenQR={() => setIsQROpen(true)}
           onDetectLocation={handleDetectLocation}
           region={region}
@@ -159,10 +244,20 @@ export default function App() {
             />
           )}
 
+          {activeScreen === 'screen-procedure' && (
+            <ProcedureScreen
+              protocol={selectedProtocol}
+              onBack={() => handleNavigate('screen-selection')}
+              onLaunchCamera={handleLaunchCamera}
+              onNavigate={handleNavigate}
+              showToast={showToast}
+            />
+          )}
+
           {activeScreen === 'screen-camera' && (
             <CameraScreen
               protocol={selectedProtocol}
-              onBack={() => handleNavigate('screen-selection')}
+              onBack={() => handleNavigate('screen-procedure', selectedProtocol)}
               onNavigateHome={() => handleNavigate('screen-home')}
               onNavigateMap={() => handleNavigate('screen-map')}
               showToast={showToast}
@@ -182,6 +277,14 @@ export default function App() {
           {activeScreen === 'screen-learning' && (
             <LearningScreen
               showToast={showToast}
+              onNavigate={handleNavigate}
+            />
+          )}
+
+          {activeScreen === 'screen-login' && (
+            <LoginScreen
+              onNavigate={handleNavigate}
+              showToast={showToast}
             />
           )}
         </main>
@@ -192,19 +295,12 @@ export default function App() {
           setActiveScreen={handleNavigate}
         />
 
-        {/* Image 1 Instruction Sheet Modal */}
+        {/* Optional Instruction Sheet Modal (if invoked as quick preview) */}
         <InstructionSheet
           isOpen={isInstructionOpen}
           protocol={selectedProtocol}
           onClose={() => setIsInstructionOpen(false)}
           onLaunchCamera={handleLaunchCamera}
-        />
-
-        {/* Auth & Sync Modal */}
-        <AuthModal
-          isOpen={isAuthOpen}
-          onClose={() => setIsAuthOpen(false)}
-          showToast={showToast}
         />
 
         {/* QR Code Modal for Phone Testing */}
