@@ -75,7 +75,7 @@ export default function App() {
   const handleNavigate = (screenId) => {
     soundEngine.playClick();
     setActiveScreen(screenId);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   const handleOpenProtocol = (protocol) => {
@@ -87,8 +87,9 @@ export default function App() {
     setSelectedProtocol(protocol);
     setIsInstructionOpen(false);
     setActiveScreen('screen-camera');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'instant' });
   };
+
 
   return (
     <>
@@ -145,6 +146,9 @@ export default function App() {
             <MapScreen
               showToast={showToast}
               theme={theme}
+              onNavigate={handleNavigate}
+              onSelectFood={handleOpenProtocol}
+              onLaunchCamera={handleLaunchCamera}
             />
           )}
 

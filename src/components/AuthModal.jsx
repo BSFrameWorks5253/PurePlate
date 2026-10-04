@@ -20,11 +20,27 @@ export default function AuthModal({ isOpen, onClose, showToast }) {
     onClose();
   };
 
-  const handleQuickDemo = () => {
-    setEmail('student@dpssurat.edu');
+  const handleQuickDemo = (demoEmail = 'student@dpssurat.edu') => {
+    setEmail(demoEmail);
     setPassword('surat2026');
     soundEngine.playClick();
-    showToast('✨ Demo credentials entered', 'info');
+    showToast(`✨ Loaded credentials for ${demoEmail}`, 'info');
+  };
+
+  const handleDirectDemoLogin = async (demoEmail, demoPass = 'surat2026') => {
+    soundEngine.playClick();
+    setLoading(true);
+    try {
+      const res = await authEngine.login({ email: demoEmail, password: demoPass });
+      soundEngine.playSuccess();
+      showToast(`👋 Welcome back, ${res.user.name}!`, 'success');
+      onClose();
+    } catch (err) {
+      soundEngine.playWarning();
+      showToast(err.message || 'Login failed', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLoginSubmit = async (e) => {
@@ -43,6 +59,7 @@ export default function AuthModal({ isOpen, onClose, showToast }) {
       setLoading(false);
     }
   };
+
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
@@ -170,12 +187,29 @@ export default function AuthModal({ isOpen, onClose, showToast }) {
                   <span className="btn-text">{loading ? 'Signing In...' : 'Sign In & Sync Now'}</span>
                 </button>
 
-                {/* Quick Demo Evaluator Button */}
+                {/* Quick Demo Evaluator Buttons */}
                 <div className="demo-account-box">
-                  <span className="demo-box-label">Exhibition Evaluator / Quick Demo:</span>
-                  <button type="button" className="btn-quick-demo-fill" id="btn-fill-demo" onClick={handleQuickDemo}>
-                    ⚡ Use Demo: student@dpssurat.edu
-                  </button>
+                  <span className="demo-box-label">Exhibition Evaluator / Instant Sign-In:</span>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap' }}>
+                    <button 
+                      type="button" 
+                      className="btn-quick-demo-fill" 
+                      id="btn-fill-demo-aarav" 
+                      style={{ flex: 1, minWidth: '150px' }}
+                      onClick={() => handleDirectDemoLogin('student@dpssurat.edu', 'surat2026')}
+                    >
+                      🎓 Aarav (DPS Surat)
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn-quick-demo-fill" 
+                      id="btn-fill-demo-priya" 
+                      style={{ flex: 1, minWidth: '150px' }}
+                      onClick={() => handleDirectDemoLogin('priya@tapti.edu', 'surat2026')}
+                    >
+                      🧪 Priya (Tapti Valley)
+                    </button>
+                  </div>
                 </div>
               </form>
             ) : (

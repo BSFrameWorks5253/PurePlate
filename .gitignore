@@ -5,6 +5,7 @@ package-lock.json
 # Binaries & Downloads
 cloudflared.exe
 *.exe
+*.mp4
 
 # Logs & temp
 *.log
@@ -26,7 +27,8 @@ build/
 .github/
 
 # Server Data & Database Files
-data/
+data/*.tmp
+data/*.log
 
 # Environment Variables & Secrets
 .env

@@ -27,23 +27,86 @@ const SEED_INCIDENTS_FILE = path.join(process.cwd(), 'data', 'community_incident
 const ACTIVE_USERS_FILE = IS_VERCEL ? path.join('/tmp', 'pureplate_users.json') : SEED_USERS_FILE;
 const ACTIVE_INCIDENTS_FILE = IS_VERCEL ? path.join('/tmp', 'pureplate_incidents.json') : SEED_INCIDENTS_FILE;
 
+const DEFAULT_SEED_USERS = [
+  {
+    id: "usr_1791044917092",
+    email: "student@dpssurat.edu",
+    name: "Aarav Patel",
+    school: "Delhi Public School, Surat",
+    salt: "91912b5499be0c640a936a45872528cc",
+    passwordHash: "0beb9449e7267294cbd5b7aeadce09a98fff4315b296f5fefdfe90f0c96c395e",
+    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzcl8xNzkxMDQ0OTE3MDkyIiwiZW1haWwiOiJzdHVkZW50QGRwc3N1cmF0LmVkdSIsImV4cCI6MTc5MzYzODY0NH0.Rogxa5KTbscox3E6HAnPEfnFte0Mh9nnfdi0F8-U79w",
+    profile: {
+      name: "Aarav Patel",
+      school: "Delhi Public School, Surat",
+      points: 550,
+      testsCompleted: 2,
+      badges: ["detective", "milk_master"],
+      completedQuizzes: []
+    },
+    incidents: [
+      {
+        id: "inc_test_1",
+        food: "Milk",
+        testType: "Starch Iodine Test",
+        status: "pass",
+        neighborhood: "Athwa, Surat",
+        date: "2026-10-03T16:28:51.817Z"
+      }
+    ]
+  },
+  {
+    id: "usr_1791045102840",
+    email: "priya@tapti.edu",
+    name: "Priya Shah",
+    school: "Tapti Valley School, Surat",
+    salt: "552a6e7ea0606ed75efb27260a358fbd",
+    passwordHash: "d4d7e708765ed7e26839ec73e946e7efd97eade05f3653341dc08ca78865dd2a",
+    token: "f43e2ced44be72528b0a53f32a3690678cbc8e89a575628f32757a52bf76a711",
+    profile: {
+      name: "Priya Shah",
+      school: "Tapti Valley School, Surat",
+      points: 600,
+      testsCompleted: 3,
+      badges: ["detective", "spice_sleuth"],
+      completedQuizzes: []
+    },
+    incidents: [
+      {
+        id: "inc_turmeric_priya_1791045102848",
+        food: "Turmeric Powder",
+        testType: "Metanil Yellow Acid Test",
+        status: "fail",
+        adulterant: "Metanil Yellow (Industrial Dye)",
+        neighborhood: "Adajan, Surat",
+        vendorType: "Local Grocery Stall",
+        lat: 21.195,
+        lng: 72.793,
+        date: "2026-10-03T16:31:42.848Z"
+      }
+    ]
+  }
+];
+
 function loadUsers() {
   try {
     if (fs.existsSync(ACTIVE_USERS_FILE)) {
-      return JSON.parse(fs.readFileSync(ACTIVE_USERS_FILE, 'utf-8'));
+      const data = JSON.parse(fs.readFileSync(ACTIVE_USERS_FILE, 'utf-8'));
+      if (Array.isArray(data) && data.length > 0) return data;
     }
     if (fs.existsSync(SEED_USERS_FILE)) {
       const data = JSON.parse(fs.readFileSync(SEED_USERS_FILE, 'utf-8'));
       if (IS_VERCEL) {
         try { fs.writeFileSync(ACTIVE_USERS_FILE, JSON.stringify(data, null, 2), 'utf-8'); } catch (e) {}
       }
-      return data;
+      if (Array.isArray(data) && data.length > 0) return data;
     }
   } catch (e) {
     console.error('[API] Error loading users:', e);
   }
-  return [];
+  return DEFAULT_SEED_USERS;
 }
+
 
 function saveUsers(users) {
   try {

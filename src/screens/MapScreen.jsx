@@ -1,213 +1,242 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import storage from '../services/storage.js';
 import soundEngine from '../services/sound.js';
+import { FOOD_PROTOCOLS } from '../data/protocols.js';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+
+// Fix Leaflet's default icon paths in case bundlers mangle them
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
+
+// Curated Crisp Tile Layer Providers
+const TILE_PROVIDERS = {
+  positron: {
+    id: 'positron',
+    name: 'Clean Light',
+    icon: '🏙️',
+    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    options: {
+      attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+      subdomains: 'abcd',
+      maxZoom: 20
+    }
+  },
+  darkmatter: {
+    id: 'darkmatter',
+    name: 'Night Matrix',
+    icon: '🌙',
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    options: {
+      attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+      subdomains: 'abcd',
+      maxZoom: 20
+    }
+  },
+  satellite: {
+    id: 'satellite',
+    name: 'Satellite',
+    icon: '🛰️',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    options: {
+      attribution: 'Tiles &copy; Esri &mdash; Earthstar Geographics',
+      maxZoom: 19
+    }
+  },
+  osm: {
+    id: 'osm',
+    name: 'Detailed Street',
+    icon: '🗺️',
+    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    options: {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
+    }
+  }
+};
+
+// Surat Municipal Wards for Instant Quick-Jump
+const SURAT_WARDS = [
+  { id: 'athwa', name: 'Athwa Lines', coords: [21.1738, 72.8028], zoom: 15 },
+  { id: 'adajan', name: 'Adajan', coords: [21.1882, 72.7933], zoom: 15 },
+  { id: 'pal', name: 'Pal & Gaurav Path', coords: [21.2150, 72.7750], zoom: 15 },
+  { id: 'varachha', name: 'Varachha', coords: [21.2035, 72.8421], zoom: 15 },
+  { id: 'majura', name: 'Majura Gate', coords: [21.1685, 72.8256], zoom: 15 },
+  { id: 'citylight', name: 'City Light', coords: [21.1554, 72.7845], zoom: 15 },
+  { id: 'katargam', name: 'Katargam', coords: [21.2280, 72.8290], zoom: 15 },
+  { id: 'rander', name: 'Rander', coords: [21.2170, 72.7910], zoom: 15 },
+];
 
 // Google Maps Custom Apple Liquid Glass Styles
 const GOOGLE_MAPS_LIGHT_STYLE = [
   { elementType: 'geometry', stylers: [{ color: '#f8fafc' }] },
   { elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }] },
   { elementType: 'labels.text.fill', stylers: [{ color: '#334155' }] },
-  {
-    featureType: 'administrative.locality',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#0f172a' }, { weight: 1.5 }]
-  },
-  {
-    featureType: 'poi',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#64748b' }]
-  },
-  {
-    featureType: 'poi.park',
-    elementType: 'geometry',
-    stylers: [{ color: '#ecfdf5' }]
-  },
-  {
-    featureType: 'road',
-    elementType: 'geometry',
-    stylers: [{ color: '#ffffff' }]
-  },
-  {
-    featureType: 'road',
-    elementType: 'geometry.stroke',
-    stylers: [{ color: '#e2e8f0' }]
-  },
-  {
-    featureType: 'road.highway',
-    elementType: 'geometry',
-    stylers: [{ color: '#ccfbf1' }]
-  },
-  {
-    featureType: 'road.highway',
-    elementType: 'geometry.stroke',
-    stylers: [{ color: '#99f6e4' }]
-  },
-  {
-    featureType: 'water',
-    elementType: 'geometry',
-    stylers: [{ color: '#e0f2fe' }]
-  },
-  {
-    featureType: 'water',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#0284c7' }]
-  }
+  { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#0f172a' }, { weight: 1.5 }] },
+  { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#64748b' }] },
+  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#ecfdf5' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#e2e8f0' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#ccfbf1' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#e0f2fe' }] }
 ];
 
 const GOOGLE_MAPS_DARK_STYLE = [
   { elementType: 'geometry', stylers: [{ color: '#0b1120' }] },
   { elementType: 'labels.text.stroke', stylers: [{ color: '#0b1120' }] },
   { elementType: 'labels.text.fill', stylers: [{ color: '#94a3b8' }] },
-  {
-    featureType: 'administrative.locality',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#38bdf8' }]
-  },
-  {
-    featureType: 'poi',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#64748b' }]
-  },
-  {
-    featureType: 'poi.park',
-    elementType: 'geometry',
-    stylers: [{ color: '#064e3b' }]
-  },
-  {
-    featureType: 'road',
-    elementType: 'geometry',
-    stylers: [{ color: '#1e293b' }]
-  },
-  {
-    featureType: 'road.highway',
-    elementType: 'geometry',
-    stylers: [{ color: '#0f766e' }]
-  },
-  {
-    featureType: 'water',
-    elementType: 'geometry',
-    stylers: [{ color: '#03172e' }]
-  },
-  {
-    featureType: 'water',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#38bdf8' }]
-  }
+  { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#38bdf8' }] },
+  { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#64748b' }] },
+  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#064e3b' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1e293b' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#0f766e' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#03172e' }] }
 ];
 
-export default function MapScreen({ showToast, theme }) {
+export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, onLaunchCamera }) {
   const mapContainerRef = useRef(null);
-  
-  // Google Maps refs
+
+  // Map Engine & Layer State
+  const [mapEngine, setMapEngine] = useState('leaflet'); // 'leaflet' (default, rock-solid) or 'google'
+  const [activeTileKey, setActiveTileKey] = useState(theme === 'dark' ? 'darkmatter' : 'positron');
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // References
+  const leafletInstanceRef = useRef(null);
+  const leafletTileLayerRef = useRef(null);
+  const leafletMarkersGroupRef = useRef(null);
+  const leafletCirclesGroupRef = useRef(null);
+  const markersMapRef = useRef({});
+
+  // Google Maps refs (for optional API key usage)
   const googleMapInstanceRef = useRef(null);
   const googleMarkersRef = useRef([]);
   const googleCirclesRef = useRef([]);
   const activeInfoWindowRef = useRef(null);
 
-  // Fallback Leaflet refs
-  const leafletInstanceRef = useRef(null);
-  const leafletMarkersRef = useRef(null);
-  const leafletCirclesRef = useRef(null);
-
-  const [mapEngine, setMapEngine] = useState('google'); // 'google' or 'leaflet'
   const [googleMapsReady, setGoogleMapsReady] = useState(false);
   const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState(() => {
-    return localStorage.getItem('pureplate_google_maps_api_key') || 
-           (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GOOGLE_MAPS_API_KEY) || 
-           '';
+    return localStorage.getItem('pureplate_google_maps_api_key') || '';
   });
   const [apiKey, setApiKey] = useState(() => {
-    return localStorage.getItem('pureplate_google_maps_api_key') || 
-           (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GOOGLE_MAPS_API_KEY) || 
-           '';
+    return localStorage.getItem('pureplate_google_maps_api_key') || '';
   });
 
+  // Data & Filters
   const [filter, setFilter] = useState('all');
-  const [incidents, setIncidents] = useState(storage.getAllIncidents());
+  const [incidents, setIncidents] = useState(() => storage.getAllIncidents());
+  const [activeWard, setActiveWard] = useState('athwa');
+  const [selectedIncidentId, setSelectedIncidentId] = useState(null);
+
+  // Report Modal on Map
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportCoords, setReportCoords] = useState({ lat: 21.1738, lng: 72.8028, neighborhood: 'Athwa Lines, Surat' });
+  const [reportFood, setReportFood] = useState('Milk & Dairy');
+  const [reportStatus, setReportStatus] = useState('fail');
+  const [reportAdulterant, setReportAdulterant] = useState('Added Starch / Water');
+  const [reportVendor, setReportVendor] = useState('Local Loose Milk Vendor');
+  const [reportNotes, setReportNotes] = useState('');
 
   const filters = [
-    { id: 'all', label: 'All Food Types' },
+    { id: 'all', label: 'All Samples' },
     { id: 'fail', label: '⚠️ Contamination Spikes' },
     { id: 'pass', label: '🛡️ Pure Zones' },
-    { id: 'milk', label: '🥛 Milk Only' },
-    { id: 'spices', label: '🌶️ Spices' },
+    { id: 'milk', label: '🥛 Milk & Dairy' },
+    { id: 'spices', label: '🌶️ Turmeric & Spices' },
+    { id: 'honey', label: '🍯 Honey' },
   ];
 
-  // Dynamically load Google Maps script
+  // Calculated Real-Time Safety Metrics
+  const stats = useMemo(() => {
+    const total = incidents.length;
+    const fails = incidents.filter(i => i.status === 'fail').length;
+    const purityRate = total > 0 ? Math.round(((total - fails) / total) * 100) : 100;
+    return { total, fails, purityRate };
+  }, [incidents]);
+
+  // Keep incidents fresh
+  const refreshIncidents = () => {
+    setIncidents(storage.getAllIncidents());
+  };
+
+  // Auto-switch between Light and Dark CartoDB tiles when theme changes
   useEffect(() => {
-    let isCancelled = false;
+    if (activeTileKey === 'positron' && theme === 'dark') {
+      setActiveTileKey('darkmatter');
+    } else if (activeTileKey === 'darkmatter' && theme === 'light') {
+      setActiveTileKey('positron');
+    }
+  }, [theme]);
 
-    const loadGoogleMaps = () => {
-      if (window.google && window.google.maps) {
-        setGoogleMapsReady(true);
-        return;
+  // Update Leaflet tile layer when activeTileKey changes
+  useEffect(() => {
+    if (mapEngine === 'leaflet' && leafletInstanceRef.current) {
+      const map = leafletInstanceRef.current;
+      if (leafletTileLayerRef.current) {
+        map.removeLayer(leafletTileLayerRef.current);
       }
+      const provider = TILE_PROVIDERS[activeTileKey] || TILE_PROVIDERS.positron;
+      const tileLayer = L.tileLayer(provider.url, provider.options);
+      tileLayer.addTo(map);
+      leafletTileLayerRef.current = tileLayer;
+    }
+  }, [activeTileKey, mapEngine]);
 
-      // Check if script already attached
-      const existingScript = document.getElementById('google-maps-api-script');
-      if (existingScript) {
-        existingScript.remove();
-      }
+  // Handle Google Maps API dynamic loading (only if API key is configured or user switches)
+  useEffect(() => {
+    if (mapEngine !== 'google') return;
 
-      const script = document.createElement('script');
-      script.id = 'google-maps-api-script';
-      const keyQuery = apiKey ? `&key=${encodeURIComponent(apiKey)}` : '';
-      script.src = `https://maps.googleapis.com/maps/api/js?v=weekly&libraries=places,geometry${keyQuery}&callback=__initPurePlateGoogleMaps`;
-      script.async = true;
-      script.defer = true;
+    if (window.google && window.google.maps) {
+      setGoogleMapsReady(true);
+      return;
+    }
 
-      window.__initPurePlateGoogleMaps = () => {
-        if (!isCancelled) {
-          console.log('✅ Google Maps JavaScript API loaded successfully');
-          setGoogleMapsReady(true);
-          setMapEngine('google');
-        }
-      };
+    const existingScript = document.getElementById('google-maps-api-script');
+    if (existingScript) existingScript.remove();
 
-      script.onerror = () => {
-        if (!isCancelled) {
-          console.warn('⚠️ Google Maps script failed to load. Falling back to high-res OpenStreetMap engine.');
-          setMapEngine('leaflet');
-          showToast('Google Maps network notice: using fallback map engine', 'info');
-        }
-      };
+    const script = document.createElement('script');
+    script.id = 'google-maps-api-script';
+    const keyQuery = apiKey ? `&key=${encodeURIComponent(apiKey)}` : '';
+    script.src = `https://maps.googleapis.com/maps/api/js?v=weekly&libraries=places,geometry${keyQuery}&callback=__initPurePlateGoogleMaps`;
+    script.async = true;
+    script.defer = true;
 
-      document.head.appendChild(script);
+    window.__initPurePlateGoogleMaps = () => {
+      setGoogleMapsReady(true);
+      showToast('🗺️ Google Maps JavaScript API initialized', 'success');
     };
 
-    loadGoogleMaps();
+    script.onerror = () => {
+      console.warn('Google Maps script failed. Falling back to Leaflet vector tiles.');
+      setMapEngine('leaflet');
+      showToast('Google Maps network notice: using Leaflet vector tiles', 'info');
+    };
+
+    document.head.appendChild(script);
 
     return () => {
-      isCancelled = true;
       if (window.__initPurePlateGoogleMaps) {
         delete window.__initPurePlateGoogleMaps;
       }
     };
-  }, [apiKey]);
+  }, [apiKey, mapEngine]);
 
-  // Cleanup map instances on unmount
-  useEffect(() => {
-    return () => {
-      clearGoogleLayers();
-      googleMapInstanceRef.current = null;
-      if (leafletInstanceRef.current) {
-        try {
-          leafletInstanceRef.current.remove();
-        } catch (e) {}
-        leafletInstanceRef.current = null;
-      }
-    };
-  }, []);
-
-  // Initialize and maintain Google Map
+  // Initialize Maps (Leaflet or Google)
   useEffect(() => {
     if (!mapContainerRef.current) return;
+    const container = mapContainerRef.current;
 
-    if (mapEngine === 'google' && window.google && window.google.maps) {
-      // Teardown Leaflet if switching from Leaflet to Google
+    if (mapEngine === 'leaflet') {
+      // Teardown Google Maps if any
+      clearGoogleLayers();
+      googleMapInstanceRef.current = null;
+
+      // Teardown previous Leaflet if any
       if (leafletInstanceRef.current) {
         try {
           leafletInstanceRef.current.remove();
@@ -215,7 +244,57 @@ export default function MapScreen({ showToast, theme }) {
         leafletInstanceRef.current = null;
       }
 
-      const container = mapContainerRef.current;
+      container.innerHTML = '';
+
+      const lmap = L.map(container, {
+        center: [21.1738, 72.8028],
+        zoom: 13,
+        zoomControl: false,
+        preferCanvas: true
+      });
+
+      // Add Zoom Control to Bottom Right
+      L.control.zoom({ position: 'bottomright' }).addTo(lmap);
+
+      // Add active Tile Provider
+      const provider = TILE_PROVIDERS[activeTileKey] || (theme === 'dark' ? TILE_PROVIDERS.darkmatter : TILE_PROVIDERS.positron);
+      const tileLayer = L.tileLayer(provider.url, provider.options);
+      tileLayer.addTo(lmap);
+      leafletTileLayerRef.current = tileLayer;
+
+      // Layer groups for markers & radar circles
+      leafletMarkersGroupRef.current = L.layerGroup().addTo(lmap);
+      leafletCirclesGroupRef.current = L.layerGroup().addTo(lmap);
+      leafletInstanceRef.current = lmap;
+
+      // Click on map to drop a pin or report
+      lmap.on('click', (e) => {
+        soundEngine.playClick();
+        const { lat, lng } = e.latlng;
+        setReportCoords({
+          lat: parseFloat(lat.toFixed(5)),
+          lng: parseFloat(lng.toFixed(5)),
+          neighborhood: `Surat GPS (${lat.toFixed(3)}, ${lng.toFixed(3)})`
+        });
+        setIsReportModalOpen(true);
+      });
+
+      renderLeafletMarkers(lmap);
+
+      setTimeout(() => {
+        if (leafletInstanceRef.current) {
+          leafletInstanceRef.current.invalidateSize(true);
+        }
+      }, 200);
+
+    } else if (mapEngine === 'google' && window.google && window.google.maps) {
+      if (leafletInstanceRef.current) {
+        try {
+          leafletInstanceRef.current.remove();
+        } catch (e) {}
+        leafletInstanceRef.current = null;
+      }
+
       container.innerHTML = '';
 
       const center = { lat: 21.1738, lng: 72.8028 };
@@ -223,7 +302,6 @@ export default function MapScreen({ showToast, theme }) {
         center,
         zoom: 13,
         mapTypeId: window.google.maps.MapTypeId.ROADMAP,
-        disableDefaultUI: false,
         zoomControl: true,
         mapTypeControl: false,
         streetViewControl: false,
@@ -234,68 +312,218 @@ export default function MapScreen({ showToast, theme }) {
       googleMapInstanceRef.current = map;
       renderGoogleMarkers(map);
 
-      // Staggered resize triggers
       setTimeout(() => {
         if (googleMapInstanceRef.current) {
           window.google.maps.event.trigger(googleMapInstanceRef.current, 'resize');
           googleMapInstanceRef.current.setCenter(center);
         }
-      }, 150);
-
-    } else if (mapEngine === 'leaflet') {
-      // Fallback Leaflet Map
-      clearGoogleLayers();
-      googleMapInstanceRef.current = null;
-
-      const container = mapContainerRef.current;
-      container.innerHTML = '';
-
-      if (leafletInstanceRef.current) {
-        try {
-          leafletInstanceRef.current.remove();
-        } catch (e) {}
-        leafletInstanceRef.current = null;
-      }
-
-      const lmap = L.map(container, {
-        center: [21.1738, 72.8028],
-        zoom: 13,
-        zoomControl: false,
-        preferCanvas: true
-      });
-
-      L.control.zoom({ position: 'bottomright' }).addTo(lmap);
-
-      const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
-        maxZoom: 19
-      });
-      osm.addTo(lmap);
-
-      leafletMarkersRef.current = L.layerGroup().addTo(lmap);
-      leafletCirclesRef.current = L.layerGroup().addTo(lmap);
-      leafletInstanceRef.current = lmap;
-
-      renderLeafletMarkers(lmap);
-
-      setTimeout(() => {
-        if (leafletInstanceRef.current) {
-          leafletInstanceRef.current.invalidateSize(true);
-        }
-      }, 150);
+      }, 200);
     }
   }, [mapEngine, googleMapsReady]);
 
-  // Update Google Maps theme dynamically
+  // Handle Resize whenever viewport is expanded/collapsed
   useEffect(() => {
-    if (mapEngine === 'google' && googleMapInstanceRef.current && window.google?.maps) {
-      googleMapInstanceRef.current.setOptions({
-        styles: theme === 'dark' ? GOOGLE_MAPS_DARK_STYLE : GOOGLE_MAPS_LIGHT_STYLE
-      });
-    }
-  }, [theme, mapEngine]);
+    const timer = setTimeout(() => {
+      if (mapEngine === 'leaflet' && leafletInstanceRef.current) {
+        leafletInstanceRef.current.invalidateSize(true);
+      } else if (mapEngine === 'google' && googleMapInstanceRef.current && window.google?.maps) {
+        window.google.maps.event.trigger(googleMapInstanceRef.current, 'resize');
+      }
+    }, 320);
+    return () => clearTimeout(timer);
+  }, [isExpanded]);
 
-  // Render Google Maps Markers & Circles
+  // Filtered incidents list
+  const filteredIncidents = useMemo(() => {
+    return incidents.filter((item) => {
+      if (filter === 'fail') return item.status === 'fail';
+      if (filter === 'pass') return item.status === 'pass';
+      if (filter === 'milk') return item.food.toLowerCase().includes('milk');
+      if (filter === 'spices') return item.food.toLowerCase().includes('turmeric') || item.food.toLowerCase().includes('chili');
+      if (filter === 'honey') return item.food.toLowerCase().includes('honey');
+      return true;
+    });
+  }, [incidents, filter]);
+
+  // Leaflet Marker Rendering
+  const renderLeafletMarkers = (mapInstance) => {
+    const lmap = mapInstance || leafletInstanceRef.current;
+    if (!lmap || !leafletMarkersGroupRef.current || !leafletCirclesGroupRef.current) return;
+
+    leafletMarkersGroupRef.current.clearLayers();
+    leafletCirclesGroupRef.current.clearLayers();
+    markersMapRef.current = {};
+
+    filteredIncidents.forEach((item) => {
+      const isFail = item.status === 'fail';
+
+      if (isFail) {
+        // Red Pulsing Wave Marker
+        const customIcon = L.divIcon({
+          className: 'custom-radar-pin',
+          html: `
+            <div class="radar-wave"></div>
+            <div class="radar-wave second"></div>
+            <div class="radar-marker-inner" title="⚠️ Contamination Spike">
+              ⚠️
+            </div>
+          `,
+          iconSize: [44, 44],
+          iconAnchor: [22, 22]
+        });
+
+        const marker = L.marker([item.lat, item.lng], { icon: customIcon });
+
+        // Radar circle layer
+        const circle = L.circle([item.lat, item.lng], {
+          radius: 380,
+          color: '#ef4444',
+          weight: 1.5,
+          opacity: 0.85,
+          fillColor: '#ef4444',
+          fillOpacity: 0.18
+        });
+        leafletCirclesGroupRef.current.addLayer(circle);
+
+        // Rich Glassmorphic Popup
+        const popupContent = `
+          <div class="pureplate-popup-card">
+            <div class="popup-status-badge fail">
+              <span>⚠️ Contamination Spike</span>
+            </div>
+            <div class="popup-food-title">${item.food}</div>
+            <div class="popup-loc-meta">
+              <span>📍 ${item.neighborhood}</span>
+            </div>
+            <div class="popup-adulterant-box fail">
+              <strong>Adulterant:</strong> ${item.adulterant}
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px;">
+              <strong>Test:</strong> ${item.testType || 'Reagent Colorimetric Test'}
+            </div>
+            <div class="popup-footer-row">
+              <span>${item.timestamp || 'Recent'}</span>
+              <span>${item.vendorType || 'Local Vendor'}</span>
+            </div>
+            <div class="popup-actions-row">
+              <button class="popup-btn primary" id="btn-popup-test-${item.id}">
+                🔬 Test Food
+              </button>
+              <button class="popup-btn" id="btn-popup-zoom-${item.id}">
+                🎯 Focus
+              </button>
+            </div>
+          </div>
+        `;
+
+        marker.bindPopup(popupContent, { maxWidth: 320 });
+
+        marker.on('click', () => {
+          soundEngine.playClick();
+          setSelectedIncidentId(item.id);
+        });
+
+        marker.on('popupopen', () => {
+          const testBtn = document.getElementById(`btn-popup-test-${item.id}`);
+          if (testBtn) {
+            testBtn.onclick = () => handleTestThisFood(item);
+          }
+          const zoomBtn = document.getElementById(`btn-popup-zoom-${item.id}`);
+          if (zoomBtn) {
+            zoomBtn.onclick = () => {
+              soundEngine.playClick();
+              lmap.flyTo([item.lat, item.lng], 16, { duration: 1 });
+            };
+          }
+        });
+
+        leafletMarkersGroupRef.current.addLayer(marker);
+        markersMapRef.current[item.id] = marker;
+
+      } else {
+        // Pure Shield Emerald Marker
+        const shieldIcon = L.divIcon({
+          className: 'custom-shield-pin',
+          html: `
+            <div class="shield-marker-inner" title="🛡️ Verified Pure">
+              🛡️
+            </div>
+          `,
+          iconSize: [36, 36],
+          iconAnchor: [18, 18]
+        });
+
+        const marker = L.marker([item.lat, item.lng], { icon: shieldIcon });
+
+        // Safe green aura
+        const circle = L.circle([item.lat, item.lng], {
+          radius: 250,
+          color: '#10b981',
+          weight: 1.5,
+          opacity: 0.6,
+          fillColor: '#10b981',
+          fillOpacity: 0.12
+        });
+        leafletCirclesGroupRef.current.addLayer(circle);
+
+        const popupContent = `
+          <div class="pureplate-popup-card">
+            <div class="popup-status-badge pass">
+              <span>🛡️ Verified Pure Zone</span>
+            </div>
+            <div class="popup-food-title">${item.food}</div>
+            <div class="popup-loc-meta">
+              <span>📍 ${item.neighborhood}</span>
+            </div>
+            <div class="popup-adulterant-box pass">
+              <strong>Verified Safe:</strong> 100% Unadulterated
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px;">
+              <strong>Test:</strong> ${item.testType || 'Reagent Verification'}
+            </div>
+            <div class="popup-footer-row">
+              <span>${item.timestamp || 'Recent'}</span>
+              <span>${item.vendorType || 'Local Vendor'}</span>
+            </div>
+            <div class="popup-actions-row">
+              <button class="popup-btn primary" id="btn-popup-test-${item.id}">
+                🔬 Re-Test Food
+              </button>
+              <button class="popup-btn" id="btn-popup-zoom-${item.id}">
+                🎯 Focus
+              </button>
+            </div>
+          </div>
+        `;
+
+        marker.bindPopup(popupContent, { maxWidth: 320 });
+
+        marker.on('click', () => {
+          soundEngine.playClick();
+          setSelectedIncidentId(item.id);
+        });
+
+        marker.on('popupopen', () => {
+          const testBtn = document.getElementById(`btn-popup-test-${item.id}`);
+          if (testBtn) {
+            testBtn.onclick = () => handleTestThisFood(item);
+          }
+          const zoomBtn = document.getElementById(`btn-popup-zoom-${item.id}`);
+          if (zoomBtn) {
+            zoomBtn.onclick = () => {
+              soundEngine.playClick();
+              lmap.flyTo([item.lat, item.lng], 16, { duration: 1 });
+            };
+          }
+        });
+
+        leafletMarkersGroupRef.current.addLayer(marker);
+        markersMapRef.current[item.id] = marker;
+      }
+    });
+  };
+
+  // Google Maps Markers & Circles
   const clearGoogleLayers = () => {
     googleMarkersRef.current.forEach((m) => m.setMap(null));
     googleMarkersRef.current = [];
@@ -313,22 +541,16 @@ export default function MapScreen({ showToast, theme }) {
 
     clearGoogleLayers();
 
-    incidents.forEach((item) => {
-      if (filter === 'fail' && item.status !== 'fail') return;
-      if (filter === 'pass' && item.status !== 'pass') return;
-      if (filter === 'milk' && !item.food.toLowerCase().includes('milk')) return;
-      if (filter === 'spices' && !item.food.toLowerCase().includes('turmeric') && !item.food.toLowerCase().includes('chili')) return;
-
+    filteredIncidents.forEach((item) => {
       const isFail = item.status === 'fail';
       const pos = { lat: item.lat, lng: item.lng };
 
       if (isFail) {
-        // Red radar circle in Google Maps
         const circle = new window.google.maps.Circle({
-          strokeColor: '#e11d48',
+          strokeColor: '#ef4444',
           strokeOpacity: 0.85,
           strokeWeight: 1.5,
-          fillColor: '#e11d48',
+          fillColor: '#ef4444',
           fillOpacity: 0.22,
           map: map,
           center: pos,
@@ -337,30 +559,27 @@ export default function MapScreen({ showToast, theme }) {
         });
         googleCirclesRef.current.push(circle);
 
-        // Warning Marker
         const marker = new window.google.maps.Marker({
           position: pos,
           map: map,
           title: `⚠️ Contamination Spike: ${item.food}`,
           icon: {
             url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36">
-                <circle cx="18" cy="18" r="16" fill="#e11d48" stroke="#ffffff" stroke-width="2.5"/>
-                <text x="18" y="23" font-size="16" text-anchor="middle" fill="#ffffff">⚠️</text>
+              <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 38 38">
+                <circle cx="19" cy="19" r="17" fill="#ef4444" stroke="#ffffff" stroke-width="2.5"/>
+                <text x="19" y="24" font-size="16" text-anchor="middle" fill="#ffffff">⚠️</text>
               </svg>
             `),
-            scaledSize: new window.google.maps.Size(36, 36),
-            anchor: new window.google.maps.Point(18, 18)
+            scaledSize: new window.google.maps.Size(38, 38),
+            anchor: new window.google.maps.Point(19, 19)
           }
         });
 
         const info = new window.google.maps.InfoWindow({
           content: `
-            <div style="font-family: inherit; font-size: 13px; line-height: 1.4; padding: 4px; max-width: 250px;">
-              <div style="font-weight: 800; color: #e11d48; font-size: 14px; margin-bottom: 3px;">
-                ⚠️ Contamination Spike
-              </div>
-              <strong>${item.food}</strong> - ${item.testType}<br/>
+            <div style="font-family: inherit; font-size: 13px; line-height: 1.4; padding: 6px; max-width: 260px;">
+              <div style="font-weight: 800; color: #ef4444; font-size: 14px; margin-bottom: 3px;">⚠️ Contamination Spike</div>
+              <strong>${item.food}</strong><br/>
               <span style="color: #64748b; font-size: 11px;">📍 ${item.neighborhood}</span><br/>
               <div style="margin-top: 5px; padding: 4px 8px; background: #fff1f2; border-radius: 6px; color: #9f1239; font-size: 11px; font-weight: 700;">
                 Detected: ${item.adulterant}
@@ -377,11 +596,11 @@ export default function MapScreen({ showToast, theme }) {
           if (activeInfoWindowRef.current) activeInfoWindowRef.current.close();
           info.open(map, marker);
           activeInfoWindowRef.current = info;
+          setSelectedIncidentId(item.id);
         });
 
         googleMarkersRef.current.push(marker);
       } else {
-        // Pure Shield Marker
         const marker = new window.google.maps.Marker({
           position: pos,
           map: map,
@@ -400,10 +619,8 @@ export default function MapScreen({ showToast, theme }) {
 
         const info = new window.google.maps.InfoWindow({
           content: `
-            <div style="font-family: inherit; font-size: 13px; line-height: 1.4; padding: 4px; max-width: 250px;">
-              <div style="font-weight: 800; color: #047857; font-size: 14px; margin-bottom: 3px;">
-                🛡️ Verified Pure &amp; Safe
-              </div>
+            <div style="font-family: inherit; font-size: 13px; line-height: 1.4; padding: 6px; max-width: 260px;">
+              <div style="font-weight: 800; color: #047857; font-size: 14px; margin-bottom: 3px;">🛡️ Verified Pure &amp; Safe</div>
               <strong>${item.food}</strong><br/>
               <span style="color: #64748b; font-size: 11px;">📍 ${item.neighborhood}</span><br/>
               <div style="margin-top: 5px; padding: 4px 8px; background: #ecfdf5; border-radius: 6px; color: #065f46; font-size: 11px; font-weight: 700;">
@@ -421,6 +638,7 @@ export default function MapScreen({ showToast, theme }) {
           if (activeInfoWindowRef.current) activeInfoWindowRef.current.close();
           info.open(map, marker);
           activeInfoWindowRef.current = info;
+          setSelectedIncidentId(item.id);
         });
 
         googleMarkersRef.current.push(marker);
@@ -428,78 +646,83 @@ export default function MapScreen({ showToast, theme }) {
     });
   };
 
-  // Render Leaflet fallback markers
-  const renderLeafletMarkers = (mapInstance) => {
-    const lmap = mapInstance || leafletInstanceRef.current;
-    if (!lmap || !leafletMarkersRef.current || !leafletCirclesRef.current) return;
-
-    leafletMarkersRef.current.clearLayers();
-    leafletCirclesRef.current.clearLayers();
-
-    incidents.forEach((item) => {
-      if (filter === 'fail' && item.status !== 'fail') return;
-      if (filter === 'pass' && item.status !== 'pass') return;
-      if (filter === 'milk' && !item.food.toLowerCase().includes('milk')) return;
-      if (filter === 'spices' && !item.food.toLowerCase().includes('turmeric') && !item.food.toLowerCase().includes('chili')) return;
-
-      const isFail = item.status === 'fail';
-
-      if (isFail) {
-        const circle = L.circle([item.lat, item.lng], {
-          radius: 380,
-          color: '#e11d48',
-          weight: 1.5,
-          opacity: 0.8,
-          fillColor: '#e11d48',
-          fillOpacity: 0.22
-        });
-        leafletCirclesRef.current.addLayer(circle);
-
-        const alertIcon = L.divIcon({
-          className: 'custom-leaflet-marker',
-          html: `<div style="background:#e11d48;color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 4px 12px rgba(225,29,72,0.55);border:2px solid white;">⚠️</div>`,
-          iconSize: [32, 32],
-          iconAnchor: [16, 16]
-        });
-
-        const marker = L.marker([item.lat, item.lng], { icon: alertIcon });
-        marker.bindPopup(`<strong>${item.food}</strong>: Adulterant detected (${item.adulterant})`);
-        leafletMarkersRef.current.addLayer(marker);
-      } else {
-        const shieldIcon = L.divIcon({
-          className: 'custom-leaflet-marker',
-          html: `<div style="background:#10b981;color:white;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 4px 12px rgba(16,185,129,0.55);border:2px solid white;">🛡️</div>`,
-          iconSize: [30, 30],
-          iconAnchor: [15, 15]
-        });
-
-        const marker = L.marker([item.lat, item.lng], { icon: shieldIcon });
-        marker.bindPopup(`<strong>${item.food}</strong>: Verified 100% pure.`);
-        leafletMarkersRef.current.addLayer(marker);
-      }
-    });
-  };
-
-  // Re-filter markers whenever filter or incidents change
+  // Re-render markers when filter, incidents, or engine changes
   useEffect(() => {
-    if (mapEngine === 'google') {
-      renderGoogleMarkers();
-    } else {
+    if (mapEngine === 'leaflet') {
       renderLeafletMarkers();
+    } else {
+      renderGoogleMarkers();
     }
   }, [filter, incidents, mapEngine]);
 
+  // Jump to Surat Ward
+  const handleJumpToWard = (ward) => {
+    soundEngine.playClick();
+    setActiveWard(ward.id);
+    if (mapEngine === 'leaflet' && leafletInstanceRef.current) {
+      leafletInstanceRef.current.flyTo(ward.coords, ward.zoom, { duration: 1.2 });
+    } else if (mapEngine === 'google' && googleMapInstanceRef.current) {
+      googleMapInstanceRef.current.panTo({ lat: ward.coords[0], lng: ward.coords[1] });
+      googleMapInstanceRef.current.setZoom(ward.zoom);
+    }
+    showToast(`📍 Centered map on ${ward.name}, Surat`, 'info');
+  };
+
+  // Focus and pop open marker when clicking a feed item
+  const handleFocusIncident = (item) => {
+    soundEngine.playClick();
+    setSelectedIncidentId(item.id);
+
+    if (mapEngine === 'leaflet' && leafletInstanceRef.current) {
+      leafletInstanceRef.current.flyTo([item.lat, item.lng], 15, { duration: 1 });
+      const marker = markersMapRef.current[item.id];
+      if (marker) {
+        setTimeout(() => {
+          marker.openPopup();
+        }, 600);
+      }
+    } else if (mapEngine === 'google' && googleMapInstanceRef.current) {
+      googleMapInstanceRef.current.panTo({ lat: item.lat, lng: item.lng });
+      googleMapInstanceRef.current.setZoom(15);
+    }
+  };
+
+  // Live GPS Geolocation
   const handleLocateUser = () => {
     soundEngine.playClick();
     if (!navigator.geolocation) {
       showToast('Geolocation not supported on this device', 'warning');
       return;
     }
-    showToast('Locating GPS position via Google Maps...', 'info');
+    showToast('🛰️ Acquiring live GPS lock...', 'info');
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const { latitude, longitude } = pos.coords;
-        if (mapEngine === 'google' && googleMapInstanceRef.current && window.google?.maps) {
+        const { latitude, longitude, accuracy } = pos.coords;
+        if (mapEngine === 'leaflet' && leafletInstanceRef.current) {
+          const lmap = leafletInstanceRef.current;
+          lmap.flyTo([latitude, longitude], 15, { duration: 1.2 });
+
+          const gpsIcon = L.divIcon({
+            className: 'custom-gps-pin',
+            html: '<div class="gps-marker-inner" title="Your GPS Location"></div>',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+          });
+
+          L.marker([latitude, longitude], { icon: gpsIcon })
+            .addTo(lmap)
+            .bindPopup(`<strong>📍 Your Live Location</strong><br/><span style="font-size:11px;color:#64748b;">Accurate to ~${Math.round(accuracy || 20)} meters</span>`)
+            .openPopup();
+
+          L.circle([latitude, longitude], {
+            radius: Math.max(accuracy || 50, 100),
+            color: '#0284c7',
+            weight: 1,
+            fillColor: '#38bdf8',
+            fillOpacity: 0.15
+          }).addTo(lmap);
+
+        } else if (googleMapInstanceRef.current && window.google?.maps) {
           const userPos = { lat: latitude, lng: longitude };
           googleMapInstanceRef.current.panTo(userPos);
           googleMapInstanceRef.current.setZoom(15);
@@ -514,27 +737,62 @@ export default function MapScreen({ showToast, theme }) {
             center: userPos,
             radius: 120
           });
-        } else if (leafletInstanceRef.current) {
-          leafletInstanceRef.current.flyTo([latitude, longitude], 15);
-          L.circleMarker([latitude, longitude], {
-            radius: 9,
-            fillColor: '#0284c7',
-            color: '#ffffff',
-            weight: 3,
-            fillOpacity: 1
-          }).addTo(leafletInstanceRef.current).bindPopup('📍 <strong>Your Live Location</strong>').openPopup();
         }
-        showToast('📍 Live GPS position locked on Google Maps!', 'success');
+        soundEngine.playSuccess();
+        showToast('📍 Live GPS position locked on map!', 'success');
       },
       () => {
         showToast('GPS permission denied. Centered on Surat, Athwa Lines.', 'warning');
-        if (mapEngine === 'google' && googleMapInstanceRef.current) {
-          googleMapInstanceRef.current.panTo({ lat: 21.1738, lng: 72.8028 });
+        if (leafletInstanceRef.current) {
+          leafletInstanceRef.current.flyTo([21.1738, 72.8028], 14);
         }
-      }
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
     );
   };
 
+  // Navigate to testing protocol for a food item
+  const handleTestThisFood = (item) => {
+    soundEngine.playClick();
+    const matchedProtocol = FOOD_PROTOCOLS.find(p => 
+      p.foodName.toLowerCase().includes(item.food.toLowerCase().split(' ')[0]) ||
+      item.food.toLowerCase().includes(p.foodName.toLowerCase().split(' ')[0])
+    ) || FOOD_PROTOCOLS[0];
+
+    if (onSelectFood) {
+      onSelectFood(matchedProtocol);
+    } else if (onNavigate) {
+      onNavigate('screen-selection');
+    }
+  };
+
+  // Submit Community Report on Map
+  const handleSubmitReport = (e) => {
+    e.preventDefault();
+    soundEngine.playSuccess();
+
+    storage.submitTestResult({
+      food: reportFood,
+      testType: `${reportFood} Purity Check`,
+      status: reportStatus,
+      adulterant: reportStatus === 'fail' ? reportAdulterant : 'None Detected',
+      vendorType: reportVendor,
+      locationName: reportCoords.neighborhood,
+      lat: reportCoords.lat,
+      lng: reportCoords.lng
+    });
+
+    refreshIncidents();
+    setIsReportModalOpen(false);
+    showToast(`✅ ${reportFood} report pinned to Surat safety grid!`, 'success');
+
+    // Pan map to new pin
+    if (mapEngine === 'leaflet' && leafletInstanceRef.current) {
+      leafletInstanceRef.current.flyTo([reportCoords.lat, reportCoords.lng], 15, { duration: 1 });
+    }
+  };
+
+  // Handle API Key Configuration
   const handleSaveApiKey = (e) => {
     e.preventDefault();
     soundEngine.playClick();
@@ -542,7 +800,7 @@ export default function MapScreen({ showToast, theme }) {
     localStorage.setItem('pureplate_google_maps_api_key', cleanKey);
     setApiKey(cleanKey);
     setApiKeyModalOpen(false);
-    showToast(cleanKey ? '🔑 Google Maps API Key saved! Reloading map...' : 'Switched to standard Google Maps demo mode', 'success');
+    showToast(cleanKey ? '🔑 Google Maps API Key saved! Reloading map...' : 'Standard vector map engine active.', 'success');
   };
 
   const handleExportCsv = () => {
@@ -559,32 +817,69 @@ export default function MapScreen({ showToast, theme }) {
 
   return (
     <section id="screen-heatmap" className="app-screen active">
-      {/* Header */}
+      {/* Top Header */}
       <div className="screen-top-nav">
         <div className="screen-top-title">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <h2 style={{ margin: 0 }}>Regional Food Security Tracker</h2>
+            <h2 style={{ margin: 0 }}>Surat Food Security Radar</h2>
             <span
               style={{
                 fontSize: '11px',
                 fontWeight: 800,
-                background: mapEngine === 'google' ? 'linear-gradient(135deg, #4285F4 0%, #34A853 100%)' : 'var(--brand-teal)',
+                background: mapEngine === 'google' 
+                  ? 'linear-gradient(135deg, #4285F4 0%, #34A853 100%)' 
+                  : 'linear-gradient(135deg, #0d9488 0%, #0284c7 100%)',
                 color: '#fff',
-                padding: '3px 8px',
+                padding: '3px 9px',
                 borderRadius: '12px',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '4px'
               }}
             >
-              <span>{mapEngine === 'google' ? '🗺️ Google Maps' : '🛰️ OpenStreetMap'}</span>
+              <span>{mapEngine === 'google' ? '🗺️ Google Maps' : `🛰️ ${TILE_PROVIDERS[activeTileKey]?.name || 'Leaflet Vector'}`}</span>
             </span>
           </div>
-          <p>Live crowdsourced adulteration heat map for Surat &amp; surrounding areas</p>
+          <p>Live crowdsourced adulteration heat map &amp; pure zones across Surat municipal wards</p>
         </div>
+
         <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button 
+            className="btn-locate-user" 
+            id="btn-add-map-report"
+            style={{ background: 'var(--brand-teal)', color: '#fff', borderColor: 'var(--brand-teal)' }}
+            title="Log test result on map" 
+            onClick={() => {
+              soundEngine.playClick();
+              setIsReportModalOpen(true);
+            }}
+          >
+            <span>➕ Pin Test</span>
+          </button>
           <button className="btn-locate-user" id="btn-locate-user-map" title="Center on my location" onClick={handleLocateUser}>
             <span>🎯 My GPS</span>
+          </button>
+          <button
+            className="btn-locate-user"
+            title="Toggle Fullscreen / Expand"
+            onClick={() => {
+              soundEngine.playClick();
+              setIsExpanded(!isExpanded);
+            }}
+          >
+            <span>{isExpanded ? '⤢ Compact' : '⤢ Expand'}</span>
+          </button>
+          <button
+            className="btn-locate-user"
+            title="Toggle Engine"
+            onClick={() => {
+              soundEngine.playClick();
+              const nextEngine = mapEngine === 'leaflet' ? 'google' : 'leaflet';
+              setMapEngine(nextEngine);
+              showToast(`Switched engine to ${nextEngine === 'google' ? 'Google Maps' : 'Leaflet Vector'}`, 'info');
+            }}
+          >
+            <span>🔄 Engine</span>
           </button>
           <button
             className="btn-locate-user"
@@ -596,17 +891,6 @@ export default function MapScreen({ showToast, theme }) {
           >
             <span>🔑 API Key</span>
           </button>
-          <button
-            className="btn-locate-user"
-            title="Toggle Map Engine"
-            onClick={() => {
-              soundEngine.playClick();
-              setMapEngine(mapEngine === 'google' ? 'leaflet' : 'google');
-              showToast(mapEngine === 'google' ? 'Switched to OSM fallback' : 'Switched to Google Maps', 'info');
-            }}
-          >
-            <span>🔄 Switch Engine</span>
-          </button>
           <button className="btn-locate-user" title="Export CSV" onClick={handleExportCsv}>
             <span>📥 CSV</span>
           </button>
@@ -616,7 +900,44 @@ export default function MapScreen({ showToast, theme }) {
         </div>
       </div>
 
-      {/* Filter Tabs matching user screenshot */}
+      {/* Real-Time Safety Metrics Strip */}
+      <div className="map-stats-strip">
+        <div className="map-stat-badge">
+          <span>🛡️ Surat Purity Index:</span>
+          <span className={`map-stat-val ${stats.purityRate >= 80 ? 'safe' : 'danger'}`}>
+            {stats.purityRate}% Clean
+          </span>
+        </div>
+        <div className="map-stat-badge">
+          <span>📍 Verified Tests:</span>
+          <span className="map-stat-val">{stats.total} Logs</span>
+        </div>
+        <div className="map-stat-badge">
+          <span>🚨 Active Danger Zones:</span>
+          <span className="map-stat-val danger">{stats.fails} Spikes</span>
+        </div>
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+          Tip: Click any spot on the map to pin a test report!
+        </div>
+      </div>
+
+      {/* Surat Wards Quick-Jump Bar */}
+      <div className="map-wards-bar">
+        <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+          <span>WARDS:</span>
+        </span>
+        {SURAT_WARDS.map((w) => (
+          <button
+            key={w.id}
+            className={`ward-jump-chip ${activeWard === w.id ? 'active' : ''}`}
+            onClick={() => handleJumpToWard(w)}
+          >
+            📍 {w.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Filter Tabs */}
       <div className="map-filter-bar">
         {filters.map((f) => (
           <button
@@ -632,57 +953,299 @@ export default function MapScreen({ showToast, theme }) {
         ))}
       </div>
 
-      {/* Fullscreen Map Canvas with Legend */}
-      <div className="map-viewport-wrapper">
+      {/* Map Viewport Canvas with Floating Overlays */}
+      <div className={`map-viewport-wrapper ${isExpanded ? 'is-fullscreen' : ''}`}>
         <div 
           ref={mapContainerRef} 
-          id="pureplate-google-map" 
-          style={{ width: '100%', height: '100%', minHeight: '440px', position: 'relative' }}
+          id="pureplate-leaflet-map" 
+          style={{ width: '100%', height: '100%' }}
         ></div>
 
-        {/* Floating Apple Liquid Glass Legend Box from Screenshot */}
+        {/* Floating Layer Selector (Leaflet) */}
+        {mapEngine === 'leaflet' && (
+          <div className="map-floating-overlay-top-left">
+            <div className="map-layer-selector">
+              {Object.values(TILE_PROVIDERS).map((prov) => (
+                <button
+                  key={prov.id}
+                  className={`layer-opt-btn ${activeTileKey === prov.id ? 'active' : ''}`}
+                  onClick={() => {
+                    soundEngine.playClick();
+                    setActiveTileKey(prov.id);
+                    showToast(`Switched map layer to ${prov.name}`, 'info');
+                  }}
+                  title={`Switch to ${prov.name}`}
+                >
+                  <span>{prov.icon}</span>
+                  <span>{prov.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Floating Glassmorphic Legend Box */}
         <div className="map-legend-box">
-          <div className="legend-row">
+          <div 
+            className="legend-row" 
+            onClick={() => {
+              soundEngine.playClick();
+              setFilter(filter === 'fail' ? 'all' : 'fail');
+            }}
+            title="Click to filter spikes"
+          >
             <span className="legend-dot red-pulse"></span>
             <span>Spike (&gt;3 fails in 7 days)</span>
           </div>
-          <div className="legend-row">
+          <div 
+            className="legend-row"
+            onClick={() => {
+              soundEngine.playClick();
+              setFilter(filter === 'pass' ? 'all' : 'pass');
+            }}
+            title="Click to filter pure zones"
+          >
             <span className="legend-dot green-shield"></span>
             <span>Verified Pure Zone</span>
           </div>
         </div>
       </div>
 
-      {/* Pull-Up Feed Sheet at Bottom of Map */}
+      {/* Community Intelligence Feed (Bottom Sheet) */}
       <div className="map-bottom-feed" id="map-bottom-feed">
         <div className="map-feed-header">
           <div className="mf-title">
             <span className="pulse-dot"></span>
-            <h4>Community Intelligence Feed</h4>
-            <span className="feed-counter" id="feed-count-badge">{incidents.length} community logs</span>
+            <h4>Surat Community Intelligence Feed</h4>
+            <span className="feed-counter" id="feed-count-badge">
+              {filteredIncidents.length} logs in view
+            </span>
           </div>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+            Click any entry to inspect on map ➔
+          </span>
         </div>
         <div className="map-feed-items" id="map-feed-items">
-          {incidents.map((item) => {
+          {filteredIncidents.map((item) => {
             const isFail = item.status === 'fail';
+            const isSelected = selectedIncidentId === item.id;
             return (
-              <div key={item.id} className={`feed-log-entry ${isFail ? 'fail' : 'pass'}`}>
-                <span className="feed-log-icon">{isFail ? '⚠️' : '✅'}</span>
+              <div 
+                key={item.id} 
+                className={`feed-log-entry ${isFail ? 'fail' : 'pass'} ${isSelected ? 'active-selected' : ''}`}
+                onClick={() => handleFocusIncident(item)}
+              >
+                <span className="feed-log-icon">{isFail ? '⚠️' : '🛡️'}</span>
                 <div className="feed-log-body">
                   <span className="feed-log-text">
                     {isFail
-                      ? `Adulterated ${item.food} logged near ${item.neighborhood}. (${item.adulterant})`
-                      : `Pure ${item.food} verified near ${item.neighborhood}.`}
+                      ? `Adulterated ${item.food} near ${item.neighborhood} (${item.adulterant})`
+                      : `Verified Pure ${item.food} near ${item.neighborhood}`}
                   </span>
                   <div className="feed-log-meta">
-                    <span>{item.timestamp}</span> • <span>{item.vendorType || 'Local Vendor'}</span>
+                    <span>📍 {item.neighborhood}</span>
+                    <span>•</span>
+                    <span>{item.timestamp || 'Recent'}</span>
+                    <span>•</span>
+                    <span>{item.vendorType || 'Local Vendor'}</span>
                   </div>
                 </div>
+                <span className="feed-jump-hint">Inspect ➔</span>
               </div>
             );
           })}
         </div>
       </div>
+
+      {/* Modal: Pin/Log Food Test on Map */}
+      {isReportModalOpen && (
+        <div className="auth-modal-backdrop active" onClick={() => setIsReportModalOpen(false)}>
+          <div className="auth-modal-sheet" style={{ maxWidth: '460px' }} onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close-btn" onClick={() => setIsReportModalOpen(false)}>
+              &times;
+            </button>
+            <div style={{ textAlign: 'left', padding: '8px 4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '28px' }}>📍</span>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>Pin Food Safety Report</h3>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    Add real-time citizen test results directly to the Surat heat map
+                  </span>
+                </div>
+              </div>
+
+              <form onSubmit={handleSubmitReport}>
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px' }}>
+                    Food Sample Tested:
+                  </label>
+                  <select
+                    value={reportFood}
+                    onChange={(e) => setReportFood(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      borderRadius: '12px',
+                      border: '1px solid var(--border-subtle)',
+                      background: 'var(--bg-input)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.85rem'
+                    }}
+                  >
+                    <option value="Milk & Dairy">🥛 Milk &amp; Dairy</option>
+                    <option value="Turmeric Powder">🌶️ Turmeric Powder (Haldi)</option>
+                    <option value="Red Chili Powder">🌶️ Red Chili Powder</option>
+                    <option value="Pure Honey">🍯 Pure Honey</option>
+                    <option value="Edible Oil & Ghee">🫒 Edible Cooking Oil &amp; Ghee</option>
+                    <option value="Tea Leaves">☕ Tea Leaves</option>
+                    <option value="Sweets / Mawa">🍬 Mawa &amp; Traditional Sweets</option>
+                  </select>
+                </div>
+
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px' }}>
+                    Test Result:
+                  </label>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <label style={{
+                      flex: 1,
+                      padding: '10px',
+                      borderRadius: '12px',
+                      border: `1.5px solid ${reportStatus === 'fail' ? '#ef4444' : 'var(--border-subtle)'}`,
+                      background: reportStatus === 'fail' ? '#fff1f2' : 'var(--bg-card)',
+                      color: reportStatus === 'fail' ? '#9f1239' : 'var(--text-primary)',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      fontWeight: 700,
+                      fontSize: '12.5px'
+                    }}>
+                      <input 
+                        type="radio" 
+                        name="test_status" 
+                        value="fail" 
+                        checked={reportStatus === 'fail'} 
+                        onChange={() => setReportStatus('fail')} 
+                        style={{ display: 'none' }}
+                      />
+                      ⚠️ Adulterated (Fail)
+                    </label>
+
+                    <label style={{
+                      flex: 1,
+                      padding: '10px',
+                      borderRadius: '12px',
+                      border: `1.5px solid ${reportStatus === 'pass' ? '#10b981' : 'var(--border-subtle)'}`,
+                      background: reportStatus === 'pass' ? '#ecfdf5' : 'var(--bg-card)',
+                      color: reportStatus === 'pass' ? '#065f46' : 'var(--text-primary)',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      fontWeight: 700,
+                      fontSize: '12.5px'
+                    }}>
+                      <input 
+                        type="radio" 
+                        name="test_status" 
+                        value="pass" 
+                        checked={reportStatus === 'pass'} 
+                        onChange={() => setReportStatus('pass')} 
+                        style={{ display: 'none' }}
+                      />
+                      🛡️ Verified Pure (Pass)
+                    </label>
+                  </div>
+                </div>
+
+                {reportStatus === 'fail' && (
+                  <div style={{ marginBottom: '12px' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px' }}>
+                      Adulterant Detected:
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Added Starch, Detergent, Brick Dust, Metanil Yellow"
+                      value={reportAdulterant}
+                      onChange={(e) => setReportAdulterant(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        borderRadius: '12px',
+                        border: '1px solid var(--border-subtle)',
+                        background: 'var(--bg-input)',
+                        color: 'var(--text-primary)',
+                        fontSize: '0.85rem'
+                      }}
+                      required
+                    />
+                  </div>
+                )}
+
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px' }}>
+                    Neighborhood / Location:
+                  </label>
+                  <input
+                    type="text"
+                    value={reportCoords.neighborhood}
+                    onChange={(e) => setReportCoords({ ...reportCoords, neighborhood: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      borderRadius: '12px',
+                      border: '1px solid var(--border-subtle)',
+                      background: 'var(--bg-input)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.85rem'
+                    }}
+                    required
+                  />
+                  <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
+                    Coordinates: {reportCoords.lat}, {reportCoords.lng}
+                  </span>
+                </div>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px' }}>
+                    Vendor Type:
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Local Loose Milk Vendor, Street Market, Grocery Store"
+                    value={reportVendor}
+                    onChange={(e) => setReportVendor(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      borderRadius: '12px',
+                      border: '1px solid var(--border-subtle)',
+                      background: 'var(--bg-input)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.85rem'
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    className="btn-locate-user"
+                    onClick={() => setIsReportModalOpen(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-primary-action"
+                    style={{ width: 'auto', padding: '10px 22px', borderRadius: '12px', fontSize: '13px' }}
+                  >
+                    Pin on Heat Map
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Google Maps API Key Modal */}
       {apiKeyModalOpen && (
@@ -700,7 +1263,7 @@ export default function MapScreen({ showToast, theme }) {
                 </div>
               </div>
               <p style={{ fontSize: '0.86rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: '10px 0 16px' }}>
-                PurePlate uses Google Maps JavaScript API to render live high-definition vector tiles, satellite overlays, and crowdsourced Surat adulteration radar markers.
+                PurePlate uses Leaflet with CartoDB &amp; ESRI satellite vector tiles by default. If you have an official Google Maps API Key, you can configure it here.
               </p>
 
               <form onSubmit={handleSaveApiKey}>
@@ -725,7 +1288,7 @@ export default function MapScreen({ showToast, theme }) {
                     }}
                   />
                   <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '6px' }}>
-                    Tip: If left blank, Google Maps runs in dev/free mode or uses OpenStreetMap fallback.
+                    Tip: Leaving this blank keeps the ultra-fast Leaflet vector engine active.
                   </span>
                 </div>
 
@@ -738,7 +1301,8 @@ export default function MapScreen({ showToast, theme }) {
                       localStorage.removeItem('pureplate_google_maps_api_key');
                       setApiKey('');
                       setApiKeyModalOpen(false);
-                      showToast('API Key cleared. Using default mode.', 'info');
+                      setMapEngine('leaflet');
+                      showToast('API Key cleared. Using Leaflet vector engine.', 'info');
                     }}
                   >
                     Clear Key
