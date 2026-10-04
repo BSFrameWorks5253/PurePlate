@@ -5,6 +5,7 @@ import InstructionSheet from './components/InstructionSheet.jsx';
 import AuthModal from './components/AuthModal.jsx';
 import QRModal from './components/QRModal.jsx';
 import Toast from './components/Toast.jsx';
+import WelcomeScreen from './components/WelcomeScreen.jsx';
 
 import HomeScreen from './screens/HomeScreen.jsx';
 import SelectionScreen from './screens/SelectionScreen.jsx';
@@ -31,6 +32,7 @@ export default function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isQROpen, setIsQROpen] = useState(false);
   const [toasts, setToasts] = useState([]);
+  const [showSplash, setShowSplash] = useState(true);
 
   // Toast notification manager
   const showToast = (message, type = 'info') => {
@@ -112,6 +114,11 @@ export default function App() {
 
   return (
     <>
+      {/* ── Premium Welcome Splash Screen ── */}
+      {showSplash && (
+        <WelcomeScreen onFinish={() => setShowSplash(false)} />
+      )}
+
       {/* Apple Liquid Glass Ambient Light Orbs */}
       <div className="apple-liquid-mesh" aria-hidden="true">
         <div className="liquid-orb orb-teal"></div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import soundEngine from '../services/sound.js';
 import authEngine from '../services/auth.js';
 import storage from '../services/storage.js';
+import PurePlateLogo from './PurePlateLogo.jsx';
 
 export default function Header({
   currentScreen,
@@ -102,10 +103,7 @@ export default function Header({
         {/* Left: Brand Identity with Glass Shield & Live Grid Indicator */}
         <div className="dt-brand" onClick={() => onNavigate && onNavigate('screen-home')} style={{ cursor: 'pointer' }} title="PurePlate Home">
           <div className="dt-logo-wrap">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--brand-teal)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              <path d="m9 12 2 2 4-4"/>
-            </svg>
+            <PurePlateLogo size={26} showGlow={true} />
           </div>
           <div className="dt-titles">
             <div className="dt-title-row">
@@ -253,10 +251,7 @@ export default function Header({
         <div className="header-content-unified">
           <div className="mb-brand-wrap" onClick={() => onNavigate && onNavigate('screen-home')} style={{ cursor: 'pointer' }} title="PurePlate">
             <div className="mb-logo-box">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-teal)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                <path d="m9 12 2 2 4-4"/>
-              </svg>
+              <PurePlateLogo size={22} showGlow={false} />
             </div>
             <div className="mb-title-col">
               <span className="mb-title">PurePlate</span>
