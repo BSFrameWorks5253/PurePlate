@@ -91,6 +91,20 @@ export default function App() {
   };
 
 
+  // Keyboard shortcuts for Mac / Desktop power users (1=Home, 2=Test, 3=Map, 4=Academy)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Don't trigger if user is typing in an input or textarea
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
+      if (e.key === '1') handleNavigate('screen-home');
+      if (e.key === '2') handleNavigate('screen-selection');
+      if (e.key === '3') handleNavigate('screen-map');
+      if (e.key === '4') handleNavigate('screen-learning');
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
     <>
       {/* Apple Liquid Glass Ambient Light Orbs */}
@@ -114,6 +128,7 @@ export default function App() {
           onDetectLocation={handleDetectLocation}
           region={region}
           showToast={showToast}
+          onNavigate={handleNavigate}
         />
 
         {/* Screens Viewport */}

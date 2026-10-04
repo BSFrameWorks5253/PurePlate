@@ -271,7 +271,7 @@ button:active {
   filter: blur(120px);
 }
 
-/* ── 4. Desktop Top Bar (Visible >820px) ── */
+/* ── 4. Apple 2027 Liquid Glass Desktop Command Bar (Visible ≥821px) ── */
 .desktop-top-bar {
   display: none;
   position: sticky;
@@ -279,89 +279,262 @@ button:active {
   left: 0;
   right: 0;
   z-index: 1000;
-  height: 64px;
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border-bottom: 1px solid var(--glass-border);
+  height: 70px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(48px) saturate(220%) contrast(106%);
+  -webkit-backdrop-filter: blur(48px) saturate(220%) contrast(106%);
+  border-bottom: 1.2px solid rgba(255, 255, 255, 0.5);
   padding: 0 28px;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
   width: 100%;
-  box-shadow: var(--glass-inner-specular), 0 4px 24px rgba(0, 0, 0, 0.04);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.04), 0 8px 30px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.dt-brand { display: flex; align-items: center; gap: 12px; }
-.dt-logo-wrap {
-  width: 40px; height: 40px; border-radius: 12px;
-  background: rgba(13, 148, 136, 0.12);
-  border: 1px solid var(--border-teal);
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.6);
+[data-theme="dark"] .desktop-top-bar {
+  background: rgba(10, 16, 31, 0.8);
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.04), 0 12px 40px rgba(0, 0, 0, 0.4);
 }
-.dt-logo   { font-size: 22px; }
+
+.dt-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  user-select: none;
+}
+.dt-logo-wrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.14), rgba(56, 189, 248, 0.18));
+  border: 1.2px solid rgba(13, 148, 136, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.8), 0 4px 12px rgba(13, 148, 136, 0.12);
+}
+.dt-titles { display: flex; flex-direction: column; }
 .dt-title-row { display: flex; align-items: center; gap: 8px; }
-.dt-name   { font-size: 18px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.3px; }
-.dt-badge  {
-  font-size: 10.5px; font-weight: 800; background: var(--brand-teal);
-  color: #fff; padding: 2px 9px; border-radius: 20px;
+.dt-name {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.4px;
+}
+.dt-badge {
+  font-size: 10px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--brand-teal), #0ea5e9);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 20px;
   box-shadow: 0 2px 8px var(--brand-teal-glow);
 }
-.dt-sub    { font-size: 12px; color: var(--text-muted); display: block; margin-top: 1px; }
-
-.dt-center-controls { display: flex; align-items: center; }
-.view-mode-toggle   {
+.dt-node-status {
   display: flex;
-  background: var(--glass-bg-subtle);
-  backdrop-filter: blur(16px);
-  border-radius: 14px; padding: 3px; gap: 3px;
-  border: 1px solid var(--glass-border);
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.6);
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--brand-green);
+  background: rgba(5, 150, 105, 0.1);
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid rgba(5, 150, 105, 0.2);
 }
-.v-mode-btn {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 12px; font-weight: 700;
-  padding: 6px 14px; border-radius: 11px;
+.dt-sub {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 1px;
+}
+
+/* ── Apple 2027 Desktop Island Navigation ── */
+.desktop-nav-island {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dt-nav-capsule {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  border: 1.2px solid rgba(255, 255, 255, 0.7);
+  border-radius: 9999px;
+  box-shadow: 
+    0 10px 25px -4px rgba(0, 0, 0, 0.06),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.9);
+  transition: all 0.25s var(--ease-spring);
+}
+
+[data-theme="dark"] .dt-nav-capsule {
+  background: rgba(18, 26, 48, 0.7);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 
+    0 12px 30px -4px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.dt-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 15px;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
   color: var(--text-secondary);
-  transition: all 0.22s var(--ease-spring);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
 }
-.v-mode-btn.active {
+
+.dt-nav-btn:hover {
+  color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.04);
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .dt-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.dt-nav-btn.active {
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--brand-teal), #0284c7);
+  box-shadow: 
+    0 4px 16px var(--brand-teal-glow),
+    inset 0 1px 1px rgba(255, 255, 255, 0.45);
+  font-weight: 800;
+}
+
+[data-theme="dark"] .dt-nav-btn.active {
+  background: linear-gradient(135deg, #0d9488, #0369a1);
+  box-shadow: 
+    0 4px 20px rgba(0, 240, 192, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.35);
+}
+
+.dt-nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dt-nav-badge {
+  font-size: 9px;
+  font-weight: 800;
+  background: rgba(0, 0, 0, 0.16);
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 20px;
+  line-height: 1.2;
+}
+
+.dt-nav-btn:not(.active) .dt-nav-badge {
   background: var(--brand-teal);
   color: #fff;
-  font-weight: 800;
-  box-shadow: 0 4px 12px var(--brand-teal-glow);
 }
 
-.dt-right-actions { display: flex; align-items: center; gap: 10px; }
+.dt-nav-badge.live {
+  background: #ef4444 !important;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dt-nav-badge-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ffffff;
+  animation: badge-pulse-anim 1.5s infinite;
+}
+
+/* ── Desktop Right Actions Cluster ── */
+.dt-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .dt-btn {
-  display: flex; align-items: center; gap: 6px;
-  font-size: 12px; font-weight: 700;
-  padding: 8px 14px; border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 12px;
   background: var(--glass-bg);
   backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   color: var(--text-secondary);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-inner-specular), 0 2px 6px rgba(0,0,0,0.03);
   transition: all 0.22s var(--ease-spring);
+  cursor: pointer;
 }
+
 .dt-btn:hover {
   background: var(--bg-card-hover);
   color: var(--text-primary);
   transform: translateY(-1px);
 }
-.dt-btn-accent {
-  background: rgba(13, 148, 136, 0.12);
+
+.dt-btn-launch {
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.14), rgba(14, 165, 233, 0.14));
+  border: 1.2px solid rgba(13, 148, 136, 0.35);
   color: var(--brand-teal);
-  border-color: rgba(13, 148, 136, 0.28);
+  font-weight: 800;
 }
-.dt-network-pill {
-  display: flex; align-items: center; gap: 7px;
-  font-size: 11px; font-weight: 700; color: var(--brand-green);
-  background: rgba(5, 150, 105, 0.1); padding: 6px 14px; border-radius: 20px;
-  border: 1px solid rgba(5, 150, 105, 0.25);
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.5);
+.dt-btn-launch:hover {
+  background: var(--brand-teal);
+  color: #fff;
+  box-shadow: 0 4px 14px var(--brand-teal-glow);
 }
+
+.dt-btn-loc {
+  max-width: 140px;
+}
+.dt-loc-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 95px;
+}
+
+.dt-icon-only {
+  width: 35px;
+  height: 35px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+}
+
+.auth-avatar-svg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dt-btn-auth {
+  position: relative;
+}
+
 .pulse-dot {
   width: 7px; height: 7px; border-radius: 50%;
   background: var(--brand-green);
@@ -441,68 +614,76 @@ button:active {
   }
 }
 
-/* ── 6. iOS 27 Ultimate Floating Glass Dock Navigation Bar ── */
+/* ── 6. Apple 2027 Ultra-Minimalist Liquid Glass Dock Navigation ── */
 .bottom-nav-bar {
   position: fixed;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100% - 24px);
-  max-width: 420px;
+  width: auto;
+  max-width: 92vw;
   z-index: 9999;
   pointer-events: auto;
   user-select: none;
-}
-
-.app-frame.frame-expanded .bottom-nav-bar {
-  max-width: 480px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .bottom-nav-dock {
   display: flex;
   align-items: center;
-  justify-content: space-around;
-  padding: 5px 6px;
-  height: 66px;
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(36px) saturate(210%);
-  -webkit-backdrop-filter: blur(36px) saturate(210%);
-  border: 1.5px solid rgba(255, 255, 255, 0.9);
-  border-radius: 36px;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 6px;
+  height: 56px;
+  min-width: 310px;
+  max-width: 370px;
+  background: rgba(255, 255, 255, 0.68);
+  backdrop-filter: blur(48px) saturate(230%) contrast(108%);
+  -webkit-backdrop-filter: blur(48px) saturate(230%) contrast(108%);
+  border: 1.2px solid rgba(255, 255, 255, 0.65);
+  border-radius: 9999px;
   box-shadow: 
-    0 20px 50px -10px rgba(15, 23, 42, 0.18),
-    0 4px 16px -2px rgba(15, 23, 42, 0.06),
-    inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.95),
-    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.04);
+    0 20px 48px -10px rgba(15, 23, 42, 0.18),
+    0 2px 10px rgba(0, 0, 0, 0.04),
+    inset 0 1.2px 1.5px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.03);
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 [data-theme="dark"] .bottom-nav-dock {
-  background: rgba(15, 23, 42, 0.84);
+  background: rgba(11, 17, 33, 0.78);
   border-color: rgba(255, 255, 255, 0.16);
   box-shadow: 
-    0 22px 60px rgba(0, 0, 0, 0.75),
-    0 0 28px rgba(0, 240, 192, 0.14),
+    0 24px 64px rgba(0, 0, 0, 0.8),
+    0 0 24px rgba(0, 240, 192, 0.12),
     inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.28);
 }
 
 .nav-item {
   flex: 1;
-  height: 54px;
+  height: 46px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 28px;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background: transparent;
   position: relative;
   transition: all 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
   color: var(--text-secondary);
   cursor: pointer;
+  padding: 0 8px;
 }
 
 .nav-item:hover {
   color: var(--text-primary);
-  transform: translateY(-1.5px);
+  background: rgba(0, 0, 0, 0.03);
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .nav-item:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .nav-item:active {
@@ -512,14 +693,20 @@ button:active {
 .nav-item.active {
   color: var(--brand-teal);
   font-weight: 800;
-  background: rgba(13, 148, 136, 0.12);
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.7), 0 2px 10px var(--brand-teal-glow);
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.12), rgba(14, 165, 233, 0.1));
+  border-color: rgba(13, 148, 136, 0.25);
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.8),
+    0 2px 10px rgba(13, 148, 136, 0.2);
 }
 
 [data-theme="dark"] .nav-item.active {
   color: var(--brand-teal);
-  background: rgba(0, 240, 192, 0.16);
-  box-shadow: 0 0 18px rgba(0, 240, 192, 0.26), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  background: rgba(0, 240, 192, 0.14);
+  border-color: rgba(0, 240, 192, 0.28);
+  box-shadow: 
+    0 0 18px rgba(0, 240, 192, 0.22),
+    inset 0 1px 1px rgba(255, 255, 255, 0.32);
 }
 
 .nav-icon-wrap {
@@ -527,24 +714,26 @@ button:active {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
 }
 
-.nav-icon {
-  font-size: 20px;
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+.nav-svg-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.nav-item.active .nav-icon {
-  transform: translateY(-2px) scale(1.15);
+.nav-item.active .nav-svg-icon {
+  transform: translateY(-1px) scale(1.1);
 }
 
 .nav-label {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 700;
-  letter-spacing: -0.2px;
-  margin-top: 2px;
+  letter-spacing: -0.01em;
+  margin-top: 1.5px;
   transition: color 0.2s;
 }
 
@@ -552,12 +741,12 @@ button:active {
   position: absolute;
   top: -4px;
   right: -9px;
-  font-size: 8.5px;
+  font-size: 8px;
   font-weight: 900;
   background: var(--brand-teal);
   color: #fff;
-  padding: 1px 5px;
-  border-radius: 10px;
+  padding: 1px 4.5px;
+  border-radius: 99px;
   box-shadow: 0 2px 6px var(--brand-teal-glow);
   line-height: 1.2;
 }
@@ -567,7 +756,7 @@ button:active {
   display: flex;
   align-items: center;
   gap: 3px;
-  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
 }
 
 .nav-badge-pulse {
@@ -585,10 +774,10 @@ button:active {
 
 .nav-active-pill {
   position: absolute;
-  bottom: 3px;
-  width: 14px;
-  height: 3px;
-  border-radius: 2px;
+  bottom: 2.5px;
+  width: 12px;
+  height: 2.5px;
+  border-radius: 99px;
   background: var(--brand-teal);
   box-shadow: 0 0 6px var(--brand-teal-glow);
 }
@@ -3800,72 +3989,170 @@ button:active {
   }
 }
 
-/* ── 5. Large Desktops & Workstations (≥1025px) ── */
+/* ── 5. Apple 2027 Studio Desktop & Workstation UX (≥1025px) ── */
 @media (min-width: 1025px) {
   body { padding-top: 0; }
   .desktop-top-bar { display: flex; }
 
+  /* Expanded Desktop Mode: Hide mobile bottom nav, full desktop workspace */
   .app-frame.frame-expanded {
-    max-width: min(1140px, 92vw);
+    max-width: min(1380px, 94vw);
     min-height: calc(100dvh - 86px);
-    border-radius: 24px;
-    border: 1px solid var(--border-subtle);
-    margin: 16px auto;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), var(--shadow-glow);
+    border-radius: 28px;
+    border: 1.5px solid rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(48px) saturate(220%) contrast(106%);
+    -webkit-backdrop-filter: blur(48px) saturate(220%) contrast(106%);
+    margin: 16px auto 32px;
+    box-shadow: 
+      0 30px 90px rgba(0, 0, 0, 0.25),
+      inset 0 1px 2px rgba(255, 255, 255, 0.8),
+      0 0 40px rgba(0, 240, 192, 0.1);
     transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
+  [data-theme="dark"] .app-frame.frame-expanded {
+    background: rgba(13, 19, 36, 0.78);
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: 
+      0 32px 100px rgba(0, 0, 0, 0.85),
+      0 0 50px rgba(0, 240, 192, 0.12),
+      inset 0 1px 1.5px rgba(255, 255, 255, 0.22);
+  }
+
+  /* In Desktop Expanded mode, hide the mobile bottom nav bar */
+  .app-frame.frame-expanded .bottom-nav-bar {
+    display: none !important;
+  }
+
+  .app-frame.frame-expanded .screens-viewport {
+    padding: 24px 32px 48px;
+  }
+
+  /* Phone Simulator Mode on Laptop */
   .app-frame.frame-mobile {
-    max-width: 440px !important;
+    max-width: 420px !important;
     width: 100% !important;
     min-height: calc(100dvh - 96px);
-    border-radius: 38px !important;
-    border: 8px solid rgba(15, 23, 42, 0.85) !important;
-    margin: 16px auto !important;
-    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.45), var(--shadow-glow) !important;
+    border-radius: 46px !important;
+    border: 9px solid rgba(25, 33, 50, 0.88) !important;
+    margin: 18px auto !important;
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5), var(--shadow-glow) !important;
     overflow: hidden;
     transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .app-frame.frame-expanded .screens-viewport,
-  .app-frame.frame-mobile .screens-viewport {
-    display: block;
+  .app-frame.frame-mobile .bottom-nav-bar {
+    display: block !important;
   }
+
+  /* ── Desktop Home Screen: 2-Column Command Center ── */
   .app-frame.frame-expanded #screen-home {
-    max-width: 960px;
+    max-width: 1300px;
     margin: 0 auto;
     width: 100%;
+    display: grid;
+    grid-template-columns: 1.55fr 1fr;
+    grid-template-areas:
+      "ticker ticker"
+      "hero intel"
+      "stats intel"
+      "actions intel"
+      "quick intel"
+      "banner intel";
+    gap: 22px;
+    align-items: start;
   }
+
+  .app-frame.frame-expanded #screen-home .community-ticker-card {
+    grid-area: ticker;
+    margin-bottom: 0;
+  }
+
+  .app-frame.frame-expanded #screen-home .purity-gauge-card {
+    grid-area: hero;
+    margin-bottom: 0;
+    padding: 26px 28px;
+  }
+
+  .app-frame.frame-expanded #screen-home .stats-row {
+    grid-area: stats;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
   .app-frame.frame-expanded #screen-home .action-grid {
+    grid-area: actions;
     grid-template-columns: 1fr 1fr;
     gap: 18px;
+    margin-top: 0;
   }
+
+  .app-frame.frame-expanded #screen-home .quick-tests-strip {
+    grid-area: quick;
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .app-frame.frame-expanded #screen-home .kids-portal-banner {
+    grid-area: banner;
+    margin-top: 0;
+  }
+
+  .app-frame.frame-expanded #screen-home .recent-feed-section {
+    grid-area: intel;
+    margin-top: 0;
+    position: sticky;
+    top: 86px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  /* ── Desktop Selection Screen: 3-Column Studio Grid ── */
   .app-frame.frame-expanded #screen-selection {
-    max-width: 960px;
+    max-width: 1300px;
     margin: 0 auto;
     width: 100%;
   }
+
   .app-frame.frame-expanded #screen-selection .food-cards-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
   }
-  .app-frame.frame-expanded .test-wizard-container {
-    max-width: 560px;
-    margin: 0 auto;
+
+  .app-frame.frame-expanded #screen-selection .categories-scroll {
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 24px;
   }
-  .app-frame.frame-expanded #screen-heatmap {
-    max-width: 1040px;
+
+  /* ── Desktop Map Screen: Edge-to-Edge Surveillance Station ── */
+  .app-frame.frame-expanded #screen-map {
+    max-width: 1320px;
     margin: 0 auto;
     width: 100%;
   }
-  .app-frame.frame-expanded #screen-heatmap .map-viewport-wrapper {
-    min-height: 520px;
+
+  .app-frame.frame-expanded #screen-map .map-viewport-wrapper {
+    min-height: 640px;
+    height: 70vh;
+    border-radius: 28px;
   }
+
+  /* ── Desktop Learning Screen: 2-Column Split Lab ── */
   .app-frame.frame-expanded #screen-learning {
-    max-width: 900px;
+    max-width: 1300px;
     margin: 0 auto;
     width: 100%;
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .app-frame.frame-expanded #screen-learning .learning-hero-card {
+    grid-column: 1 / -1;
   }
 }
 
