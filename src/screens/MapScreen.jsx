@@ -143,6 +143,10 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
   const [activeWard, setActiveWard] = useState('athwa');
   const [selectedIncidentId, setSelectedIncidentId] = useState(null);
 
+  // Mobile Map UI State (Apple Maps Style Floating Island & Drawer)
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [mobileLayersOpen, setMobileLayersOpen] = useState(false);
+
   // Report Modal on Map
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportCoords, setReportCoords] = useState({ lat: 21.1738, lng: 72.8028, neighborhood: 'Athwa Lines, Surat' });
@@ -766,6 +770,7 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
   const handleFocusIncident = (item) => {
     soundEngine.playClick();
     setSelectedIncidentId(item.id);
+    setMobileDrawerOpen(false); // Close mobile bottom drawer so map is fully visible
 
     if (mapEngine === 'leaflet' && leafletInstanceRef.current) {
       leafletInstanceRef.current.flyTo([item.lat, item.lng], 15, { duration: 1 });
@@ -1088,7 +1093,7 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
           </div>
         )}
 
-        {/* Floating Glassmorphic Legend Box */}
+        {/* Floating Glassmorphic Legend Box (Desktop) */}
         <div className="map-legend-box">
           <div 
             className="legend-row" 
@@ -1111,6 +1116,185 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
           >
             <span className="legend-dot green-shield"></span>
             <span>Verified Pure Zone</span>
+          </div>
+        </div>
+
+        {/* ── Mobile Floating Top Island (Phone View Only) ── */}
+        <div className="map-mobile-top-island">
+          {/* Horizontal Swipeable Ward Quick-Jump Pills */}
+          <div className="map-mobile-wards-scroll">
+            {SURAT_WARDS.map((w) => (
+              <button
+                key={w.id}
+                className={`mobile-ward-pill ${activeWard === w.id ? 'active' : ''}`}
+                onClick={() => handleJumpToWard(w)}
+              >
+                📍 {w.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Horizontal Swipeable Filter Chips */}
+          <div className="map-mobile-filters-scroll">
+            {filters.map((f) => (
+              <button
+                key={f.id}
+                className={`mobile-filter-pill ${filter === f.id ? 'active' : ''}`}
+                onClick={() => {
+                  soundEngine.playClick();
+                  setFilter(f.id);
+                }}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Mobile Floating Action FABs (Right Side) ── */}
+        <div className="map-mobile-fabs">
+          <button 
+            className="mobile-fab primary" 
+            title="Pin Food Safety Report"
+            onClick={() => {
+              soundEngine.playClick();
+              setIsReportModalOpen(true);
+            }}
+          >
+            <span>➕</span>
+          </button>
+          <button 
+            className="mobile-fab" 
+            title="Center on My GPS"
+            onClick={handleLocateUser}
+          >
+            <span>🎯</span>
+          </button>
+          <button 
+            className={`mobile-fab ${mobileLayersOpen ? 'active' : ''}`}
+            title="Switch Map Layer"
+            onClick={() => {
+              soundEngine.playClick();
+              setMobileLayersOpen(!mobileLayersOpen);
+            }}
+          >
+            <span>🗺️</span>
+          </button>
+          <button 
+            className="mobile-fab" 
+            title="Toggle Engine"
+            onClick={() => {
+              soundEngine.playClick();
+              const nextEngine = mapEngine === 'leaflet' ? 'google' : 'leaflet';
+              setMapEngine(nextEngine);
+              showToast(`Engine: ${nextEngine === 'google' ? 'Google Maps' : 'Detailed Streets'}`, 'info');
+            }}
+          >
+            <span>🔄</span>
+          </button>
+        </div>
+
+        {/* ── Mobile Layer Picker Popover ── */}
+        {mobileLayersOpen && (
+          <div className="mobile-layers-popover" onClick={(e) => e.stopPropagation()}>
+            <div className="mlp-title">Map Tile Layer</div>
+            <div className="mlp-grid">
+              {Object.values(TILE_PROVIDERS).map((p) => (
+                <button
+                  key={p.id}
+                  className={`mlp-btn ${activeTileKey === p.id ? 'active' : ''}`}
+                  onClick={() => {
+                    soundEngine.playClick();
+                    setActiveTileKey(p.id);
+                    setMobileLayersOpen(false);
+                    if (mapEngine !== 'leaflet') setMapEngine('leaflet');
+                    showToast(`Layer: ${p.name}`, 'info');
+                  }}
+                >
+                  <span className="mlp-icon">{p.icon}</span>
+                  <span className="mlp-name">{p.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Mobile Floating Apple Maps Bottom Safety Drawer ── */}
+        <div className={`map-mobile-drawer ${mobileDrawerOpen ? 'expanded' : 'collapsed'}`}>
+          <div 
+            className="mobile-drawer-header" 
+            onClick={() => {
+              soundEngine.playClick();
+              setMobileDrawerOpen(!mobileDrawerOpen);
+            }}
+          >
+            <div className="drawer-handle-bar"></div>
+            <div className="drawer-summary-row">
+              <div className="drawer-stat-pill">
+                <span className="pulse-dot"></span>
+                <span>{stats.purityRate}% Surat Clean</span>
+              </div>
+              <div className="drawer-counts">
+                <span>🚨 {stats.fails} Spikes</span>
+                <span>•</span>
+                <span>🛡️ {stats.total - stats.fails} Pure</span>
+              </div>
+              <button className="drawer-toggle-btn" aria-label="Toggle feed drawer">
+                {mobileDrawerOpen ? 'Close ▾' : `Feed (${filteredIncidents.length}) ▴`}
+              </button>
+            </div>
+          </div>
+
+          {/* Drawer Content */}
+          <div className="mobile-drawer-body">
+            <div className="drawer-body-title">
+              <span>Surat Live Citizen Reports ({filteredIncidents.length})</span>
+              <span className="drawer-tip">Tap card to focus on map</span>
+            </div>
+            <div className="drawer-cards-list">
+              {filteredIncidents.map((item) => {
+                const isFail = item.status === 'fail';
+                const isSelected = selectedIncidentId === item.id;
+                return (
+                  <div
+                    key={item.id}
+                    className={`drawer-incident-card ${isFail ? 'fail' : 'pass'} ${isSelected ? 'selected' : ''}`}
+                    onClick={() => handleFocusIncident(item)}
+                  >
+                    <div className="dic-top-row">
+                      <span className="dic-icon">{isFail ? '⚠️' : '🛡️'}</span>
+                      <div className="dic-road-badge">
+                        🛣️ {item.road || item.neighborhood}
+                      </div>
+                      <span className="dic-time">{item.timestamp || 'Recent'}</span>
+                    </div>
+
+                    <div className="dic-food-name">{item.food}</div>
+
+                    <div className={`dic-status-line ${isFail ? 'fail' : 'pass'}`}>
+                      {isFail ? `Adulterant: ${item.adulterant}` : 'Verified 100% Pure & Safe'}
+                    </div>
+
+                    <div className="dic-address">
+                      🏠 {item.address || `${item.road || item.neighborhood}, Surat`}
+                    </div>
+
+                    <div className="dic-actions">
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.address || (item.road + ', ' + item.neighborhood + ', Surat'))}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="dic-gmaps-link"
+                      >
+                        📍 Google Maps ↗
+                      </a>
+                      <span className="dic-inspect-btn">Focus on Map ➔</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

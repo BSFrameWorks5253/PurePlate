@@ -96,12 +96,11 @@ export default function Header({
   return (
     <>
       {/* ============================================================
-           APPLE 2027 LIQUID GLASS DESKTOP COMMAND BAR (Laptop / Big S      {/* ============================================================
            APPLE LIQUID GLASS DESKTOP COMMAND BAR (Desktop / Laptops)
            ============================================================ */}
       <header className="desktop-top-bar" id="desktop-top-bar">
         {/* Left: Brand Identity with Glass Shield & Live Grid Indicator */}
-        <div className="dt-brand" onClick={() => onNavigate && onNavigate('screen-home')} style={{ cursor: 'pointer' }}>
+        <div className="dt-brand" onClick={() => onNavigate && onNavigate('screen-home')} style={{ cursor: 'pointer' }} title="PurePlate Home">
           <div className="dt-logo-wrap">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--brand-teal)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -237,7 +236,7 @@ export default function Header({
       </header>
 
       {/* ============================================================
-           APP HEADER (Mobile & Small Screen In-App View)
+           PREMIUM SINGLE-TIER MOBILE LIQUID GLASS HEADER (56px)
            ============================================================ */}
       <header className="app-header">
         <div
@@ -251,60 +250,68 @@ export default function Header({
             transition: 'width 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
           }}
         ></div>
-        <div className="header-content">
-          <div className="brand-row">
-            <div className="brand-mark" onClick={() => onNavigate && onNavigate('screen-home')} style={{ cursor: 'pointer' }}>
-              <div className="logo-shield-svg">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--brand-teal)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                  <path d="m9 12 2 2 4-4"/>
-                </svg>
-              </div>
-              <div className="brand-names">
-                <h1 className="brand-title">PurePlate</h1>
-                <span className="brand-tagline">Citizen Food Safety Network</span>
-              </div>
+        <div className="header-content-unified">
+          <div className="mb-brand-wrap" onClick={() => onNavigate && onNavigate('screen-home')} style={{ cursor: 'pointer' }} title="PurePlate">
+            <div className="mb-logo-box">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--brand-teal)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="m9 12 2 2 4-4"/>
+              </svg>
             </div>
-            <div className="header-badges">
-              <button className="mb-auth-btn" id="mb-theme-btn" title="Toggle Theme" onClick={toggleTheme}>
-                {theme === 'dark' ? (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                  </svg>
-                ) : (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="5"/>
-                    <line x1="12" y1="1" x2="12" y2="3"/>
-                    <line x1="12" y1="21" x2="12" y2="23"/>
-                  </svg>
-                )}
-              </button>
-              <button className="mb-auth-btn" id="mb-user-btn" title="Sign In / Sync" onClick={onOpenAuth}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
-                </svg>
-                <span className="sync-pulse-indicator" title="Cloud Sync Active"></span>
-              </button>
-              <button className="mb-auth-btn" id="btn-detect-loc" title="Detect GPS Location" onClick={onDetectLocation}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                  <circle cx="12" cy="10" r="3"/>
-                </svg>
-              </button>
+            <div className="mb-title-col">
+              <span className="mb-title">PurePlate</span>
+              <div className="mb-grid-live">
+                <span className="pulse-dot-sm"></span>
+                <span>Surat Grid</span>
+              </div>
             </div>
           </div>
 
-          {/* Location Region Compact Bar */}
-          <div className="location-bar-compact" id="location-bar" onClick={onDetectLocation} style={{ cursor: 'pointer' }}>
-            <span className="loc-icon-svg">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                <circle cx="12" cy="10" r="3"/>
+          {/* Quick Location Badge */}
+          <button className="mb-loc-pill" id="btn-detect-loc" title="Sync GPS Location" onClick={onDetectLocation}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            <span className="mb-loc-name">{region ? region.split(',')[0] : 'Athwa'}</span>
+          </button>
+
+          {/* Right Action Icons */}
+          <div className="mb-actions-cluster">
+            <button className="mb-action-btn" id="mb-sound-btn" title={soundMuted ? "Enable Sound" : "Mute Sound"} onClick={toggleSound}>
+              {soundMuted ? (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                  <line x1="23" y1="9" x2="17" y2="15"/>
+                  <line x1="17" y1="9" x2="23" y2="15"/>
+                </svg>
+              ) : (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                </svg>
+              )}
+            </button>
+            <button className="mb-action-btn" id="mb-theme-btn" title="Toggle Theme" onClick={toggleTheme}>
+              {theme === 'dark' ? (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+              ) : (
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="5"/>
+                  <line x1="12" y1="1" x2="12" y2="3"/>
+                  <line x1="12" y1="21" x2="12" y2="23"/>
+                </svg>
+              )}
+            </button>
+            <button className="mb-action-btn mb-profile-btn" id="mb-user-btn" title="Sign In / Profile" onClick={onOpenAuth}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
               </svg>
-            </span>
-            <span className="loc-value-sm" id="current-region-display">{region}</span>
-            <span className="live-indicator"><span className="pulse-dot-sm"></span>Live</span>
+              <span className="sync-pulse-indicator" title="Cloud Sync Active"></span>
+            </button>
           </div>
         </div>
       </header>
