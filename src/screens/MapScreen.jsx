@@ -13,28 +13,26 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// Curated Crisp Tile Layer Providers
+// Curated Crisp Tile Layer Providers (100% Free, High Resolution, Zero Watermark)
 const TILE_PROVIDERS = {
   positron: {
     id: 'positron',
     name: 'Clean Light',
     icon: '🏙️',
-    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
     options: {
-      attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
-      subdomains: 'abcd',
-      maxZoom: 20
+      attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+      maxZoom: 18
     }
   },
   darkmatter: {
     id: 'darkmatter',
     name: 'Night Matrix',
     icon: '🌙',
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
     options: {
-      attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
-      subdomains: 'abcd',
-      maxZoom: 20
+      attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+      maxZoom: 18
     }
   },
   satellite: {
@@ -818,85 +816,92 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
   return (
     <section id="screen-heatmap" className="app-screen active">
       {/* Top Header */}
-      <div className="screen-top-nav">
-        <div className="screen-top-title">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <h2 style={{ margin: 0 }}>Surat Food Security Radar</h2>
-            <span
-              style={{
-                fontSize: '11px',
-                fontWeight: 800,
-                background: mapEngine === 'google' 
-                  ? 'linear-gradient(135deg, #4285F4 0%, #34A853 100%)' 
-                  : 'linear-gradient(135deg, #0d9488 0%, #0284c7 100%)',
-                color: '#fff',
-                padding: '3px 9px',
-                borderRadius: '12px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-            >
-              <span>{mapEngine === 'google' ? '🗺️ Google Maps' : `🛰️ ${TILE_PROVIDERS[activeTileKey]?.name || 'Leaflet Vector'}`}</span>
+      <div className="map-screen-top-nav">
+        <div className="map-title-row">
+          <div className="map-title-group">
+            <h2 className="map-heading">Surat Food Security Radar</h2>
+            <span className="map-engine-pill">
+              {mapEngine === 'google' ? '🗺️ Google Maps' : `🛰️ ${TILE_PROVIDERS[activeTileKey]?.name || 'Leaflet Vector'}`}
             </span>
           </div>
-          <p>Live crowdsourced adulteration heat map &amp; pure zones across Surat municipal wards</p>
+          <div className="map-primary-actions">
+            <button 
+              className="map-action-btn primary" 
+              id="btn-add-map-report"
+              title="Log test result on map" 
+              onClick={() => {
+                soundEngine.playClick();
+                setIsReportModalOpen(true);
+              }}
+            >
+              <span>➕ Pin Test</span>
+            </button>
+            <button className="map-action-btn" id="btn-locate-user-map" title="Center on my location" onClick={handleLocateUser}>
+              <span>🎯 My GPS</span>
+            </button>
+            <button
+              className="map-action-btn"
+              title="Toggle Fullscreen / Expand"
+              onClick={() => {
+                soundEngine.playClick();
+                setIsExpanded(!isExpanded);
+              }}
+            >
+              <span>{isExpanded ? '⤢ Compact' : '⤢ Expand'}</span>
+            </button>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <button 
-            className="btn-locate-user" 
-            id="btn-add-map-report"
-            style={{ background: 'var(--brand-teal)', color: '#fff', borderColor: 'var(--brand-teal)' }}
-            title="Log test result on map" 
-            onClick={() => {
-              soundEngine.playClick();
-              setIsReportModalOpen(true);
-            }}
-          >
-            <span>➕ Pin Test</span>
-          </button>
-          <button className="btn-locate-user" id="btn-locate-user-map" title="Center on my location" onClick={handleLocateUser}>
-            <span>🎯 My GPS</span>
-          </button>
-          <button
-            className="btn-locate-user"
-            title="Toggle Fullscreen / Expand"
-            onClick={() => {
-              soundEngine.playClick();
-              setIsExpanded(!isExpanded);
-            }}
-          >
-            <span>{isExpanded ? '⤢ Compact' : '⤢ Expand'}</span>
-          </button>
-          <button
-            className="btn-locate-user"
-            title="Toggle Engine"
-            onClick={() => {
-              soundEngine.playClick();
-              const nextEngine = mapEngine === 'leaflet' ? 'google' : 'leaflet';
-              setMapEngine(nextEngine);
-              showToast(`Switched engine to ${nextEngine === 'google' ? 'Google Maps' : 'Leaflet Vector'}`, 'info');
-            }}
-          >
-            <span>🔄 Engine</span>
-          </button>
-          <button
-            className="btn-locate-user"
-            title="Configure Google Maps API Key"
-            onClick={() => {
-              soundEngine.playClick();
-              setApiKeyModalOpen(true);
-            }}
-          >
-            <span>🔑 API Key</span>
-          </button>
-          <button className="btn-locate-user" title="Export CSV" onClick={handleExportCsv}>
-            <span>📥 CSV</span>
-          </button>
-          <button className="btn-locate-user" title="Export JSON" onClick={handleExportJson}>
-            <span>📦 JSON</span>
-          </button>
+        <p className="map-subheading">Live crowdsourced adulteration heat map &amp; pure zones across Surat municipal wards</p>
+
+        {/* Secondary Utility Toolbar */}
+        <div className="map-util-toolbar">
+          <div className="map-tile-switchers">
+            {Object.values(TILE_PROVIDERS).map((p) => (
+              <button
+                key={p.id}
+                className={`tile-chip ${activeTileKey === p.id ? 'active' : ''}`}
+                onClick={() => {
+                  soundEngine.playClick();
+                  setActiveTileKey(p.id);
+                  if (mapEngine !== 'leaflet') setMapEngine('leaflet');
+                }}
+              >
+                <span>{p.icon} {p.name}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="map-extra-tools">
+            <button
+              className="map-tool-btn"
+              title="Toggle Engine"
+              onClick={() => {
+                soundEngine.playClick();
+                const nextEngine = mapEngine === 'leaflet' ? 'google' : 'leaflet';
+                setMapEngine(nextEngine);
+                showToast(`Switched engine to ${nextEngine === 'google' ? 'Google Maps' : 'Leaflet Vector'}`, 'info');
+              }}
+            >
+              <span>🔄 {mapEngine === 'google' ? 'Leaflet' : 'Google'}</span>
+            </button>
+            <button
+              className="map-tool-btn"
+              title="Configure Google Maps API Key"
+              onClick={() => {
+                soundEngine.playClick();
+                setApiKeyModalOpen(true);
+              }}
+            >
+              <span>🔑 API Key</span>
+            </button>
+            <button className="map-tool-btn" title="Export CSV" onClick={handleExportCsv}>
+              <span>📥 CSV</span>
+            </button>
+            <button className="map-tool-btn" title="Export JSON" onClick={handleExportJson}>
+              <span>📦 JSON</span>
+            </button>
+          </div>
         </div>
       </div>
 

@@ -235,17 +235,17 @@ export default function HomeScreen({
               </div>
               <div className="feed-details">
                 <div className="feed-line1">
-                  <strong>{inc.food}</strong>
-                  <span className={`feed-status ${inc.status === 'pass' ? 'status-pass' : 'status-fail'}`}>
+                  <span className="feed-food-name">{inc.food ? inc.food.replace(/&amp;/g, '&') : 'Sample'}</span>
+                  <span className={`feed-status-pill ${inc.status === 'pass' ? 'status-pass' : 'status-fail'}`}>
                     {inc.status === 'pass' ? 'PURE ✓' : 'ADULTERATED ⚠️'}
                   </span>
                 </div>
                 <div className="feed-line2">
-                  <span>📍 {inc.neighborhood}</span>
-                  <span>•</span>
+                  <span>📍 {inc.neighborhood ? inc.neighborhood.replace(/&amp;/g, '&') : 'Surat'}</span>
+                  <span className="feed-dot">•</span>
                   <span>{inc.timestamp || 'Recent'}</span>
-                  <span>•</span>
-                  <span style={{ color: 'var(--brand-teal)', fontWeight: 600 }}>Test Now ➔</span>
+                  <span className="feed-dot">•</span>
+                  <span className="feed-test-cta">Test Now ➔</span>
                 </div>
               </div>
             </div>

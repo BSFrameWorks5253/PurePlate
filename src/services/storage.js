@@ -58,7 +58,15 @@ class PurePlateStorage {
     if (typeof window === 'undefined') return INITIAL_MAP_INCIDENTS;
     try {
       const data = localStorage.getItem(this.STORAGE_KEY_INCIDENTS);
-      return data ? JSON.parse(data) : INITIAL_MAP_INCIDENTS;
+      const list = data ? JSON.parse(data) : INITIAL_MAP_INCIDENTS;
+      return list.map(item => ({
+        ...item,
+        food: this.cleanText(item.food),
+        neighborhood: this.cleanText(item.neighborhood),
+        adulterant: this.cleanText(item.adulterant),
+        testType: this.cleanText(item.testType),
+        vendorType: this.cleanText(item.vendorType),
+      }));
     } catch (e) {
       return INITIAL_MAP_INCIDENTS;
     }
@@ -73,21 +81,25 @@ class PurePlateStorage {
     return incident;
   }
 
+  cleanText(str) {
+    if (typeof str !== "string") return "";
+    return str
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .trim();
+  }
+
   sanitize(str) {
     if (typeof str !== "string") return "";
+    // Strip dangerous tags while preserving readable characters like & for React
     return str
       .trim()
       .slice(0, 150)
-      .replace(/[<>'"&]/g, (char) => {
-        switch (char) {
-          case "<": return "&lt;";
-          case ">": return "&gt;";
-          case "'": return "&#39;";
-          case '"': return "&quot;";
-          case "&": return "&amp;";
-          default: return char;
-        }
-      });
+      .replace(/<[^>]*>?/gm, "")
+      .replace(/&amp;/g, "&");
   }
 
   submitTestResult({ food, testType, status, adulterant, vendorType, locationName, lat, lng }) {
