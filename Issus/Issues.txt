@@ -80,16 +80,4 @@ also in desktop the wards written on the top not written properly make it proper
 
 
 In the app the login the otp isnt coming in the registered email id it is coming in the app only also if not exist email id it should send a notification use vercel database for storing the data of user E-mail id and the user data is to be stored in the google drive or something soo my database doesnt overload and send me a big bill 
-
-[RESOLVED — Note 4 Full Implementation]:
-1. Real Email OTP Dispatch:
-   - Replaced on-screen OTP code display with real email inbox dispatch notification.
-   - Integrated Google Apps Script free Gmail API webhook & Resend API with 10-minute code expiry.
-   - Added discreet offline demo toggle for offline development.
-2. Non-Existent Email Notification:
-   - Checked email existence before sending OTP.
-   - If not found in database, returns warning: "⚠️ This email ID is not registered yet. Please create your student account first!" and auto-switches to the registration tab with pre-filled name & email.
-3. Zero-Bill Architecture (No Database Overloads or Big Bills):
-   - User account emails and authentication tokens stored in lightweight Vercel serverless database (/tmp + users.json) with zero recurring costs.
-   - User test logs, incident reports, and profiles are synced directly to Google Sheets / Google Drive via Google Apps Script (google_drive_sync_script.gs) for 100% free unlimited storage.
-   - Added "Google Drive & Sheets Cloud Backup" panel in LoginScreen with 1-click sync, webhook URL config, and local JSON export. 
+i am login in with a existing then too it  saying doesnt exist

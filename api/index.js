@@ -99,6 +99,54 @@ const DEFAULT_SEED_USERS = [
     incidents: [],
     createdAt: "2026-10-04T12:00:00.000Z",
     updatedAt: "2026-10-04T12:00:00.000Z"
+  },
+  {
+    id: "usr_1791044917092",
+    email: "student@dpssurat.edu",
+    name: "Aarav Patel",
+    school: "Lourdes Convent Primary School, Surat",
+    salt: "91912b5499be0c640a936a45872528cc",
+    passwordHash: "0beb9449e7267294cbd5b7aeadce09a98fff4315b296f5fefdfe90f0c96c395e",
+    token: "pureplate_token_dps_student",
+    profile: {
+      name: "Aarav Patel",
+      school: "Lourdes Convent Primary School, Surat",
+      studentId: "DPS-7714",
+      grade: "Class 7-A",
+      role: "Cadet Food Inspector",
+      avatar: "🔬",
+      points: 550,
+      testsCompleted: 2,
+      badges: ["detective", "milk_master"],
+      completedQuizzes: []
+    },
+    incidents: [],
+    createdAt: "2026-10-03T16:28:37.092Z",
+    updatedAt: "2026-10-04T04:46:18.023Z"
+  },
+  {
+    id: "usr_1791045102840",
+    email: "priya@tapti.edu",
+    name: "Priya Shah",
+    school: "Lourdes Convent Primary School, Surat",
+    salt: "552a6e7ea0606ed75efb27260a358fbd",
+    passwordHash: "d4d7e708765ed7e26839ec73e946e7efd97eade05f3653341dc08ca78865dd2a",
+    token: "pureplate_token_tapti_priya",
+    profile: {
+      name: "Priya Shah",
+      school: "Lourdes Convent Primary School, Surat",
+      studentId: "TAPTI-3195",
+      grade: "Class 8-B",
+      role: "Cadet Food Inspector",
+      avatar: "👩‍🔬",
+      points: 600,
+      testsCompleted: 3,
+      badges: ["detective", "spice_sleuth"],
+      completedQuizzes: []
+    },
+    incidents: [],
+    createdAt: "2026-10-03T16:31:42.840Z",
+    updatedAt: "2026-10-04T04:46:28.457Z"
   }
 ];
 
