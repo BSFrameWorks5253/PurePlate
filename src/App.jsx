@@ -17,12 +17,14 @@ import storage from './services/storage.js';
 import soundEngine from './services/sound.js';
 
 export default function App() {
+  const [activeScreen, setActiveScreen] = useState('screen-home');
   const [viewMode, setViewMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.innerWidth < 821 ? 'mobile' : 'desktop';
     }
     return 'desktop';
   });
+  const [theme, setTheme] = useState('light');
   const [region, setRegion] = useState(storage.getUserRegion());
   const [selectedProtocol, setSelectedProtocol] = useState(FOOD_PROTOCOLS[0]);
   const [isInstructionOpen, setIsInstructionOpen] = useState(false);
