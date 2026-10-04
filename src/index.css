@@ -607,9 +607,9 @@ button:active {
 
 @media (min-width: 821px) {
   .app-frame {
-    margin: 20px auto 30px;
-    border-radius: 36px;
-    overflow: hidden;
+    margin: 16px auto 32px;
+    border-radius: 32px;
+    overflow: visible;
   }
 }
 
@@ -4260,19 +4260,28 @@ button:active {
     border-radius: 28px;
   }
 
-  /* ── Desktop Learning Screen: 2-Column Split Lab ── */
+  /* ── Desktop Learning Screen: Full Width Flow with 2-Column Modules ── */
   .app-frame.frame-expanded #screen-learning {
-    max-width: 1300px;
+    max-width: 1320px;
     margin: 0 auto;
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .learning-modules-grid {
     display: grid;
-    grid-template-columns: 1.15fr 1fr;
-    gap: 24px;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 22px;
     align-items: start;
   }
 
-  .app-frame.frame-expanded #screen-learning .learning-hero-card {
-    grid-column: 1 / -1;
+  .learning-col-left,
+  .learning-col-right {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
   }
 }
 
@@ -4389,20 +4398,25 @@ button:active {
   animation: pulse-glow 0.8s infinite;
 }
 
-/* Auth Modal Backdrop */
+/* Auth & Report Modal Backdrop (Topmost Fixed Layer) */
 .auth-modal-backdrop {
-  position: fixed; inset: 0; z-index: 9999;
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(10px);
-  display: none; align-items: center; justify-content: center;
-  padding: 16px;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 999999 !important;
+  background: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  display: none;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
   animation: modal-fade-in 0.25s var(--ease-smooth) both;
 }
 [data-theme="dark"] .auth-modal-backdrop {
-  background: rgba(0, 0, 0, 0.78);
+  background: rgba(0, 0, 0, 0.82) !important;
 }
 .auth-modal-backdrop.active {
-  display: flex;
+  display: flex !important;
 }
 @keyframes modal-fade-in {
   from { opacity: 0; }
@@ -4412,20 +4426,119 @@ button:active {
 .auth-modal-sheet {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: 24px;
-  width: 100%; max-width: 440px;
+  border-radius: 28px;
+  width: 100%;
+  max-width: 460px;
   padding: 24px;
   position: relative;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
   animation: modal-pop 0.3s var(--ease-spring) both;
-  max-height: 90dvh; overflow-y: auto;
+  max-height: calc(100dvh - 36px) !important;
+  overflow-y: auto !important;
 }
 [data-theme="dark"] .auth-modal-sheet {
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(0, 201, 167, 0.12);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 201, 167, 0.12);
 }
 @keyframes modal-pop {
-  from { opacity: 0; transform: scale(0.92) translateY(12px); }
+  from { opacity: 0; transform: scale(0.94) translateY(12px); }
   to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Specific styling for the Pin Report Modal Sheet */
+.modal-report-sheet {
+  max-width: 520px !important;
+  padding: 22px 26px !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+.modal-header-block {
+  margin-bottom: 14px;
+  padding-right: 36px;
+}
+.modal-form-scrollable {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+.modal-form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 520px) {
+  .modal-form-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+.form-group-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.modal-field-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: 0.2px;
+}
+.modal-text-input,
+.modal-select-input {
+  width: 100%;
+  padding: 9.5px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+.modal-text-input:focus,
+.modal-select-input:focus {
+  border-color: var(--brand-teal);
+  box-shadow: 0 0 0 3px var(--brand-teal-subtle);
+}
+.modal-footer-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 6px;
+}
+.btn-modal-cancel {
+  padding: 9px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.btn-modal-cancel:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+}
+.btn-modal-submit {
+  padding: 9px 22px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, var(--brand-teal), #0284c7);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+}
+.btn-modal-submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(13, 148, 136, 0.45);
 }
 
 .modal-close-btn {
@@ -5214,16 +5327,218 @@ button:active {
   transform: translateX(3px);
 }
 
-/* ── 5. Detective Badges Collection Styling (LearningScreen) ── */
+/* ── 5. Inspector Credential Hero Card (LearningScreen) ── */
+.learning-hero-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow-card);
+  padding: 24px 28px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.28s var(--ease-spring), box-shadow 0.28s ease;
+}
+.learning-hero-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--brand-teal), #0284c7, #8b5cf6, #10b981);
+}
+.learning-hero-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.l-avatar-ring {
+  position: relative;
+  width: 66px;
+  height: 66px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.2), rgba(14, 165, 233, 0.2));
+  border: 2px solid var(--brand-teal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px var(--brand-teal-glow);
+  flex-shrink: 0;
+}
+.l-avatar {
+  font-size: 34px;
+  line-height: 1;
+}
+.l-badge-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 24px;
+  border: 1.5px dashed var(--brand-teal);
+  opacity: 0.5;
+  animation: rotate-slow 24s linear infinite;
+}
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.l-info {
+  flex: 1;
+  min-width: 240px;
+}
+.l-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 2px;
+}
+.l-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+.l-official-tag {
+  font-size: 11px;
+  font-weight: 800;
+  background: rgba(13, 148, 136, 0.12);
+  color: var(--brand-teal);
+  border: 1px solid var(--border-teal);
+  padding: 2px 9px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.l-school {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 8px;
+}
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.rank-badge {
+  font-size: 11.5px;
+  font-weight: 800;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(99, 102, 241, 0.15));
+  color: #0284c7;
+  border: 1px solid rgba(14, 165, 233, 0.35);
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+[data-theme="dark"] .rank-badge {
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.3);
+}
+.xp-badge {
+  font-size: 11.5px;
+  font-weight: 800;
+  background: var(--brand-teal-subtle);
+  color: var(--brand-teal);
+  border: 1px solid var(--border-teal);
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+.cadet-badge {
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 3px 9px;
+  border-radius: 12px;
+}
+[data-theme="dark"] .cadet-badge {
+  color: #34d399;
+}
+.xp-section {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-subtle);
+}
+.xp-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+.xp-target-text {
+  color: var(--text-secondary);
+}
+.xp-pct-text {
+  font-weight: 800;
+  color: var(--brand-teal);
+  font-variant-numeric: tabular-nums;
+}
+.xp-bar-track {
+  width: 100%;
+  height: 9px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+[data-theme="dark"] .xp-bar-track {
+  background: rgba(255, 255, 255, 0.08);
+}
+.xp-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--brand-teal) 0%, #0284c7 60%, #10b981 100%);
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 12px var(--brand-teal-glow);
+}
+
+/* ── Detective Badges Showcase Card (Full Width) ── */
+.badges-showcase-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow-card);
+  padding: 22px 26px;
+  margin-bottom: 22px;
+}
+.badges-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.badges-status-pill {
+  font-size: 11.5px;
+  font-weight: 800;
+  background: var(--brand-teal-subtle);
+  color: var(--brand-teal);
+  border: 1px solid var(--border-teal);
+  padding: 4px 12px;
+  border-radius: 20px;
+}
 .badges-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 14px;
 }
-@media (max-width: 680px) {
+@media (max-width: 860px) {
   .badges-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+@media (max-width: 480px) {
+  .badges-grid {
+    grid-template-columns: 1fr;
     gap: 10px;
   }
 }
@@ -5232,50 +5547,72 @@ button:active {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 16px 12px;
+  padding: 18px 14px;
   border-radius: 18px;
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
   box-shadow: var(--shadow-card);
   transition: all 0.25s var(--ease-spring);
   position: relative;
   overflow: hidden;
 }
 .badge-card:hover {
-  transform: translateY(-3px) scale(1.02);
+  transform: translateY(-4px) scale(1.02);
 }
 .badge-card.unlocked {
-  border-color: rgba(13, 148, 136, 0.35);
-  background: linear-gradient(135deg, rgba(13, 148, 136, 0.08) 0%, rgba(255, 255, 255, 0.7) 100%);
+  border-color: rgba(13, 148, 136, 0.4);
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.08) 0%, rgba(255, 255, 255, 0.8) 100%);
+  box-shadow: 0 10px 24px -6px rgba(13, 148, 136, 0.15);
 }
 [data-theme="dark"] .badge-card.unlocked {
-  background: linear-gradient(135deg, rgba(0, 240, 192, 0.12) 0%, rgba(17, 28, 52, 0.7) 100%);
-  border-color: rgba(0, 240, 192, 0.3);
+  background: linear-gradient(135deg, rgba(0, 240, 192, 0.14) 0%, rgba(17, 28, 52, 0.8) 100%);
+  border-color: rgba(0, 240, 192, 0.35);
+  box-shadow: 0 10px 24px -6px rgba(0, 240, 192, 0.15);
+}
+.b-icon-wrap {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 1), 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+[data-theme="dark"] .b-icon-wrap {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 .badge-card.unlocked .b-icon {
-  filter: drop-shadow(0 4px 10px rgba(13, 148, 136, 0.3));
+  filter: drop-shadow(0 4px 10px rgba(13, 148, 136, 0.35));
 }
 .badge-card.locked {
-  opacity: 0.65;
-  filter: grayscale(0.7);
+  opacity: 0.62;
+  filter: grayscale(0.75);
 }
 .b-icon {
-  font-size: 32px;
-  margin-bottom: 8px;
+  font-size: 30px;
   display: block;
 }
 .b-name {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 800;
   color: var(--text-primary);
-  margin-bottom: 5px;
+  margin-bottom: 4px;
+}
+.b-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.35;
+  margin-bottom: 10px;
+  min-height: 28px;
 }
 .b-status {
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 800;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 12px;
   display: inline-block;
 }
@@ -5291,6 +5628,76 @@ button:active {
 .badge-card.locked .b-status {
   background: rgba(100, 116, 139, 0.14);
   color: var(--text-muted);
+}
+
+/* ── Interactive Split Lab (Desktop 2-Col Grid) ── */
+.learning-modules-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .learning-modules-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}
+.learning-col-left,
+.learning-col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Field Testing Protocols Card ── */
+.field-protocols-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow-card);
+  padding: 20px 22px;
+}
+.field-protocols-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 14px;
+}
+.field-tips-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.field-tip-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.field-tip-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--brand-teal-subtle);
+  color: var(--brand-teal);
+  border: 1px solid var(--border-teal);
+  font-size: 11.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.field-tip-item p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-secondary);
 }
 
 /* ── 6. School Safety Leaderboard Styling (LearningScreen) ── */

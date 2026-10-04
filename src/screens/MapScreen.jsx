@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import storage from '../services/storage.js';
 import soundEngine from '../services/sound.js';
 import { FOOD_PROTOCOLS } from '../data/protocols.js';
@@ -1381,41 +1382,49 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
         </div>
       </div>
 
-      {/* Modal: Pin/Log Food Test on Map */}
-      {isReportModalOpen && (
+      {/* Modal: Pin/Log Food Test on Map - Portaled to document.body so it is never clipped */}
+      {isReportModalOpen && typeof document !== 'undefined' && createPortal(
         <div className="auth-modal-backdrop active" onClick={() => setIsReportModalOpen(false)}>
-          <div className="auth-modal-sheet" style={{ maxWidth: '460px' }} onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close-btn" onClick={() => setIsReportModalOpen(false)}>
+          <div className="auth-modal-sheet modal-report-sheet" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close-btn" onClick={() => setIsReportModalOpen(false)} aria-label="Close modal">
               &times;
             </button>
-            <div style={{ textAlign: 'left', padding: '8px 4px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '28px' }}>📍</span>
+            <div className="modal-header-block">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '12px',
+                  background: 'rgba(13, 148, 136, 0.12)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '22px'
+                }}>
+                  📍
+                </div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>Pin Food Safety Report</h3>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    Add real-time citizen test results directly to the Surat heat map
+                  <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                    Pin Food Safety Report
+                  </h3>
+                  <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                    Log real-time citizen test results directly to the Surat heat map
                   </span>
                 </div>
               </div>
+            </div>
 
-              <form onSubmit={handleSubmitReport}>
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px' }}>
+            <form onSubmit={handleSubmitReport} className="modal-form-scrollable">
+              {/* Row 1: Food Sample + Result Verdict */}
+              <div className="modal-form-grid-2">
+                <div className="form-group-field">
+                  <label className="modal-field-label">
                     Food Sample Tested:
                   </label>
                   <select
                     value={reportFood}
                     onChange={(e) => setReportFood(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      borderRadius: '12px',
-                      border: '1px solid var(--border-subtle)',
-                      background: 'var(--bg-input)',
-                      color: 'var(--text-primary)',
-                      fontSize: '0.85rem'
-                    }}
+                    className="modal-select-input"
                   >
                     <option value="Milk & Dairy">🥛 Milk &amp; Dairy</option>
                     <option value="Turmeric Powder">🌶️ Turmeric Powder (Haldi)</option>
@@ -1427,22 +1436,25 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
                   </select>
                 </div>
 
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px' }}>
-                    Test Result:
+                <div className="form-group-field">
+                  <label className="modal-field-label">
+                    Test Result Verdict:
                   </label>
-                  <div style={{ display: 'flex', gap: '10px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                     <label style={{
-                      flex: 1,
-                      padding: '10px',
+                      padding: '9px 6px',
                       borderRadius: '12px',
                       border: `1.5px solid ${reportStatus === 'fail' ? '#ef4444' : 'var(--border-subtle)'}`,
-                      background: reportStatus === 'fail' ? '#fff1f2' : 'var(--bg-card)',
-                      color: reportStatus === 'fail' ? '#9f1239' : 'var(--text-primary)',
+                      background: reportStatus === 'fail' ? 'rgba(239, 68, 68, 0.12)' : 'var(--bg-card)',
+                      color: reportStatus === 'fail' ? '#dc2626' : 'var(--text-primary)',
                       cursor: 'pointer',
                       textAlign: 'center',
                       fontWeight: 700,
-                      fontSize: '12.5px'
+                      fontSize: '11.5px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.18s'
                     }}>
                       <input 
                         type="radio" 
@@ -1452,20 +1464,23 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
                         onChange={() => setReportStatus('fail')} 
                         style={{ display: 'none' }}
                       />
-                      ⚠️ Adulterated (Fail)
+                      ⚠️ Adulterated
                     </label>
 
                     <label style={{
-                      flex: 1,
-                      padding: '10px',
+                      padding: '9px 6px',
                       borderRadius: '12px',
                       border: `1.5px solid ${reportStatus === 'pass' ? '#10b981' : 'var(--border-subtle)'}`,
-                      background: reportStatus === 'pass' ? '#ecfdf5' : 'var(--bg-card)',
-                      color: reportStatus === 'pass' ? '#065f46' : 'var(--text-primary)',
+                      background: reportStatus === 'pass' ? 'rgba(16, 185, 129, 0.12)' : 'var(--bg-card)',
+                      color: reportStatus === 'pass' ? '#059669' : 'var(--text-primary)',
                       cursor: 'pointer',
                       textAlign: 'center',
                       fontWeight: 700,
-                      fontSize: '12.5px'
+                      fontSize: '11.5px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.18s'
                     }}>
                       <input 
                         type="radio" 
@@ -1475,174 +1490,137 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
                         onChange={() => setReportStatus('pass')} 
                         style={{ display: 'none' }}
                       />
-                      🛡️ Verified Pure (Pass)
+                      🛡️ Pure (Pass)
                     </label>
                   </div>
                 </div>
+              </div>
 
-                {reportStatus === 'fail' && (
-                  <div style={{ marginBottom: '12px' }}>
-                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px' }}>
-                      Adulterant Detected:
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Added Starch, Detergent, Brick Dust, Metanil Yellow"
-                      value={reportAdulterant}
-                      onChange={(e) => setReportAdulterant(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '10px 12px',
-                        borderRadius: '12px',
-                        border: '1px solid var(--border-subtle)',
-                        background: 'var(--bg-input)',
-                        color: 'var(--text-primary)',
-                        fontSize: '0.85rem'
-                      }}
-                      required
-                    />
-                  </div>
-                )}
+              {/* Row 2 (if fail): Adulterant Detected */}
+              {reportStatus === 'fail' && (
+                <div className="form-group-field" style={{ animation: 'modal-fade-in 0.2s ease' }}>
+                  <label className="modal-field-label">
+                    Specific Adulterant Detected:
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Added Starch, Detergent, Brick Dust, Metanil Yellow"
+                    value={reportAdulterant}
+                    onChange={(e) => setReportAdulterant(e.target.value)}
+                    className="modal-text-input"
+                    required
+                  />
+                </div>
+              )}
 
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px' }}>
+              {/* Row 3: Road Name + Landmark (2 Columns) */}
+              <div className="modal-form-grid-2">
+                <div className="form-group-field">
+                  <label className="modal-field-label">
                     Road / Street Name:
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Ghod Dod Road, Gaurav Path, Anand Mahal Road"
+                    placeholder="e.g. Ghod Dod Road"
                     value={reportRoad}
                     onChange={(e) => setReportRoad(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      borderRadius: '12px',
-                      border: '1px solid var(--border-subtle)',
-                      background: 'var(--bg-input)',
-                      color: 'var(--text-primary)',
-                      fontSize: '0.85rem'
-                    }}
+                    className="modal-text-input"
                     required
                   />
                 </div>
 
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px' }}>
+                <div className="form-group-field">
+                  <label className="modal-field-label">
                     Specific Landmark:
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Near Joggers Park, Opp. ISCON Mall, Star Bazaar"
+                    placeholder="e.g. Near Joggers Park"
                     value={reportLandmark}
                     onChange={(e) => setReportLandmark(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      borderRadius: '12px',
-                      border: '1px solid var(--border-subtle)',
-                      background: 'var(--bg-input)',
-                      color: 'var(--text-primary)',
-                      fontSize: '0.85rem'
-                    }}
+                    className="modal-text-input"
                     required
                   />
                 </div>
+              </div>
 
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px' }}>
-                    Full Street Address:
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Shop 4, Silver Point Arcade, Ghod Dod Road, Surat - 395007"
-                    value={reportAddress}
-                    onChange={(e) => setReportAddress(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      borderRadius: '12px',
-                      border: '1px solid var(--border-subtle)',
-                      background: 'var(--bg-input)',
-                      color: 'var(--text-primary)',
-                      fontSize: '0.85rem'
-                    }}
-                    required
-                  />
-                </div>
-
-                <div style={{ marginBottom: '12px' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px' }}>
+              {/* Row 4: Ward / Area + Vendor Type (2 Columns) */}
+              <div className="modal-form-grid-2">
+                <div className="form-group-field">
+                  <label className="modal-field-label">
                     Surat Ward / Area:
                   </label>
                   <input
                     type="text"
                     value={reportCoords.neighborhood}
                     onChange={(e) => setReportCoords({ ...reportCoords, neighborhood: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      borderRadius: '12px',
-                      border: '1px solid var(--border-subtle)',
-                      background: 'var(--bg-input)',
-                      color: 'var(--text-primary)',
-                      fontSize: '0.85rem'
-                    }}
+                    className="modal-text-input"
                     required
                   />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--brand-green)', fontWeight: 700, marginTop: '6px' }}>
-                    <span className="pulse-dot"></span>
-                    <span>📍 GPS Pin Geocoded &amp; Locked to Surat Grid</span>
-                  </div>
                 </div>
 
-                <div style={{ marginBottom: '16px' }}>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px' }}>
-                    Vendor Type:
+                <div className="form-group-field">
+                  <label className="modal-field-label">
+                    Vendor / Store Type:
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Local Loose Milk Vendor, Street Market, Grocery Store"
+                    placeholder="e.g. Local Loose Milk Vendor, Dairy Stall"
                     value={reportVendor}
                     onChange={(e) => setReportVendor(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      borderRadius: '12px',
-                      border: '1px solid var(--border-subtle)',
-                      background: 'var(--bg-input)',
-                      color: 'var(--text-primary)',
-                      fontSize: '0.85rem'
-                    }}
+                    className="modal-text-input"
                   />
                 </div>
+              </div>
 
-                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                  <button
-                    type="button"
-                    className="btn-locate-user"
-                    onClick={() => setIsReportModalOpen(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn-primary-action"
-                    style={{ width: 'auto', padding: '10px 22px', borderRadius: '12px', fontSize: '13px' }}
-                  >
-                    Pin on Heat Map
-                  </button>
-                </div>
-              </form>
-            </div>
+              {/* Row 5: Full Street Address */}
+              <div className="form-group-field">
+                <label className="modal-field-label">
+                  Full Street Address:
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Shop 4, Silver Point Arcade, Ghod Dod Road, Surat - 395007"
+                  value={reportAddress}
+                  onChange={(e) => setReportAddress(e.target.value)}
+                  className="modal-text-input"
+                  required
+                />
+              </div>
+
+              {/* GPS Geocoding Indicator */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11.5px', color: 'var(--brand-green)', fontWeight: 700, padding: '4px 0' }}>
+                <span className="pulse-dot"></span>
+                <span>📍 GPS Pin Geocoded &amp; Locked to Surat Coordinates</span>
+              </div>
+
+              {/* Modal Actions Footer */}
+              <div className="modal-footer-actions">
+                <button
+                  type="button"
+                  className="btn-modal-cancel"
+                  onClick={() => setIsReportModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-modal-submit"
+                >
+                  Pin on Heat Map ➔
+                </button>
+              </div>
+            </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Google Maps API Key Modal */}
-      {apiKeyModalOpen && (
+      {/* Google Maps API Key Modal - Portaled to document.body */}
+      {apiKeyModalOpen && typeof document !== 'undefined' && createPortal(
         <div className="auth-modal-backdrop active" onClick={() => setApiKeyModalOpen(false)}>
           <div className="auth-modal-sheet" style={{ maxWidth: '440px' }} onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close-btn" onClick={() => setApiKeyModalOpen(false)}>
+            <button className="modal-close-btn" onClick={() => setApiKeyModalOpen(false)} aria-label="Close modal">
               &times;
             </button>
             <div style={{ textAlign: 'left', padding: '10px 4px' }}>
@@ -1709,7 +1687,8 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
               </form>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </section>
   );
