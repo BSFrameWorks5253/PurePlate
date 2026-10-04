@@ -102,9 +102,7 @@ export default function Header({
       <header className="desktop-top-bar" id="desktop-top-bar">
         {/* Left: Brand Identity with Glass Shield & Live Grid Indicator */}
         <div className="dt-brand" onClick={() => onNavigate && onNavigate('screen-home')} style={{ cursor: 'pointer' }} title="PurePlate Home">
-          <div className="dt-logo-wrap">
-            <PurePlateLogo size={26} showGlow={true} />
-          </div>
+          <PurePlateLogo size={40} variant="icon" showGlow={true} />
           <div className="dt-titles">
             <div className="dt-title-row">
               <span className="dt-name">PurePlate</span>
@@ -250,9 +248,7 @@ export default function Header({
         ></div>
         <div className="header-content-unified">
           <div className="mb-brand-wrap" onClick={() => onNavigate && onNavigate('screen-home')} style={{ cursor: 'pointer' }} title="PurePlate">
-            <div className="mb-logo-box">
-              <PurePlateLogo size={22} showGlow={false} />
-            </div>
+            <PurePlateLogo size={32} variant="icon" showGlow={true} />
             <div className="mb-title-col">
               <span className="mb-title">PurePlate</span>
               <div className="mb-grid-live">

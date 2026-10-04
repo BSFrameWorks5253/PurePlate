@@ -76,7 +76,7 @@ export default function WelcomeScreen({ onFinish }) {
         <div className="splash-logo-wrapper">
           <div className="splash-logo-pulse-ring"></div>
           <div className="splash-logo-glow"></div>
-          <PurePlateLogo size={92} animated={true} showGlow={true} />
+          <PurePlateLogo size={104} variant="icon" animated={true} showGlow={true} />
         </div>
 
         {/* Brand Wordmark & Identification */}

@@ -1,121 +1,167 @@
 import React from 'react';
 
 /**
- * PurePlate Official Brand Logo Mark
- * Concept: Minimalist Porcelain Plate Rim + Purity Shield + Organic Leaf / Check Verification
- * Designed for ultra-high clarity from 16px micro-nav to 120px splash hero.
+ * PurePlate Official Brand Mark (v3.0 Master Identity)
+ * A fusion of:
+ * 1. The Porcelain Plate (circular rim & culinary clarity)
+ * 2. The Purity Shield (food safety & chemical protection)
+ * 3. The Letter "P" Monogram (PurePlate identity)
+ * 4. The Organic Leaf & Verified Checkmark (unadulterated, pure living food)
  */
 export default function PurePlateLogo({
-  size = 24,
+  size = 28,
+  variant = 'icon', // 'icon' (with glass squircle) or 'mark' (pure vector glyph)
   className = '',
   animated = false,
   showGlow = false
 }) {
-  const gradientId = React.useId ? React.useId() : `pp-logo-${Math.random().toString(36).substr(2, 9)}`;
+  const uniqueId = React.useId ? React.useId() : `pp-logo-${Math.random().toString(36).substr(2, 9)}`;
 
+  // The PurePlate vector glyph
+  const glyph = (
+    <svg
+      width={variant === 'icon' ? Math.round(size * 0.72) : size}
+      height={variant === 'icon' ? Math.round(size * 0.72) : size}
+      viewBox="0 0 64 64"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="pureplate-glyph-svg"
+      style={{ overflow: 'visible' }}
+    >
+      <defs>
+        {/* Primary PurePlate Cyan-Teal Gradient */}
+        <linearGradient id={`${uniqueId}-teal-flow`} x1="12" y1="10" x2="52" y2="54" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#0df0c0" />
+          <stop offset="35%" stopColor="#06b6d4" />
+          <stop offset="70%" stopColor="#0d9488" />
+          <stop offset="100%" stopColor="#0284c7" />
+        </linearGradient>
+
+        {/* Organic Emerald Leaf Gradient */}
+        <linearGradient id={`${uniqueId}-leaf-glow`} x1="24" y1="20" x2="42" y2="36" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#34d399" />
+          <stop offset="100%" stopColor="#0df0c0" />
+        </linearGradient>
+
+        {/* Shield Glass Surface Gradient */}
+        <linearGradient id={`${uniqueId}-shield-glass`} x1="32" y1="12" x2="32" y2="52" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.16" />
+          <stop offset="100%" stopColor="#0df0c0" stopOpacity="0.03" />
+        </linearGradient>
+
+        {/* Drop Glow Filter */}
+        <filter id={`${uniqueId}-soft-glow`} x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#0df0c0" floodOpacity="0.45" />
+        </filter>
+      </defs>
+
+      {/* ── 1. Outer Plate Rim (Porcelain Geometric Ring) ── */}
+      <circle
+        cx="32"
+        cy="32"
+        r="28"
+        stroke={`url(#${uniqueId}-teal-flow)`}
+        strokeWidth="2.5"
+        strokeOpacity="0.45"
+        className="plate-rim-circle"
+      />
+
+      {/* ── 2. Purity Shield Silhouette (Harmonious Plate-Shield Curve) ── */}
+      <path
+        d="M32 12.5C43.5 12.5 49 18 49 28C49 39.2 38.2 46.8 32 50.8C25.8 46.8 15 39.2 15 28C15 18 20.5 12.5 32 12.5Z"
+        fill={`url(#${uniqueId}-shield-glass)`}
+        stroke={`url(#${uniqueId}-teal-flow)`}
+        strokeWidth="2.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="shield-contour"
+      />
+
+      {/* ── 3. The Letter "P" Monogram + Botanical Purity Leaf ── */}
+      {/* Left Pillar / Spine of P */}
+      <path
+        d="M24.5 21V41.5"
+        stroke={`url(#${uniqueId}-teal-flow)`}
+        strokeWidth="4.2"
+        strokeLinecap="round"
+        className="p-spine"
+      />
+
+      {/* Purity Leaf Bowl of "P" */}
+      <path
+        d="M24.5 21C31.5 21 38.5 22.2 38.5 28.5C38.5 34.8 31.5 36 24.5 36"
+        stroke={`url(#${uniqueId}-teal-flow)`}
+        strokeWidth="4.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="p-bowl"
+      />
+
+      {/* Central Verification Check & Leaf Vein */}
+      <path
+        d="M28.5 28.5L31.8 31.8L37.5 24.5"
+        stroke={`url(#${uniqueId}-leaf-glow)`}
+        strokeWidth="3.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        filter={`url(#${uniqueId}-soft-glow)`}
+        className="leaf-check"
+      />
+
+      {/* ── 4. Luminous Purity Sparkle (Top-Right Accent) ── */}
+      <circle
+        cx="44.5"
+        cy="15.5"
+        r="2.2"
+        fill="#0df0c0"
+        className="purity-glint"
+      />
+    </svg>
+  );
+
+  if (variant === 'mark') {
+    return (
+      <div
+        className={`pureplate-logo-mark ${animated ? 'logo-animated' : ''} ${showGlow ? 'has-glow' : ''} ${className}`}
+        style={{
+          width: size,
+          height: size,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative'
+        }}
+      >
+        {glyph}
+      </div>
+    );
+  }
+
+  // Variant: 'icon' (Apple-grade Luxury Squircle Glass Container)
   return (
     <div
-      className={`pureplate-logo-container ${animated ? 'logo-animated' : ''} ${showGlow ? 'has-glow' : ''} ${className}`}
+      className={`pureplate-app-icon ${animated ? 'logo-animated' : ''} ${showGlow ? 'has-glow' : ''} ${className}`}
       style={{
         width: size,
         height: size,
+        minWidth: size,
+        minHeight: size,
+        borderRadius: Math.round(size * 0.28),
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        position: 'relative'
+        position: 'relative',
+        flexShrink: 0
       }}
     >
-      <svg
-        width={size}
-        height={size}
-        viewBox="0 0 48 48"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="pureplate-svg"
-      >
-        <defs>
-          {/* Brand Primary Linear Gradient (Emerald Purity to High-Tech Teal & Ocean Cyan) */}
-          <linearGradient id={`${gradientId}-teal`} x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#0df0c0" />
-            <stop offset="50%" stopColor="#0d9488" />
-            <stop offset="100%" stopColor="#0284c7" />
-          </linearGradient>
-
-          {/* Golden/Emerald Purity Accent Gradient */}
-          <linearGradient id={`${gradientId}-accent`} x1="16" y1="14" x2="34" y2="34" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#10b981" />
-            <stop offset="100%" stopColor="#06b6d4" />
-          </linearGradient>
-
-          {/* Inner Specular Fill Gradient */}
-          <linearGradient id={`${gradientId}-disc`} x1="24" y1="6" x2="24" y2="42" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.12" />
-            <stop offset="100%" stopColor="#ffffff" stopOpacity="0.02" />
-          </linearGradient>
-        </defs>
-
-        {/* 1. Outer Porcelain Plate Geometry (Rim & Specular Edge) */}
-        <circle
-          cx="24"
-          cy="24"
-          r="21.5"
-          stroke={`url(#${gradientId}-teal)`}
-          strokeWidth="2.5"
-          className="plate-outer-rim"
-        />
-
-        {/* 2. Inner Plate Bevel Ring */}
-        <circle
-          cx="24"
-          cy="24"
-          r="17"
-          stroke={`url(#${gradientId}-teal)`}
-          strokeWidth="1.2"
-          strokeDasharray="2 3"
-          strokeOpacity="0.4"
-          className="plate-inner-ring"
-        />
-
-        {/* 3. Central Scientific Purity Shield (Harmonious Modern Proportions) */}
-        <path
-          d="M24 10.5C28.8 10.5 33.2 13.8 33.2 18.5C33.2 27.2 26.5 33.5 24 35.8C21.5 33.5 14.8 27.2 14.8 18.5C14.8 13.8 19.2 10.5 24 10.5Z"
-          fill={`url(#${gradientId}-disc)`}
-          stroke={`url(#${gradientId}-teal)`}
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="shield-silhouette"
-        />
-
-        {/* 4. Organic Purity Leaf Spine & Verified Checkmark */}
-        {/* Verification Checkmark / Leaf Base */}
-        <path
-          d="M19.5 23.2L22.8 26.5L29.5 18.5"
-          stroke={`url(#${gradientId}-accent)`}
-          strokeWidth="2.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="purity-check-mark"
-        />
-
-        {/* Natural Organic Leaf Vein Accent */}
-        <path
-          d="M23 26.5C25.5 25 28 22 28.8 19.2"
-          stroke={`url(#${gradientId}-accent)`}
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeOpacity="0.8"
-        />
-
-        {/* 5. Crystal Purity Sparkle (Top-right of plate) */}
-        <circle
-          cx="37.5"
-          cy="10.5"
-          r="2.2"
-          fill="#0df0c0"
-          className="purity-sparkle"
-        />
-      </svg>
+      {/* Specular Inner Bevel Ring */}
+      <div
+        className="icon-specular-bevel"
+        style={{
+          borderRadius: Math.round(size * 0.28)
+        }}
+      />
+      {glyph}
     </div>
   );
 }
