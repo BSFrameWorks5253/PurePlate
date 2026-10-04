@@ -116,14 +116,15 @@ export default function ProcedureScreen({
           <div className="overview-header-row">
             <div className="overview-icon-box">{currentProtocol.icon}</div>
             <div className="overview-details">
-              <span className="overview-category-tag">STANDARD OPERATING PROCEDURE</span>
+              <div className="overview-meta-line">
+                <span className="overview-category-tag">STANDARD OPERATING PROCEDURE</span>
+                <span className="overview-school-badge">🏫 Lourdes Convent Science Lab</span>
+              </div>
               <h3 className="overview-food-name">{currentProtocol.foodName}</h3>
-              <p className="overview-target">
-                <strong>Target Adulterant:</strong> {currentProtocol.adulterant}
-              </p>
-            </div>
-            <div className="overview-school-tag">
-              <span>🏫 Lourdes Convent Science Lab</span>
+              <div className="overview-target-para">
+                <span className="target-label">Target Adulterant:</span>
+                <span className="target-value">{currentProtocol.adulterant}</span>
+              </div>
             </div>
           </div>
 

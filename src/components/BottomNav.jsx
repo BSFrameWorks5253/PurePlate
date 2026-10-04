@@ -4,9 +4,11 @@ import authEngine from '../services/auth.js';
 
 /**
  * Apple iOS 27 Liquid Glass Lens Dock
- * Matches user's reference design with dark capsule frame,
- * elevated glass squircle active lens, dual specular meniscus reflections,
- * and fluid spring transitions.
+ * Adaptive Glassmorphism matching PurePlate design system:
+ * - Sleek pill capsule dock
+ * - Elevated liquid glass squircle active lens
+ * - Dual specular meniscus reflections
+ * - Appropriate Graduation Cap icon for Academy
  */
 export default function BottomNav({ activeScreen, setActiveScreen }) {
   const [currentUser, setCurrentUser] = useState(() => authEngine.getCurrentUser());
@@ -23,7 +25,7 @@ export default function BottomNav({ activeScreen, setActiveScreen }) {
       label: 'Home',
       testId: 'nav-btn-home',
       icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M3 10.5L12 3l9 7.5v9.5a1.5 1.5 0 0 1-1.5 1.5H15v-6H9v6H4.5A1.5 1.5 0 0 1 3 20V10.5z" />
         </svg>
       )
@@ -33,9 +35,10 @@ export default function BottomNav({ activeScreen, setActiveScreen }) {
       label: 'Test Lab',
       testId: 'nav-btn-test',
       icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="9" />
-          <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none" />
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M10 2v7.31L4.69 17.65A2 2 0 0 0 6.42 21h11.16a2 2 0 0 0 1.73-3.35L14 9.31V2" />
+          <path d="M8.5 2h7" />
+          <path d="M7 16h10" />
         </svg>
       )
     },
@@ -44,8 +47,11 @@ export default function BottomNav({ activeScreen, setActiveScreen }) {
       label: 'Heat Map',
       testId: 'nav-btn-map',
       icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-          <path d="M12 2L4 20l8-4 8 4L12 2z" />
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" />
+          <line x1="9" y1="3" x2="9" y2="18" />
+          <line x1="15" y1="6" x2="15" y2="21" />
+          <circle cx="12" cy="11" r="2.2" fill="currentColor" />
         </svg>
       )
     },
@@ -55,8 +61,9 @@ export default function BottomNav({ activeScreen, setActiveScreen }) {
       testId: 'nav-btn-learn',
       icon: (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="11" cy="11" r="7" />
-          <line x1="21" y1="21" x2="16.5" y2="16.5" />
+          {/* Official Graduation Cap / Mortarboard */}
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+          <path d="M6 12v5c3 3 9 3 12 0v-5" />
         </svg>
       )
     },
@@ -67,7 +74,7 @@ export default function BottomNav({ activeScreen, setActiveScreen }) {
       icon: (
         <div className="nav-avatar-circle">
           {currentUser ? (
-            <span className="avatar-letter">{currentUser.name ? currentUser.name.charAt(0) : '🧑‍🔬'}</span>
+            <span className="avatar-letter">{currentUser.avatar || currentUser.name?.charAt(0) || '🧑‍🔬'}</span>
           ) : (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />

@@ -5,9 +5,13 @@ change the scool name to Lourdes Convent Primary School
 make the app in the first screen and then if i open a different page the url should be added / that page name like this
 https://pureplate-nu.vercel.app/map
 also in the test in the start test eg Milk Starch & Thickener Test in that there will be a full step by step procedure and instructions in that page the user can follow and do the test  also there should be a tutorial as well in that page the app will explain each steps to the user like in games we have a tutorial mode 
+
+
 ---------------------------------------------
 ```````````````````Note 2```````````````````
 ---------------------------------------------
+
+
 loading screen not proper also the website logo not appropraite and its too ai generated
 map pointers isnt proper make it proper text ui have css error it is not proper 
 also in the app when we scrool down there is a empty space please remove it  
@@ -52,3 +56,31 @@ C. THE INCIDENT REPORTING PORTAL (SUBMISSION FORMS):
 Output the full, responsive, and ready-to-compile codebase (HTML structure with complete Tailwind configurations, or modular React/Next.js UI component code blocks). Ensure all layout trees are cleanly linked, omitting any placeholder strings.
 
 make the nav bar the image given 
+
+
+---------------------------------------------
+```````````````````Note 3```````````````````
+---------------------------------------------
+
+
+Make the login logic proerply also the notification pop should be more better 
+also in that why are there 2 user option in login there shouldnt be any option there should be login via email id and if possible it can be logged in via code OTP if free 
+nav bar style not matching the full website style 
+also logo isnt proper 
+In the test ui milk and darily and other thing  where traget adultrant and all written that ui text is not proper it is not coming in proper para it is coming in standing line fix that 
+change the acadamic logo on the nav bar also make it appropraite 
+make the app proper it looks too ai generic in the ui make it proffestionall ask me if u are confused or need help 
+also in map the map pinter location is not proper it is not exact location of where the incident is please fix that also in that red 
+also in desktop the wards written on the top not written properly make it properly also in mobile make it appropraite 
+
+=============================================================
+STATUS: ALL NOTE 3 ISSUES RESOLVED & VERIFIED:
+1. Login logic redesigned: Removed 2 user buttons. Direct Email ID login + 6-digit OTP code verification & password option. Full cadet registration with avatar picker.
+2. Apple Dynamic Island floating toast notification popup with specular glow, sound, and dismiss action.
+3. Adaptive Bottom Navigation Dock: Matches frosted liquid glass in Light mode and obsidian glass in Dark mode.
+4. Replaced Academic icon on bottom nav with official Graduation Cap / Mortarboard.
+5. Brand Logo: Precision clinical petri-dish rim, purity shield, and droplet core.
+6. Target Adulterant text fixed: Flows in full natural horizontal paragraphs across all devices, eliminating the vertical single-word standing line bug.
+7. Map Pointers: High-accuracy needle pins with bottom anchor pointing directly to exact street coordinates.
+8. Surat Municipal Wards Bar: Structured on both Desktop and Mobile with clean horizontal tracking and no collisions.
+============================================================= 

@@ -175,8 +175,8 @@ export const FOOD_PROTOCOLS = [
 export const INITIAL_MAP_INCIDENTS = [
   {
     id: "inc_001",
-    lat: 21.1738,
-    lng: 72.8028,
+    lat: 21.1764,
+    lng: 72.8052,
     road: "Ghod Dod Road",
     neighborhood: "Athwa Lines, Surat",
     landmark: "Near Joggers Park & Subhash Chowk",
@@ -193,8 +193,8 @@ export const INITIAL_MAP_INCIDENTS = [
   },
   {
     id: "inc_002",
-    lat: 21.1959,
-    lng: 72.7758,
+    lat: 21.1848,
+    lng: 72.7725,
     road: "Gaurav Path / VIP Road",
     neighborhood: "Pal, Surat",
     landmark: "Opposite ISCON Mall",
@@ -211,8 +211,8 @@ export const INITIAL_MAP_INCIDENTS = [
   },
   {
     id: "inc_003",
-    lat: 21.1882,
-    lng: 72.7933,
+    lat: 21.1965,
+    lng: 72.7958,
     road: "Anand Mahal Road",
     neighborhood: "Adajan, Surat",
     landmark: "Near Prime Arcade & Star Bazaar",
@@ -229,8 +229,8 @@ export const INITIAL_MAP_INCIDENTS = [
   },
   {
     id: "inc_004",
-    lat: 21.2035,
-    lng: 72.8421,
+    lat: 21.2155,
+    lng: 72.8525,
     road: "Varachha Main Road",
     neighborhood: "Varachha, Surat",
     landmark: "Near Hirabaug Circle & Diamond Market",
@@ -247,8 +247,8 @@ export const INITIAL_MAP_INCIDENTS = [
   },
   {
     id: "inc_005",
-    lat: 21.1554,
-    lng: 72.7845,
+    lat: 21.1685,
+    lng: 72.7885,
     road: "City Light Road",
     neighborhood: "City Light, Surat",
     landmark: "Near Science Centre & Anuvrat Dwar",
@@ -265,8 +265,8 @@ export const INITIAL_MAP_INCIDENTS = [
   },
   {
     id: "inc_006",
-    lat: 21.1685,
-    lng: 72.8256,
+    lat: 21.1822,
+    lng: 72.8188,
     road: "Ring Road",
     neighborhood: "Majura Gate, Surat",
     landmark: "Near Majura Gate Flyover & New Civil Hospital",

@@ -135,7 +135,10 @@ export default function SelectionScreen({
                   <h4 className="food-card-name">{item.title}</h4>
                   <span className="food-card-badge">{item.category.toUpperCase()}</span>
                 </div>
-                <span className="food-card-adulterant">Target: {item.adulterant}</span>
+                <div className="food-card-adulterant-para">
+                  <span className="adulterant-label">Target Adulterant:</span>{' '}
+                  <span className="adulterant-val">{item.adulterant}</span>
+                </div>
                 <div className="food-card-action-row">
                   <div className="food-card-meta">
                     <span>🧪 {item.tools.length} Tools</span>

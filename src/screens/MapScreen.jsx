@@ -40,12 +40,12 @@ const TILE_PROVIDERS = {
 
 // Surat Municipal Wards for Instant Quick-Jump
 const SURAT_WARDS = [
-  { id: 'athwa', name: 'Athwa Lines', coords: [21.1738, 72.8028], zoom: 15 },
-  { id: 'adajan', name: 'Adajan', coords: [21.1882, 72.7933], zoom: 15 },
-  { id: 'pal', name: 'Pal & Gaurav Path', coords: [21.2150, 72.7750], zoom: 15 },
-  { id: 'varachha', name: 'Varachha', coords: [21.2035, 72.8421], zoom: 15 },
-  { id: 'majura', name: 'Majura Gate', coords: [21.1685, 72.8256], zoom: 15 },
-  { id: 'citylight', name: 'City Light', coords: [21.1554, 72.7845], zoom: 15 },
+  { id: 'athwa', name: 'Athwa Lines', coords: [21.1764, 72.8052], zoom: 15 },
+  { id: 'adajan', name: 'Adajan', coords: [21.1965, 72.7958], zoom: 15 },
+  { id: 'pal', name: 'Pal & Gaurav Path', coords: [21.1848, 72.7725], zoom: 15 },
+  { id: 'varachha', name: 'Varachha', coords: [21.2155, 72.8525], zoom: 15 },
+  { id: 'majura', name: 'Majura Gate', coords: [21.1822, 72.8188], zoom: 15 },
+  { id: 'citylight', name: 'City Light', coords: [21.1685, 72.7885], zoom: 15 },
   { id: 'katargam', name: 'Katargam', coords: [21.2280, 72.8290], zoom: 15 },
   { id: 'rander', name: 'Rander', coords: [21.2170, 72.7910], zoom: 15 },
 ];
@@ -347,18 +347,23 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
       const isFail = item.status === 'fail';
 
       if (isFail) {
-        // Hyper-polished glossy glass sphere (Red Spike)
+        // Hyper-polished precision pinpoint needle marker (Red Spike)
         const customIcon = L.divIcon({
-          className: 'custom-glass-sphere-wrapper',
+          className: 'precision-map-marker-wrapper',
           html: `
-            <div class="glass-sphere-pin pin-red">
-              <div class="sphere-glass-glaze"></div>
-              <span class="sphere-emoji">⚠️</span>
-              <div class="sphere-ambient-pulse red"></div>
+            <div class="precision-map-pin red">
+              <div class="pin-head red">
+                <div class="pin-glaze"></div>
+                <span class="pin-emoji">⚠️</span>
+                <div class="pin-pulse-ring red"></div>
+              </div>
+              <div class="pin-needle red"></div>
+              <div class="pin-shadow-ground"></div>
             </div>
           `,
-          iconSize: [42, 42],
-          iconAnchor: [21, 21]
+          iconSize: [36, 48],
+          iconAnchor: [18, 48],
+          popupAnchor: [0, -48]
         });
 
         const marker = L.marker([item.lat, item.lng], { icon: customIcon });
@@ -460,18 +465,23 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
         markersMapRef.current[item.id] = marker;
 
       } else {
-        // Hyper-polished glossy glass sphere (Green Pure Zone)
+        // Hyper-polished precision pinpoint needle marker (Green Pure Zone)
         const shieldIcon = L.divIcon({
-          className: 'custom-glass-sphere-wrapper',
+          className: 'precision-map-marker-wrapper',
           html: `
-            <div class="glass-sphere-pin pin-green">
-              <div class="sphere-glass-glaze"></div>
-              <span class="sphere-emoji">🛡️</span>
-              <div class="sphere-ambient-pulse green"></div>
+            <div class="precision-map-pin green">
+              <div class="pin-head green">
+                <div class="pin-glaze"></div>
+                <span class="pin-emoji">🛡️</span>
+                <div class="pin-pulse-ring green"></div>
+              </div>
+              <div class="pin-needle green"></div>
+              <div class="pin-shadow-ground"></div>
             </div>
           `,
-          iconSize: [38, 38],
-          iconAnchor: [19, 19]
+          iconSize: [36, 48],
+          iconAnchor: [18, 48],
+          popupAnchor: [0, -48]
         });
 
         const marker = L.marker([item.lat, item.lng], { icon: shieldIcon });
@@ -616,13 +626,14 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
           title: `⚠️ Contamination Spike: ${item.food}`,
           icon: {
             url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-              <svg xmlns="http://www.w3.org/2000/svg" width="38" height="38" viewBox="0 0 38 38">
-                <circle cx="19" cy="19" r="17" fill="#ef4444" stroke="#ffffff" stroke-width="2.5"/>
-                <text x="19" y="24" font-size="16" text-anchor="middle" fill="#ffffff">⚠️</text>
+              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="48" viewBox="0 0 36 48">
+                <path d="M18 0 C8.06 0 0 8.06 0 18 C0 28.5 18 48 18 48 C18 48 36 28.5 36 18 C36 8.06 27.94 0 18 0 Z" fill="#ef4444" stroke="#ffffff" stroke-width="2"/>
+                <circle cx="18" cy="18" r="12" fill="#b91c1c"/>
+                <text x="18" y="23" font-size="14" text-anchor="middle" fill="#ffffff">⚠️</text>
               </svg>
             `),
-            scaledSize: new window.google.maps.Size(38, 38),
-            anchor: new window.google.maps.Point(19, 19)
+            scaledSize: new window.google.maps.Size(36, 48),
+            anchor: new window.google.maps.Point(18, 48)
           }
         });
 
@@ -667,13 +678,14 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
           title: `🛡️ Verified Pure: ${item.food}`,
           icon: {
             url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-              <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34">
-                <circle cx="17" cy="17" r="15" fill="#10b981" stroke="#ffffff" stroke-width="2.5"/>
-                <text x="17" y="22" font-size="15" text-anchor="middle" fill="#ffffff">🛡️</text>
+              <svg xmlns="http://www.w3.org/2000/svg" width="36" height="48" viewBox="0 0 36 48">
+                <path d="M18 0 C8.06 0 0 8.06 0 18 C0 28.5 18 48 18 48 C18 48 36 28.5 36 18 C36 8.06 27.94 0 18 0 Z" fill="#10b981" stroke="#ffffff" stroke-width="2"/>
+                <circle cx="18" cy="18" r="12" fill="#047857"/>
+                <text x="18" y="23" font-size="14" text-anchor="middle" fill="#ffffff">🛡️</text>
               </svg>
             `),
-            scaledSize: new window.google.maps.Size(34, 34),
-            anchor: new window.google.maps.Point(17, 17)
+            scaledSize: new window.google.maps.Size(36, 48),
+            anchor: new window.google.maps.Point(18, 48)
           }
         });
 
@@ -946,25 +958,27 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
           <span>🚨 Active Danger Zones:</span>
           <span className="map-stat-val danger">{stats.fails} Spikes</span>
         </div>
-        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-          Tip: Click any spot on the map to pin a test report!
-        </div>
       </div>
 
-      {/* Surat Wards Quick-Jump Bar */}
-      <div className="map-wards-bar">
-        <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-          <span>WARDS:</span>
-        </span>
-        {SURAT_WARDS.map((w) => (
-          <button
-            key={w.id}
-            className={`ward-jump-chip ${activeWard === w.id ? 'active' : ''}`}
-            onClick={() => handleJumpToWard(w)}
-          >
-            📍 {w.name}
-          </button>
-        ))}
+      {/* Surat Municipal Wards Command Bar (Desktop & Mobile) */}
+      <div className="map-wards-bar" id="surat-wards-bar">
+        <div className="wards-bar-title-wrap">
+          <span className="wards-bar-icon">🏛️</span>
+          <span className="wards-bar-title">Surat Wards</span>
+        </div>
+        <div className="wards-chips-track">
+          {SURAT_WARDS.map((w) => (
+            <button
+              key={w.id}
+              className={`ward-jump-chip ${activeWard === w.id ? 'active' : ''}`}
+              onClick={() => handleJumpToWard(w)}
+              title={`Focus on ${w.name}, Surat`}
+            >
+              <span className="ward-chip-pin">📍</span>
+              <span className="ward-chip-text">{w.name}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Filter Tabs */}
@@ -1006,7 +1020,7 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
             <span>Spike (&gt;3 fails in 7 days)</span>
           </div>
           <div 
-            className="legend-row"
+            className="legend-row" 
             onClick={() => {
               soundEngine.playClick();
               setFilter(filter === 'pass' ? 'all' : 'pass');
@@ -1018,21 +1032,8 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
           </div>
         </div>
 
-        {/* ── Mobile Floating Top Island (Phone View Only) ── */}
+        {/* ── Mobile Floating Filter Island (Phone View Only) ── */}
         <div className="map-mobile-top-island">
-          {/* Horizontal Swipeable Ward Quick-Jump Pills */}
-          <div className="map-mobile-wards-scroll">
-            {SURAT_WARDS.map((w) => (
-              <button
-                key={w.id}
-                className={`mobile-ward-pill ${activeWard === w.id ? 'active' : ''}`}
-                onClick={() => handleJumpToWard(w)}
-              >
-                📍 {w.name}
-              </button>
-            ))}
-          </div>
-
           {/* Horizontal Swipeable Filter Chips */}
           <div className="map-mobile-filters-scroll">
             {filters.map((f) => (
