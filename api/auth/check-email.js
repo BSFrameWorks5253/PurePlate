@@ -1,2 +1,6 @@
 const handler = require('../index.js');
-module.exports = handler;
+
+module.exports = (req, res) => {
+  req.url = '/api/auth/check-email';
+  return handler(req, res);
+};

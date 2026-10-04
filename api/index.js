@@ -333,6 +333,14 @@ module.exports = async function handler(req, res) {
     reqPath = req.url ? req.url.split('?')[0] : '/';
   }
 
+  // Check Vercel routing headers if present
+  if (req.headers) {
+    const matched = req.headers['x-matched-path'] || req.headers['x-vercel-matched-path'];
+    if (matched && matched.startsWith('/api')) {
+      reqPath = matched.split('?')[0];
+    }
+  }
+
   // Normalize path if rewrites pass slug or path without /api
   if (!reqPath.startsWith('/api') && reqPath !== '/') {
     reqPath = '/api/' + reqPath.replace(/^\/+/, '');
