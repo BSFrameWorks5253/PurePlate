@@ -347,18 +347,18 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
       const isFail = item.status === 'fail';
 
       if (isFail) {
-        // Red Pulsing Wave Marker
+        // Hyper-polished glossy glass sphere (Red Spike)
         const customIcon = L.divIcon({
-          className: 'custom-radar-pin',
+          className: 'custom-glass-sphere-wrapper',
           html: `
-            <div class="radar-wave"></div>
-            <div class="radar-wave second"></div>
-            <div class="radar-marker-inner" title="⚠️ Contamination Spike">
-              ⚠️
+            <div class="glass-sphere-pin pin-red">
+              <div class="sphere-glass-glaze"></div>
+              <span class="sphere-emoji">⚠️</span>
+              <div class="sphere-ambient-pulse red"></div>
             </div>
           `,
-          iconSize: [44, 44],
-          iconAnchor: [22, 22]
+          iconSize: [42, 42],
+          iconAnchor: [21, 21]
         });
 
         const marker = L.marker([item.lat, item.lng], { icon: customIcon });
@@ -460,16 +460,18 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
         markersMapRef.current[item.id] = marker;
 
       } else {
-        // Pure Shield Emerald Marker
+        // Hyper-polished glossy glass sphere (Green Pure Zone)
         const shieldIcon = L.divIcon({
-          className: 'custom-shield-pin',
+          className: 'custom-glass-sphere-wrapper',
           html: `
-            <div class="shield-marker-inner" title="🛡️ Verified Pure">
-              🛡️
+            <div class="glass-sphere-pin pin-green">
+              <div class="sphere-glass-glaze"></div>
+              <span class="sphere-emoji">🛡️</span>
+              <div class="sphere-ambient-pulse green"></div>
             </div>
           `,
-          iconSize: [36, 36],
-          iconAnchor: [18, 18]
+          iconSize: [38, 38],
+          iconAnchor: [19, 19]
         });
 
         const marker = L.marker([item.lat, item.lng], { icon: shieldIcon });

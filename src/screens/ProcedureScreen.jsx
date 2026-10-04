@@ -9,7 +9,6 @@ export default function ProcedureScreen({
   onNavigate,
   showToast
 }) {
-  // If no protocol is passed, fallback to Milk Starch
   const currentProtocol = protocol || {
     id: "milk_starch",
     category: "dairy",
@@ -19,133 +18,69 @@ export default function ProcedureScreen({
     adulterant: "Added Starch / Potato Flour",
     healthRisk: "Severe gastrointestinal issues, altered insulin response, nutrient dilution.",
     tools: [
-      "1 small transparent glass cup",
-      "Tincture of Iodine solution (2-3 drops)",
-      "5 ml milk sample (boiled & cooled)"
+      "1 clean transparent glass cup or test tube",
+      "Tincture of Iodine reagent (2-3 drops)",
+      "5 ml milk sample (boiled and cooled to room temp)"
     ],
-    science: "Iodine (triiodide ion) slips inside the helical structure of amylose in starch, creating a charge-transfer complex that turns the liquid deep blue or purple. Pure milk does not react and stays white or pale yellowish.",
+    science: "Iodine (triiodide ion I3-) slips inside the helical coil of amylose in starch, forming a deep blue-black charge-transfer complex. Pure milk does not react with iodine and remains white or pale cream.",
     steps: [
-      "Take 5 ml of milk sample in a clean transparent glass cup.",
-      "Boil the milk sample thoroughly and let it cool to room temperature.",
-      "Add 2-3 drops of Iodine solution and shake or swirl gently.",
-      "Hold the cup inside the camera target ring and verify color change."
+      "Measure 5 ml of milk sample into a clean transparent glass cup or tube.",
+      "Bring the milk sample to a gentle boil and let it cool completely to room temperature (~25°C).",
+      "Add 2 to 3 drops of Tincture of Iodine reagent into the milk.",
+      "Swirl gently for 5 seconds and compare the resulting color against the calibrated visual standards."
     ],
     visualGuide: {
-      pureTitle: "Stayed White / Pale Yellow",
-      pureDesc: "Pure milk without starch contamination",
+      pureTitle: "Remains Milky White / Pale Cream",
+      pureDesc: "Pure milk without added thickeners or potato starch",
       pureColorHex: "#FAF8F5",
-      adulteratedTitle: "Turned Deep Blue / Violet",
-      adulteratedDesc: "Starch adulteration present (>0.1% starch)",
+      adulteratedTitle: "Turns Deep Midnight Blue / Violet",
+      adulteratedDesc: "Starch adulteration present (>0.1% starch detected)",
       adulteratedColorHex: "#1E1B4B"
     }
   };
 
-  // State
-  const [activeTab, setActiveTab] = useState('tutorial'); // 'tutorial' | 'manual'
-  const [currentStep, setCurrentStep] = useState(0);
   const [checkedTools, setCheckedTools] = useState({});
-  const [dropperCount, setDropperCount] = useState(0);
-  const [simulatedSampleType, setSimulatedSampleType] = useState('pure'); // 'pure' | 'adulterated'
-  const [hasCompletedReaction, setHasCompletedReaction] = useState(false);
   const [selectedVerdict, setSelectedVerdict] = useState(null);
-  const [isLogged, setIsLogged] = useState(false);
+  const [testLogged, setTestLogged] = useState(false);
+  const [testScore, setTestScore] = useState(null);
 
-  // Tutorial Dialogue Script for Game Mode
-  const tutorialSteps = [
-    {
-      title: "Step 1: Equipment & Sample Preparation",
-      dialogue: "Welcome Cadet! I'm Inspector Arya from the Lourdes Convent Science Lab. Let's inspect this milk sample! First, grab a clean transparent glass cup and pour in 5 ml of fresh milk.",
-      instruction: "Ensure the glass is dry and transparent. Measure out approximately 5 ml of your milk sample.",
-      actionPrompt: "Cadet Checklist: Verify you have all required apparatus ready on your desk.",
-      badge: "Preparation"
-    },
-    {
-      title: "Step 2: Heat Activation (Boiling)",
-      dialogue: "Crucial lab science rule: Boiling breaks the protective outer amylopectin coating of starch granules! Bring your 5 ml milk sample to a gentle boil, then let it cool completely to room temperature.",
-      instruction: "Allow the milk to cool. Adding chemical reagent to scalding hot milk can degrade the iodine complex!",
-      actionPrompt: "Wait until sample reaches room temperature (~25°C).",
-      badge: "Activation"
-    },
-    {
-      title: "Step 3: Reagent Dropper Reaction",
-      dialogue: "Now the magic happens! We're adding Tincture of Iodine. Tap the interactive dropper below to add 3 drops into the test tube and watch the chemical reaction!",
-      instruction: "Add 2 to 3 drops of standard Iodine solution directly to the milk sample. Gently swirl for 5 seconds.",
-      actionPrompt: "Tap the reagent dropper button 3 times to observe the reaction in the virtual tube!",
-      badge: "Chemical Reaction"
-    },
-    {
-      title: "Step 4: Color Analysis & Verdict",
-      dialogue: "Observe the color! If starch is present, iodine binds into the amylose helix, flashing deep midnight blue/violet. If the milk is pure, it stays milky white or faint straw yellow!",
-      instruction: "Compare your physical sample against our calibrated digital color standard.",
-      actionPrompt: "Select your observation below to earn your +60 Citizen XP and log to the Surat Safety Grid!",
-      badge: "Final Verdict"
-    }
-  ];
-
-  const handleToolToggle = (idx) => {
+  const toggleTool = (idx) => {
     soundEngine.playClick();
-    setCheckedTools(prev => ({ ...prev, [idx]: !prev[idx] }));
+    setCheckedTools((prev) => ({ ...prev, [idx]: !prev[idx] }));
   };
 
-  const handleAddDrop = () => {
-    if (dropperCount < 3) {
-      soundEngine.playBeep(440 + dropperCount * 120);
-      const nextCount = dropperCount + 1;
-      setDropperCount(nextCount);
-      if (nextCount === 3) {
-        setHasCompletedReaction(true);
-        soundEngine.playSuccess();
-        showToast("Reagent applied! Reaction completed.", "info");
-      }
-    }
-  };
-
-  const handleResetDropper = () => {
-    soundEngine.playClick();
-    setDropperCount(0);
-    setHasCompletedReaction(false);
-  };
-
-  const handleNextStep = () => {
-    if (currentStep < tutorialSteps.length - 1) {
-      soundEngine.playClick();
-      setCurrentStep(prev => prev + 1);
-    }
-  };
-
-  const handlePrevStep = () => {
-    if (currentStep > 0) {
-      soundEngine.playClick();
-      setCurrentStep(prev => prev - 1);
-    }
-  };
-
-  const handleLogResult = (verdict) => {
+  const handleRecordVerdict = (verdict) => {
     soundEngine.playSuccess();
     setSelectedVerdict(verdict);
-    setIsLogged(true);
-
     const isPure = verdict === 'pure';
-    const ward = 'Athwa Lines';
+    const score = isPure ? 96 : 22;
+    setTestScore(score);
+    setTestLogged(true);
+
     const record = {
       id: `test-${Date.now()}`,
       foodId: currentProtocol.id,
       foodName: currentProtocol.foodName,
       title: currentProtocol.title,
-      status: isPure ? 'pure' : 'adulterated',
+      status: isPure ? 'pass' : 'fail',
       adulterant: isPure ? 'None (Clean Sample)' : currentProtocol.adulterant,
-      ward: ward,
-      lat: 21.1702 + (Math.random() - 0.5) * 0.02,
-      lng: 72.8011 + (Math.random() - 0.5) * 0.02,
-      timestamp: new Date().toISOString(),
+      ward: 'Athwa Lines',
+      lat: 21.1738 + (Math.random() - 0.5) * 0.015,
+      lng: 72.8028 + (Math.random() - 0.5) * 0.015,
+      timestamp: 'Just now',
       school: 'Lourdes Convent Primary School, Surat',
-      score: isPure ? 96 : 28
+      score: score
     };
 
     storage.addTestRecord(record);
     storage.awardXP(60);
 
-    showToast(`Test logged to Surat Map! +60 XP awarded to Lourdes Convent Primary School profile`, 'success');
+    showToast(
+      isPure
+        ? '✅ Sample Verified Pure! Logged to Surat Heat Map (+60 XP)'
+        : '⚠️ Adulteration Spike Logged to Surat Heat Map (+60 XP)',
+      isPure ? 'success' : 'warning'
+    );
   };
 
   return (
@@ -155,7 +90,7 @@ export default function ProcedureScreen({
         <button
           className="btn-back"
           id="btn-back-to-catalog"
-          title="Back to Test Selection"
+          title="Back to Catalog"
           onClick={() => {
             soundEngine.playClick();
             onBack();
@@ -171,370 +106,203 @@ export default function ProcedureScreen({
             <h2>{currentProtocol.title}</h2>
             <span className="catalog-counter-pill">{currentProtocol.foodName}</span>
           </div>
-          <p>Lourdes Convent Primary School • Verified FSSAI Test Procedure</p>
+          <p>Lourdes Convent Primary School • Official FSSAI Testing Method</p>
         </div>
       </div>
 
-      {/* Mode Switcher: Game Tutorial vs Full Lab Manual */}
-      <div className="procedure-tabs-wrap">
-        <div className="procedure-tabs-pill">
-          <button
-            className={`proc-tab-btn ${activeTab === 'tutorial' ? 'active' : ''}`}
-            onClick={() => {
-              soundEngine.playClick();
-              setActiveTab('tutorial');
-            }}
-          >
-            <span className="tab-icon">🎮</span>
-            <span>Game Tutorial Mode</span>
-            <span className="xp-pill-badge">+60 XP</span>
-          </button>
-
-          <button
-            className={`proc-tab-btn ${activeTab === 'manual' ? 'active' : ''}`}
-            onClick={() => {
-              soundEngine.playClick();
-              setActiveTab('manual');
-            }}
-          >
-            <span className="tab-icon">🔬</span>
-            <span>Full Lab Manual</span>
-          </button>
-        </div>
-      </div>
-
-      {/* ── 1. GAME TUTORIAL MODE (Walkthrough) ── */}
-      {activeTab === 'tutorial' && (
-        <div className="tutorial-game-viewport">
-          {/* Game Quest Step Bar */}
-          <div className="game-quest-header glass-card">
-            <div className="quest-meta">
-              <span className="quest-step-indicator">
-                MISSION STEP {currentStep + 1} OF {tutorialSteps.length}
-              </span>
-              <h3 className="quest-step-title">{tutorialSteps[currentStep].title}</h3>
+      <div className="method-guide-container">
+        {/* Method Overview Banner */}
+        <div className="method-overview-card glass-card">
+          <div className="overview-header-row">
+            <div className="overview-icon-box">{currentProtocol.icon}</div>
+            <div className="overview-details">
+              <span className="overview-category-tag">STANDARD OPERATING PROCEDURE</span>
+              <h3 className="overview-food-name">{currentProtocol.foodName}</h3>
+              <p className="overview-target">
+                <strong>Target Adulterant:</strong> {currentProtocol.adulterant}
+              </p>
             </div>
-            <div className="quest-progress-dots">
-              {tutorialSteps.map((step, idx) => (
+            <div className="overview-school-tag">
+              <span>🏫 Lourdes Convent Science Lab</span>
+            </div>
+          </div>
+
+          <div className="overview-risk-alert">
+            <span className="risk-icon">⚠️</span>
+            <div className="risk-info">
+              <strong>Health Hazard:</strong> {currentProtocol.healthRisk}
+            </div>
+          </div>
+        </div>
+
+        {/* Section 1: Required Apparatus & Reagents Checklist */}
+        <div className="method-section glass-card">
+          <div className="section-header-row">
+            <div className="section-num-badge">1</div>
+            <div>
+              <h3 className="section-title">Apparatus &amp; Reagents Checklist</h3>
+              <p className="section-sub">Verify and check off required equipment on your lab desk</p>
+            </div>
+          </div>
+
+          <div className="apparatus-checklist-grid">
+            {currentProtocol.tools.map((tool, idx) => {
+              const isChecked = !!checkedTools[idx];
+              return (
                 <button
                   key={idx}
-                  className={`quest-dot ${idx === currentStep ? 'current' : idx < currentStep ? 'completed' : ''}`}
-                  onClick={() => {
-                    soundEngine.playClick();
-                    setCurrentStep(idx);
-                  }}
-                  title={step.title}
+                  className={`apparatus-check-card ${isChecked ? 'is-checked' : ''}`}
+                  onClick={() => toggleTool(idx)}
                 >
-                  {idx < currentStep ? '✓' : idx + 1}
+                  <span className="check-box-indicator">{isChecked ? '✓' : ''}</span>
+                  <span className="apparatus-label">{tool}</span>
                 </button>
-              ))}
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Section 2: Step-by-Step Method Instructions */}
+        <div className="method-section glass-card">
+          <div className="section-header-row">
+            <div className="section-num-badge">2</div>
+            <div>
+              <h3 className="section-title">Step-by-Step Procedure Instructions</h3>
+              <p className="section-sub">Follow each step in sequential order</p>
             </div>
           </div>
 
-          {/* Inspector Cadence Dialogue Stage */}
-          <div className="game-dialogue-stage glass-card">
-            <div className="cadet-instructor-avatar-wrap">
-              <div className="instructor-avatar-frame">
-                <span className="instructor-emoji">👩‍🔬</span>
-                <span className="instructor-pulse-ring"></span>
+          <div className="procedural-steps-list">
+            {currentProtocol.steps.map((step, idx) => (
+              <div key={idx} className="procedure-step-card">
+                <div className="step-circle-badge">Step {idx + 1}</div>
+                <div className="step-body-content">
+                  <p className="step-instruction-text">{step}</p>
+                </div>
               </div>
-              <div className="instructor-info">
-                <strong>Inspector Arya</strong>
-                <span>Lead Science Instructor</span>
-                <span className="school-sub-tag">Lourdes Convent Primary</span>
-              </div>
-            </div>
+            ))}
+          </div>
+        </div>
 
-            <div className="game-speech-bubble">
-              <div className="speech-arrow"></div>
-              <p className="speech-text">{tutorialSteps[currentStep].dialogue}</p>
+        {/* Section 3: Scientific Principle */}
+        <div className="method-section glass-card">
+          <div className="section-header-row">
+            <div className="section-num-badge">3</div>
+            <div>
+              <h3 className="section-title">Chemical Principle &amp; Reaction</h3>
+              <p className="section-sub">Scientific basis under FSSAI DART guidelines</p>
+            </div>
+          </div>
+          <div className="science-principle-box">
+            <p>{currentProtocol.science}</p>
+          </div>
+        </div>
+
+        {/* Section 4: Visual Color Verdict Comparator & Result Logging */}
+        <div className="method-section glass-card">
+          <div className="section-header-row">
+            <div className="section-num-badge">4</div>
+            <div>
+              <h3 className="section-title">Record Physical Observation &amp; Test Result</h3>
+              <p className="section-sub">Compare your test sample color and record the official result</p>
             </div>
           </div>
 
-          {/* Interactive Step Workspace */}
-          <div className="game-interactive-panel glass-card">
-            {currentStep === 0 && (
-              <div className="step-apparatus-stage">
-                <h4 className="stage-subheading">📋 Desk Preparation Checklist</h4>
-                <p className="stage-desc">Tap each item once you have it ready on your lab desk:</p>
-                <div className="interactive-tools-list">
-                  {currentProtocol.tools.map((tool, idx) => {
-                    const isChecked = !!checkedTools[idx];
-                    return (
-                      <button
-                        key={idx}
-                        className={`tool-check-pill ${isChecked ? 'checked' : ''}`}
-                        onClick={() => handleToolToggle(idx)}
-                      >
-                        <span className="check-box-icon">{isChecked ? '✅' : '⚪'}</span>
-                        <span className="tool-text">{tool}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {currentStep === 1 && (
-              <div className="step-thermal-stage">
-                <div className="thermal-visual-box">
-                  <div className="thermal-icon-anim">🔥</div>
-                  <div className="thermal-info">
-                    <h4>Thermal Starch Release Principle</h4>
-                    <p>Raw starch resides inside rigid crystalline envelopes. Gentle boiling swells and bursts these granule envelopes, liberating <em>amylose</em> so our iodine reagent can detect adulteration instantly!</p>
-                  </div>
-                </div>
-                <div className="temperature-gauge">
-                  <div className="gauge-marker heated">Boiled (100°C)</div>
-                  <div className="gauge-arrow">➔</div>
-                  <div className="gauge-marker ready">Cooled to Room Temp (~25°C) ✅</div>
-                </div>
-              </div>
-            )}
-
-            {currentStep === 2 && (
-              <div className="step-reaction-stage">
-                <h4 className="stage-subheading">🧪 Interactive Virtual Reagent Dropper</h4>
-                <p className="stage-desc">Simulate the chemical reaction or choose sample state:</p>
-
-                {/* Sample Selector */}
-                <div className="sample-type-toggle">
-                  <button
-                    className={`sample-pill-btn ${simulatedSampleType === 'pure' ? 'active' : ''}`}
-                    onClick={() => {
-                      soundEngine.playClick();
-                      setSimulatedSampleType('pure');
-                      handleResetDropper();
-                    }}
-                  >
-                    Simulate: Pure Milk
-                  </button>
-                  <button
-                    className={`sample-pill-btn ${simulatedSampleType === 'adulterated' ? 'active' : ''}`}
-                    onClick={() => {
-                      soundEngine.playClick();
-                      setSimulatedSampleType('adulterated');
-                      handleResetDropper();
-                    }}
-                  >
-                    Simulate: Starch-Adulterated Milk
-                  </button>
-                </div>
-
-                {/* Reaction Vial Visualizer */}
-                <div className="virtual-lab-bench">
-                  <div className="virtual-tube-wrapper">
-                    <div className="virtual-tube">
-                      <div
-                        className="tube-liquid"
-                        style={{
-                          backgroundColor:
-                            dropperCount === 0
-                              ? '#FFFDF9'
-                              : simulatedSampleType === 'pure'
-                              ? '#FAF6EB'
-                              : dropperCount === 1
-                              ? '#4A5568'
-                              : dropperCount === 2
-                              ? '#2D3748'
-                              : '#1E1B4B',
-                          height: `${45 + dropperCount * 12}%`,
-                          transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
-                        }}
-                      >
-                        <div className="liquid-surface-shine"></div>
-                      </div>
-                    </div>
-                    <span className="tube-label">
-                      {dropperCount === 0
-                        ? 'Raw Milk (5 ml)'
-                        : hasCompletedReaction
-                        ? simulatedSampleType === 'pure'
-                          ? 'Pure Milk (No Reaction)'
-                          : 'Starch Positive (Deep Blue/Violet)'
-                        : `Drops Added: ${dropperCount}/3`}
-                    </span>
-                  </div>
-
-                  {/* Dropper Control */}
-                  <div className="dropper-control-box">
-                    <button
-                      className="btn-dropper-squeeze"
-                      onClick={handleAddDrop}
-                      disabled={dropperCount >= 3}
-                    >
-                      <span className="dropper-icon">💧</span>
-                      <span>{dropperCount < 3 ? `Add Iodine Drop (${dropperCount}/3)` : 'Reaction Ready!'}</span>
-                    </button>
-
-                    <button className="btn-reset-vial" onClick={handleResetDropper}>
-                      Reset Vial
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {currentStep === 3 && (
-              <div className="step-verdict-stage">
-                <h4 className="stage-subheading">🔍 Record Your Physical Observation</h4>
-                <p className="stage-desc">Look at your real desk sample. Which matches your observation?</p>
-
-                <div className="verdict-comparison-grid">
-                  {/* Pure Option */}
-                  <div
-                    className={`verdict-choice-card ${selectedVerdict === 'pure' ? 'selected pure' : ''}`}
-                    onClick={() => handleLogResult('pure')}
-                  >
-                    <div className="color-swatch-box" style={{ background: '#FAF8F5', border: '2px solid #E2E8F0' }}>
-                      <span className="swatch-check">🥛</span>
-                    </div>
-                    <h4>{currentProtocol.visualGuide.pureTitle}</h4>
-                    <p>{currentProtocol.visualGuide.pureDesc}</p>
-                    <button className="btn-select-verdict pure">
-                      {selectedVerdict === 'pure' ? '✓ Verified Pure' : 'Select Pure Milk'}
-                    </button>
-                  </div>
-
-                  {/* Adulterated Option */}
-                  <div
-                    className={`verdict-choice-card ${selectedVerdict === 'adulterated' ? 'selected danger' : ''}`}
-                    onClick={() => handleLogResult('adulterated')}
-                  >
-                    <div className="color-swatch-box" style={{ background: '#1E1B4B', border: '2px solid #312E81' }}>
-                      <span className="swatch-check">⚠️</span>
-                    </div>
-                    <h4>{currentProtocol.visualGuide.adulteratedTitle}</h4>
-                    <p>{currentProtocol.visualGuide.adulteratedDesc}</p>
-                    <button className="btn-select-verdict danger">
-                      {selectedVerdict === 'adulterated' ? '⚠️ Log Starch Contamination' : 'Select Adulterated'}
-                    </button>
-                  </div>
-                </div>
-
-                {isLogged && (
-                  <div className="quest-success-banner glass-card">
-                    <span className="party-emoji">🎉</span>
-                    <div className="banner-text">
-                      <h4>Tutorial Quest Completed!</h4>
-                      <p>+60 XP awarded to your Lourdes Convent Primary School cadet log. Data synced to Surat municipal grid.</p>
-                    </div>
-                    <button
-                      className="btn-view-map-pill"
-                      onClick={() => onNavigate('screen-map')}
-                    >
-                      View Live On Heat Map ➔
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Stepper Navigation Buttons */}
-            <div className="quest-navigation-bar">
-              <button
-                className="btn-quest-step"
-                onClick={handlePrevStep}
-                disabled={currentStep === 0}
+          <div className="verdict-selection-duo">
+            {/* Pure Verdict Option */}
+            <div
+              className={`verdict-action-card pure ${selectedVerdict === 'pure' ? 'active-verdict' : ''}`}
+              onClick={() => handleRecordVerdict('pure')}
+              role="button"
+              tabIndex={0}
+            >
+              <div
+                className="verdict-color-swatch"
+                style={{
+                  background: currentProtocol.visualGuide.pureColorHex,
+                  border: '2px solid rgba(16, 185, 129, 0.4)'
+                }}
               >
-                ← Previous Step
+                <span className="swatch-symbol">🛡️</span>
+              </div>
+              <h4 className="verdict-heading">{currentProtocol.visualGuide.pureTitle}</h4>
+              <p className="verdict-desc">{currentProtocol.visualGuide.pureDesc}</p>
+              <button className="verdict-btn pure">
+                {selectedVerdict === 'pure' ? '✓ Verified Pure' : 'Select Pure Milk'}
               </button>
-
-              {currentStep < tutorialSteps.length - 1 ? (
-                <button className="btn-quest-step next" onClick={handleNextStep}>
-                  Next Step ({currentStep + 2}/{tutorialSteps.length}) →
-                </button>
-              ) : (
-                <button
-                  className="btn-quest-step finish"
-                  onClick={() => onLaunchCamera(currentProtocol)}
-                >
-                  📸 Launch Camera Color Scanner
-                </button>
-              )}
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* ── 2. FULL LAB MANUAL MODE ── */}
-      {activeTab === 'manual' && (
-        <div className="lab-manual-viewport glass-card">
-          <div className="manual-section">
-            <h3 className="section-title">🔬 Scientific Principle</h3>
-            <p className="science-text">{currentProtocol.science}</p>
-          </div>
-
-          <div className="manual-section">
-            <h3 className="section-title">⚠️ Target Adulterant &amp; Health Risk</h3>
-            <div className="risk-box">
-              <strong>Adulterant:</strong> {currentProtocol.adulterant}
-              <p className="risk-detail">{currentProtocol.healthRisk}</p>
-            </div>
-          </div>
-
-          <div className="manual-section">
-            <h3 className="section-title">🧪 Apparatus &amp; Reagents</h3>
-            <ul className="apparatus-list">
-              {currentProtocol.tools.map((item, idx) => (
-                <li key={idx} className="apparatus-item">
-                  <span className="bullet-dot">•</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="manual-section">
-            <h3 className="section-title">📝 Step-by-Step Procedure</h3>
-            <ol className="procedure-ordered-list">
-              {currentProtocol.steps.map((step, idx) => (
-                <li key={idx} className="proc-step-row">
-                  <span className="step-num-pill">{idx + 1}</span>
-                  <span className="step-text">{step}</span>
-                </li>
-              ))}
-            </ol>
-          </div>
-
-          <div className="manual-section">
-            <h3 className="section-title">🎨 Visual Color Standards</h3>
-            <div className="visual-guide-duo">
-              <div className="visual-box pure">
-                <div className="visual-swatch" style={{ background: currentProtocol.visualGuide.pureColorHex }}></div>
-                <strong>Pure Result</strong>
-                <p>{currentProtocol.visualGuide.pureTitle}</p>
-                <small>{currentProtocol.visualGuide.pureDesc}</small>
-              </div>
-
-              <div className="visual-box danger">
-                <div className="visual-swatch" style={{ background: currentProtocol.visualGuide.adulteratedColorHex }}></div>
-                <strong>Adulteration Positive</strong>
-                <p>{currentProtocol.visualGuide.adulteratedTitle}</p>
-                <small>{currentProtocol.visualGuide.adulteratedDesc}</small>
-              </div>
-            </div>
-          </div>
-
-          <div className="manual-footer-actions">
-            <button
-              className="btn-primary-action"
-              onClick={() => onLaunchCamera(currentProtocol)}
+            {/* Adulterated Verdict Option */}
+            <div
+              className={`verdict-action-card danger ${selectedVerdict === 'danger' ? 'active-verdict' : ''}`}
+              onClick={() => handleRecordVerdict('danger')}
+              role="button"
+              tabIndex={0}
             >
-              📸 Launch Camera Spectrometer
-            </button>
-            <button
-              className="btn-secondary-action"
-              onClick={() => {
-                soundEngine.playClick();
-                setActiveTab('tutorial');
-              }}
-            >
-              🎮 Open Interactive Tutorial Mode
-            </button>
+              <div
+                className="verdict-color-swatch"
+                style={{
+                  background: currentProtocol.visualGuide.adulteratedColorHex,
+                  border: '2px solid rgba(239, 68, 68, 0.4)'
+                }}
+              >
+                <span className="swatch-symbol">⚠️</span>
+              </div>
+              <h4 className="verdict-heading">{currentProtocol.visualGuide.adulteratedTitle}</h4>
+              <p className="verdict-desc">{currentProtocol.visualGuide.adulteratedDesc}</p>
+              <button className="verdict-btn danger">
+                {selectedVerdict === 'danger' ? '⚠️ Log Contamination' : 'Select Adulterated'}
+              </button>
+            </div>
           </div>
+
+          {/* Result Confirmation Banner */}
+          {testLogged && (
+            <div className={`test-result-summary-card ${selectedVerdict === 'pure' ? 'pure' : 'danger'}`}>
+              <div className="result-crest-icon">
+                {selectedVerdict === 'pure' ? '🛡️' : '🚨'}
+              </div>
+              <div className="result-details">
+                <h4>
+                  {selectedVerdict === 'pure'
+                    ? 'VERIFIED PURE (Pass - 96% Safety Index)'
+                    : 'ADULTERATION SPIKE LOGGED (Fail - 22% Safety Index)'}
+                </h4>
+                <p>
+                  Result recorded to Surat Food Security Heat Map. Lourdes Convent Primary School student log updated with +60 XP.
+                </p>
+              </div>
+              <button
+                className="btn-result-view-map"
+                onClick={() => onNavigate('screen-map')}
+              >
+                View On Heat Map ➔
+              </button>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Bottom Actions Bar */}
+        <div className="method-bottom-actions">
+          <button
+            className="method-action-btn primary"
+            onClick={() => onLaunchCamera(currentProtocol)}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+            <span>Launch Camera Spectrometer</span>
+          </button>
+
+          <button
+            className="method-action-btn secondary"
+            onClick={() => onNavigate('screen-map')}
+          >
+            <span>View Surat Heat Map</span>
+          </button>
+        </div>
+      </div>
     </section>
   );
 }

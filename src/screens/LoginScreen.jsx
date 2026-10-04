@@ -12,8 +12,12 @@ export default function LoginScreen({ onNavigate, showToast }) {
   const [studentName, setStudentName] = useState('');
   const [studentId, setStudentId] = useState('');
   const [studentGrade, setStudentGrade] = useState('Class 7-A');
+  const [selectedAvatar, setSelectedAvatar] = useState('🧑‍🔬');
+  const [userRole, setUserRole] = useState('Cadet Food Inspector');
   const [schoolName, setSchoolName] = useState('Lourdes Convent Primary School, Surat');
   const [isLoading, setIsLoading] = useState(false);
+
+  const avatarList = ['🧑‍🔬', '👩‍🔬', '👨‍🔬', '🔬', '🛡️', '🌟'];
 
   useEffect(() => {
     return authEngine.subscribe((user) => {
@@ -48,6 +52,7 @@ export default function LoginScreen({ onNavigate, showToast }) {
           school: 'Lourdes Convent Primary School, Surat',
           grade: cadetType === 'officer' ? 'Lab Captain' : 'Class 7-A',
           role: cadetType === 'officer' ? 'Officer' : 'Cadet Inspector',
+          avatar: cadetType === 'officer' ? '👩‍🔬' : '🧑‍🔬',
           verifiedTests: 8,
           xpPoints: 340,
           joinedDate: '2026-09-01'
@@ -81,7 +86,8 @@ export default function LoginScreen({ onNavigate, showToast }) {
         studentId: id,
         school: 'Lourdes Convent Primary School, Surat',
         grade: studentGrade,
-        role: 'Cadet Food Inspector',
+        role: userRole,
+        avatar: selectedAvatar,
         verifiedTests: (currentUser && currentUser.verifiedTests) || 4,
         xpPoints: (currentUser && currentUser.xpPoints) || 180,
         joinedDate: new Date().toISOString().split('T')[0]
@@ -92,7 +98,7 @@ export default function LoginScreen({ onNavigate, showToast }) {
       authEngine.login(generatedEmail, 'studentPass');
 
       soundEngine.playSuccess();
-      showToast(`Welcome, Cadet ${customProfile.name}! Synced with Lourdes Convent Primary School`, 'success');
+      showToast(`Welcome, ${customProfile.name}! Profile created and synced with Lourdes Convent Primary School`, 'success');
       setIsLoading(false);
     }, 450);
   };
@@ -150,7 +156,7 @@ export default function LoginScreen({ onNavigate, showToast }) {
               <div className="cadet-badge-body">
                 <div className="cadet-avatar-box">
                   <div className="cadet-avatar-ring">
-                    <span className="cadet-emoji-avatar">🧑‍🔬</span>
+                    <span className="cadet-emoji-avatar">{currentUser.avatar || '🧑‍🔬'}</span>
                   </div>
                   <span className="cadet-id-code">{currentUser.studentId || 'LCPS-CADET-042'}</span>
                 </div>
@@ -331,6 +337,44 @@ export default function LoginScreen({ onNavigate, showToast }) {
                   </select>
                 </div>
               </div>
+
+              {activeTab === 'register' && (
+                <>
+                  <div className="form-group">
+                    <label>Choose Laboratory Avatar</label>
+                    <div className="avatar-picker-row">
+                      {avatarList.map((av) => (
+                        <button
+                          key={av}
+                          type="button"
+                          className={`avatar-pick-btn ${selectedAvatar === av ? 'active' : ''}`}
+                          onClick={() => {
+                            soundEngine.playClick();
+                            setSelectedAvatar(av);
+                          }}
+                        >
+                          <span>{av}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="student-role-select">Cadet Inspection Role</label>
+                    <select
+                      id="student-role-select"
+                      value={userRole}
+                      onChange={(e) => setUserRole(e.target.value)}
+                      className="select-custom"
+                    >
+                      <option value="Cadet Food Inspector">Cadet Food Inspector</option>
+                      <option value="Lead Student Officer">Lead Student Officer</option>
+                      <option value="Laboratory Science Captain">Laboratory Science Captain</option>
+                      <option value="Citizen Food Safety Analyst">Citizen Food Safety Analyst</option>
+                    </select>
+                  </div>
+                </>
+              )}
 
               <div className="form-group">
                 <label>Institution / School</label>

@@ -2,124 +2,124 @@ import React, { useState, useEffect } from 'react';
 import PurePlateLogo from './PurePlateLogo.jsx';
 import soundEngine from '../services/sound.js';
 
+/**
+ * Volumetric Fluid Loading Sequence
+ * High-fidelity glass plaque launcher with liquid-core pooling animation,
+ * sunken glass well progress track, and glossy shimmer sweeps.
+ */
 export default function WelcomeScreen({ onFinish }) {
-  const [phase, setPhase] = useState(0); // 0: init, 1: protocols, 2: ready, 3: exiting
+  const [progress, setProgress] = useState(15);
+  const [stage, setStage] = useState('Initializing Sensors');
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
-    // Phase 1: Spectrometry Calibration
-    const timer1 = setTimeout(() => {
-      setPhase(1);
-    }, 700);
+    const t1 = setTimeout(() => {
+      setProgress(55);
+      setStage('Calibrating Reagent Spectrometry');
+    }, 500);
 
-    // Phase 2: Grid Online & Protocols Loaded
-    const timer2 = setTimeout(() => {
-      setPhase(2);
+    const t2 = setTimeout(() => {
+      setProgress(85);
+      setStage('Syncing Surat Municipal Grid');
+    }, 1100);
+
+    const t3 = setTimeout(() => {
+      setProgress(100);
+      setStage('Citizen Safety Network Online');
       try {
         soundEngine.playSuccess();
       } catch (e) {}
-    }, 1500);
+    }, 1700);
 
-    // Phase 3: Initiate smooth exit transition
-    const timer3 = setTimeout(() => {
+    const t4 = setTimeout(() => {
       handleComplete();
     }, 2400);
 
     return () => {
-      clearTimeout(timer1);
-      clearTimeout(timer2);
-      clearTimeout(timer3);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
     };
   }, []);
 
   const handleComplete = () => {
     if (isExiting) return;
     setIsExiting(true);
-    setPhase(3);
-    // Allow the 550ms fade & zoom-out animation to complete before unmounting
     setTimeout(() => {
       if (onFinish) onFinish();
-    }, 550);
-  };
-
-  const getStatusText = () => {
-    switch (phase) {
-      case 0:
-        return 'Calibrating Spectrometry Sensors...';
-      case 1:
-        return 'Connecting to Surat Municipal Safety Grid...';
-      case 2:
-      case 3:
-        return 'Surat Citizen Food Safety Network Ready';
-      default:
-        return 'Loading PurePlate...';
-    }
+    }, 500);
   };
 
   return (
     <div
-      className={`welcome-splash-overlay ${isExiting ? 'splash-exiting' : 'splash-active'}`}
+      className={`volumetric-welcome-overlay ${isExiting ? 'volumetric-exiting' : 'volumetric-active'}`}
       onClick={handleComplete}
       role="dialog"
       aria-label="Welcome to PurePlate"
     >
       {/* Background Liquid Light Orbs */}
-      <div className="splash-ambient-mesh" aria-hidden="true">
-        <div className="splash-orb orb-1"></div>
-        <div className="splash-orb orb-2"></div>
-        <div className="splash-orb orb-3"></div>
+      <div className="volumetric-ambient-backdrop" aria-hidden="true">
+        <div className="ambient-fluid-orb orb-emerald"></div>
+        <div className="ambient-fluid-orb orb-teal"></div>
+        <div className="ambient-fluid-orb orb-cyan"></div>
       </div>
 
-      {/* Center Hero Stage */}
-      <div className="splash-center-stage">
-        {/* Glowing Logo Pedestal */}
-        <div className="splash-logo-wrapper">
-          <div className="splash-logo-pulse-ring"></div>
-          <div className="splash-logo-glow"></div>
-          <PurePlateLogo size={104} variant="icon" animated={true} showGlow={true} />
-        </div>
+      {/* Centered Glass Plaque Launcher Block */}
+      <div className="volumetric-glass-plaque">
+        {/* Specular Highlight Glaze */}
+        <div className="plaque-specular-edge"></div>
 
-        {/* Brand Wordmark & Identification */}
-        <div className="splash-text-wrap">
-          <h1 className="splash-brand-title">PurePlate</h1>
-          <p className="splash-brand-subtitle">Citizen Food Safety &amp; Purity Network</p>
-          <div className="splash-meta-tag">
-            <span className="splash-pulse-dot"></span>
-            <span>Surat Live Verification Node</span>
-          </div>
-        </div>
-
-        {/* Dynamic Calibration Progress Bar */}
-        <div className="splash-progress-container">
-          <div className="splash-progress-bar">
+        {/* Liquid-Core Pooling Logo Stage */}
+        <div className="liquid-core-asset-stage">
+          <div className="liquid-pool-glow"></div>
+          <div className="liquid-fill-anim-wrapper">
+            <PurePlateLogo size={84} variant="icon" animated={true} showGlow={true} />
             <div
-              className="splash-progress-fill"
-              style={{
-                width: phase === 0 ? '35%' : phase === 1 ? '75%' : '100%',
-                transition: 'width 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
-              }}
-            ></div>
+              className="fluid-pool-waterline"
+              style={{ height: `${progress}%` }}
+            >
+              <div className="fluid-wave-surface"></div>
+            </div>
           </div>
-          <span className="splash-status-label">{getStatusText()}</span>
         </div>
 
-        {/* Action Button & Quick Enter Hint */}
+        {/* Brand Identification */}
+        <div className="plaque-brand-info">
+          <h1 className="plaque-title">PurePlate</h1>
+          <p className="plaque-subtitle">Citizen Food Safety Network</p>
+          <div className="plaque-node-tag">
+            <span className="pulse-dot-live"></span>
+            <span>Surat Verification Node</span>
+          </div>
+        </div>
+
+        {/* Sunken Glass Well Progress Track */}
+        <div className="sunken-progress-well">
+          <div
+            className="sunken-progress-fill"
+            style={{ width: `${progress}%` }}
+          >
+            <div className="sunken-shimmer-sweep"></div>
+          </div>
+        </div>
+
+        {/* Progress Caption */}
+        <div className="plaque-status-row">
+          <span className="plaque-status-text">{stage}</span>
+          <span className="plaque-status-pct">{progress}%</span>
+        </div>
+
+        {/* Skip button for instant entry */}
         <button
-          className="splash-enter-btn"
+          className="plaque-enter-action"
           onClick={(e) => {
             e.stopPropagation();
-            soundEngine.playClick();
             handleComplete();
           }}
         >
-          <span>Enter PurePlate</span>
-          <span className="splash-arrow">➔</span>
+          <span>Enter Dashboard ➔</span>
         </button>
-      </div>
-
-      {/* Bottom Legal / Version Watermark */}
-      <div className="splash-footer-note">
-        <span>Empowering Citizens with Rigorous Science • v2.4</span>
       </div>
     </div>
   );

@@ -133,28 +133,91 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  // Handle GPS location detection
+  // Handle Real GPS location detection with smart neighborhood resolution
   const handleDetectLocation = () => {
     soundEngine.playClick();
     if (!navigator.geolocation) {
       showToast('Geolocation not supported on this browser', 'warning');
       return;
     }
-    showToast('Detecting live GPS location...', 'info');
+    showToast('Acquiring high-precision GPS lock...', 'info');
+
+    const suratWards = [
+      { name: 'Athwa Lines, Surat', lat: 21.1738, lng: 72.8028 },
+      { name: 'Adajan, Surat', lat: 21.1950, lng: 72.7930 },
+      { name: 'Pal & Gaurav Path, Surat', lat: 21.1870, lng: 72.7680 },
+      { name: 'Varachha, Surat', lat: 21.2180, lng: 72.8550 },
+      { name: 'Majura Gate, Surat', lat: 21.1820, lng: 72.8180 },
+      { name: 'City Light, Surat', lat: 21.1620, lng: 72.7840 },
+      { name: 'Katargam, Surat', lat: 21.2320, lng: 72.8290 },
+      { name: 'Rander, Surat', lat: 21.2160, lng: 72.7920 }
+    ];
+
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        const newRegion = `GPS: ${latitude.toFixed(3)}, ${longitude.toFixed(3)}`;
-        setRegion(newRegion);
-        storage.setUserRegion(newRegion);
+      async (pos) => {
+        const { latitude, longitude, accuracy } = pos.coords;
+
+        // Check if inside or near Surat municipal boundary
+        const distToSurat = Math.hypot(latitude - 21.1738, longitude - 72.8028);
+        let resolvedName = '';
+
+        if (distToSurat < 0.25) {
+          // Find closest Surat municipal ward
+          let closest = suratWards[0];
+          let minDist = 999;
+          suratWards.forEach((w) => {
+            const d = Math.hypot(latitude - w.lat, longitude - w.lng);
+            if (d < minDist) {
+              minDist = d;
+              closest = w;
+            }
+          });
+          resolvedName = closest.name;
+        } else {
+          // Attempt reverse geocoding via OpenStreetMap
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=14`, {
+              headers: { 'Accept': 'application/json' }
+            });
+            if (res.ok) {
+              const data = await res.json();
+              const addr = data.address || {};
+              const suburb = addr.suburb || addr.neighbourhood || addr.city_district || addr.quarter;
+              const city = addr.city || addr.town || addr.county || 'Surat';
+              resolvedName = suburb ? `${suburb}, ${city}` : city;
+            }
+          } catch (e) {
+            resolvedName = `GPS: ${latitude.toFixed(3)}, ${longitude.toFixed(3)}`;
+          }
+        }
+
+        if (!resolvedName) {
+          resolvedName = 'Athwa Lines, Surat';
+        }
+
+        setRegion(resolvedName);
+        storage.setUserRegion(resolvedName);
+
+        // Notify Map screen and components
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('pureplate_user_location_updated', {
+            detail: { lat: latitude, lng: longitude, name: resolvedName, accuracy }
+          }));
+        }
+
         soundEngine.playSuccess();
-        showToast('📍 Live GPS coordinates synced', 'success');
+        showToast(`📍 Live Location Locked: ${resolvedName}`, 'success');
       },
       () => {
-        const def = 'Athwa, Surat';
+        const def = 'Athwa Lines, Surat';
         setRegion(def);
         storage.setUserRegion(def);
-        showToast('GPS permission denied. Using default: Athwa, Surat', 'warning');
+        showToast('GPS access denied. Defaulted to Athwa Lines, Surat', 'warning');
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
       }
     );
   };
