@@ -59,14 +59,21 @@ class PurePlateStorage {
     try {
       const data = localStorage.getItem(this.STORAGE_KEY_INCIDENTS);
       const list = data ? JSON.parse(data) : INITIAL_MAP_INCIDENTS;
-      return list.map(item => ({
-        ...item,
-        food: this.cleanText(item.food),
-        neighborhood: this.cleanText(item.neighborhood),
-        adulterant: this.cleanText(item.adulterant),
-        testType: this.cleanText(item.testType),
-        vendorType: this.cleanText(item.vendorType),
-      }));
+      return list.map(item => {
+        const fallback = INITIAL_MAP_INCIDENTS.find(i => i.id === item.id) || {};
+        return {
+          ...fallback,
+          ...item,
+          food: this.cleanText(item.food),
+          neighborhood: this.cleanText(item.neighborhood || fallback.neighborhood || "Surat"),
+          road: this.cleanText(item.road || fallback.road || "Ghod Dod Road"),
+          address: this.cleanText(item.address || fallback.address || `${item.neighborhood || 'Surat'}, Gujarat`),
+          landmark: this.cleanText(item.landmark || fallback.landmark || "Near Main Market"),
+          adulterant: this.cleanText(item.adulterant),
+          testType: this.cleanText(item.testType),
+          vendorType: this.cleanText(item.vendorType),
+        };
+      });
     } catch (e) {
       return INITIAL_MAP_INCIDENTS;
     }
@@ -102,7 +109,7 @@ class PurePlateStorage {
       .replace(/&amp;/g, "&");
   }
 
-  submitTestResult({ food, testType, status, adulterant, vendorType, locationName, lat, lng }) {
+  submitTestResult({ food, testType, status, adulterant, vendorType, locationName, road, address, landmark, lat, lng }) {
     const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
 
     const safeLat = (typeof lat === "number" && !isNaN(lat) && lat >= -90 && lat <= 90)
@@ -113,12 +120,19 @@ class PurePlateStorage {
       : 72.8028 + (Math.random() - 0.5) * 0.04;
 
     const safeStatus = status === "pass" ? "pass" : "fail";
+    const safeNeighborhood = this.sanitize(locationName || this.getUserRegion());
+    const safeRoad = this.sanitize(road || "Ghod Dod Road");
+    const safeAddress = this.sanitize(address || `${safeRoad}, ${safeNeighborhood}, Surat`);
+    const safeLandmark = this.sanitize(landmark || "Near Main Market");
 
     const incidentData = {
       id: "inc_" + Date.now(),
       lat: safeLat,
       lng: safeLng,
-      neighborhood: this.sanitize(locationName || this.getUserRegion()),
+      road: safeRoad,
+      address: safeAddress,
+      landmark: safeLandmark,
+      neighborhood: safeNeighborhood,
       food: this.sanitize(food || "Sample"),
       testType: this.sanitize(testType || "Chemical Test"),
       status: safeStatus,

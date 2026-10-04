@@ -304,6 +304,8 @@ button:active {
   align-items: center;
   gap: 12px;
   user-select: none;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .dt-logo-wrap {
   width: 42px;
@@ -315,14 +317,26 @@ button:active {
   align-items: center;
   justify-content: center;
   box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.8), 0 4px 12px rgba(13, 148, 136, 0.12);
+  flex-shrink: 0;
 }
-.dt-titles { display: flex; flex-direction: column; }
-.dt-title-row { display: flex; align-items: center; gap: 8px; }
+.dt-titles { 
+  display: flex; 
+  flex-direction: column; 
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.dt-title-row { 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+  white-space: nowrap;
+}
 .dt-name {
   font-size: 18px;
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.4px;
+  white-space: nowrap;
 }
 .dt-badge {
   font-size: 10px;
@@ -332,6 +346,7 @@ button:active {
   padding: 2px 8px;
   border-radius: 20px;
   box-shadow: 0 2px 8px var(--brand-teal-glow);
+  white-space: nowrap;
 }
 .dt-node-status {
   display: flex;
@@ -344,12 +359,14 @@ button:active {
   padding: 2px 8px;
   border-radius: 20px;
   border: 1px solid rgba(5, 150, 105, 0.2);
+  white-space: nowrap;
 }
 .dt-sub {
   font-size: 11.5px;
   color: var(--text-muted);
   display: block;
   margin-top: 1px;
+  white-space: nowrap;
 }
 
 /* ── Apple 2027 Desktop Island Navigation ── */
@@ -357,6 +374,7 @@ button:active {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .dt-nav-capsule {
@@ -373,6 +391,8 @@ button:active {
     0 10px 25px -4px rgba(0, 0, 0, 0.06),
     inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.9);
   transition: all 0.25s var(--ease-spring);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 [data-theme="dark"] .dt-nav-capsule {
@@ -384,7 +404,7 @@ button:active {
 }
 
 .dt-nav-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 7px;
   padding: 7px 15px;
@@ -398,6 +418,8 @@ button:active {
   position: relative;
   transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
+  white-space: nowrap !important;
+  flex-shrink: 0;
 }
 
 .dt-nav-btn:hover {
@@ -467,15 +489,17 @@ button:active {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .dt-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: 12px;
   font-weight: 700;
-  padding: 7px 12px;
+  padding: 7px 13px;
   border-radius: 12px;
   background: var(--glass-bg);
   backdrop-filter: blur(14px);
@@ -485,6 +509,9 @@ button:active {
   box-shadow: var(--glass-inner-specular), 0 2px 6px rgba(0,0,0,0.03);
   transition: all 0.22s var(--ease-spring);
   cursor: pointer;
+  white-space: nowrap !important;
+  flex-shrink: 0;
+  user-select: none;
 }
 
 .dt-btn:hover {
@@ -498,6 +525,8 @@ button:active {
   border: 1.2px solid rgba(13, 148, 136, 0.35);
   color: var(--brand-teal);
   font-weight: 800;
+  white-space: nowrap !important;
+  flex-shrink: 0;
 }
 .dt-btn-launch:hover {
   background: var(--brand-teal);
@@ -506,13 +535,14 @@ button:active {
 }
 
 .dt-btn-loc {
-  max-width: 140px;
+  white-space: nowrap !important;
+  flex-shrink: 0;
 }
 .dt-loc-text {
-  white-space: nowrap;
+  white-space: nowrap !important;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 95px;
+  max-width: 120px;
 }
 
 .dt-icon-only {
@@ -3006,20 +3036,110 @@ button:active {
   border-color: rgba(16, 185, 129, 0.4);
 }
 
+.popup-road-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 800;
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  margin-bottom: 6px;
+  letter-spacing: -0.2px;
+}
+.popup-road-badge.pure {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border-color: rgba(16, 185, 129, 0.25);
+}
+[data-theme="dark"] .popup-road-badge {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+[data-theme="dark"] .popup-road-badge.pure {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
 .popup-food-title {
   font-size: 15px;
   font-weight: 800;
   color: var(--text-primary);
-  margin-bottom: 2px;
+  margin-bottom: 6px;
 }
 
-.popup-loc-meta {
+.popup-address-card {
+  background: var(--bg-card-2, rgba(0, 0, 0, 0.03));
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+[data-theme="dark"] .popup-address-card {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.popup-addr-line, .popup-landmark-line, .popup-ward-line {
   font-size: 11.5px;
+  line-height: 1.35;
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  color: var(--text-primary);
+}
+.popup-addr-line .addr-label, .popup-landmark-line .addr-label, .popup-ward-line .addr-label {
+  font-weight: 700;
   color: var(--text-muted);
+  flex-shrink: 0;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  min-width: 58px;
+}
+.popup-addr-line .addr-val {
+  font-weight: 600;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+.popup-landmark-line .addr-val {
+  color: var(--brand-teal);
+  font-weight: 700;
+}
+.popup-ward-line .addr-val {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.popup-gmaps-btn {
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin-bottom: 10px;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: #ffffff !important;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.28);
+  transition: all 0.2s var(--ease-spring);
+  margin-top: 8px;
+  cursor: pointer;
+}
+.popup-gmaps-btn:hover {
+  background: linear-gradient(135deg, #0369a1, #075985);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.45);
 }
 
 .popup-adulterant-box {

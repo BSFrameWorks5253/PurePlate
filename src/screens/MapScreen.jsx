@@ -13,26 +13,48 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// Curated Crisp Tile Layer Providers (100% Free, High Resolution, Zero Watermark)
+// Curated Crisp Tile Layer Providers (100% Free, Ultra High Resolution, Zero Watermark)
 const TILE_PROVIDERS = {
-  positron: {
-    id: 'positron',
-    name: 'Clean Light',
-    icon: '🏙️',
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+  streets: {
+    id: 'streets',
+    name: 'Detailed Streets',
+    icon: '🗺️',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
     options: {
-      attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
-      maxZoom: 18
+      attribution: 'Tiles &copy; Esri &mdash; World Street Map',
+      maxZoom: 19
+    }
+  },
+  voyager: {
+    id: 'voyager',
+    name: 'Carto Voyager',
+    icon: '🏙️',
+    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    options: {
+      attribution: '&copy; CartoDB &copy; OpenStreetMap',
+      subdomains: 'abcd',
+      maxZoom: 20
+    }
+  },
+  osm: {
+    id: 'osm',
+    name: 'OpenStreetMap',
+    icon: '📍',
+    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    options: {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19
     }
   },
   darkmatter: {
     id: 'darkmatter',
     name: 'Night Matrix',
     icon: '🌙',
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png',
     options: {
-      attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
-      maxZoom: 18
+      attribution: '&copy; CartoDB &copy; OpenStreetMap',
+      subdomains: 'abcd',
+      maxZoom: 20
     }
   },
   satellite: {
@@ -42,16 +64,6 @@ const TILE_PROVIDERS = {
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     options: {
       attribution: 'Tiles &copy; Esri &mdash; Earthstar Geographics',
-      maxZoom: 19
-    }
-  },
-  osm: {
-    id: 'osm',
-    name: 'Detailed Street',
-    icon: '🗺️',
-    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    options: {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 19
     }
   }
@@ -100,7 +112,7 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
 
   // Map Engine & Layer State
   const [mapEngine, setMapEngine] = useState('leaflet'); // 'leaflet' (default, rock-solid) or 'google'
-  const [activeTileKey, setActiveTileKey] = useState(theme === 'dark' ? 'darkmatter' : 'positron');
+  const [activeTileKey, setActiveTileKey] = useState(theme === 'dark' ? 'darkmatter' : 'streets');
   const [isExpanded, setIsExpanded] = useState(false);
 
   // References
@@ -134,6 +146,9 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
   // Report Modal on Map
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportCoords, setReportCoords] = useState({ lat: 21.1738, lng: 72.8028, neighborhood: 'Athwa Lines, Surat' });
+  const [reportRoad, setReportRoad] = useState('Ghod Dod Road');
+  const [reportLandmark, setReportLandmark] = useState('Near Joggers Park');
+  const [reportAddress, setReportAddress] = useState('Shop 4, Silver Point Arcade, Ghod Dod Road, Athwa Lines, Surat - 395007');
   const [reportFood, setReportFood] = useState('Milk & Dairy');
   const [reportStatus, setReportStatus] = useState('fail');
   const [reportAdulterant, setReportAdulterant] = useState('Added Starch / Water');
@@ -255,7 +270,7 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
       L.control.zoom({ position: 'bottomright' }).addTo(lmap);
 
       // Add active Tile Provider
-      const provider = TILE_PROVIDERS[activeTileKey] || (theme === 'dark' ? TILE_PROVIDERS.darkmatter : TILE_PROVIDERS.positron);
+      const provider = TILE_PROVIDERS[activeTileKey] || (theme === 'dark' ? TILE_PROVIDERS.darkmatter : TILE_PROVIDERS.streets);
       const tileLayer = L.tileLayer(provider.url, provider.options);
       tileLayer.addTo(lmap);
       leafletTileLayerRef.current = tileLayer;
@@ -272,8 +287,11 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
         setReportCoords({
           lat: parseFloat(lat.toFixed(5)),
           lng: parseFloat(lng.toFixed(5)),
-          neighborhood: `Surat GPS (${lat.toFixed(3)}, ${lng.toFixed(3)})`
+          neighborhood: 'Athwa Lines, Surat'
         });
+        setReportRoad('Ghod Dod Road');
+        setReportLandmark('Near Joggers Park & Subhash Chowk');
+        setReportAddress('Shop 4, Silver Point Arcade, Ghod Dod Road, Athwa Lines, Surat - 395007');
         setIsReportModalOpen(true);
       });
 
@@ -383,26 +401,56 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
         });
         leafletCirclesGroupRef.current.addLayer(circle);
 
-        // Rich Glassmorphic Popup
+        const googleMapsSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.address || (item.road + ', ' + item.neighborhood + ', Surat'))}`;
+
+        // Rich Glassmorphic Popup with Road Name, Full Address, Landmark & Google Maps Navigation Link
         const popupContent = `
           <div class="pureplate-popup-card">
             <div class="popup-status-badge fail">
               <span>⚠️ Contamination Spike</span>
             </div>
-            <div class="popup-food-title">${item.food}</div>
-            <div class="popup-loc-meta">
-              <span>📍 ${item.neighborhood}</span>
+
+            <div class="popup-road-badge">
+              <span>🛣️ ${item.road || 'Ghod Dod Road'}</span>
             </div>
+
+            <div class="popup-food-title">${item.food}</div>
+
+            <div class="popup-address-card">
+              <div class="popup-addr-line">
+                <span class="addr-label">Address:</span>
+                <span class="addr-val">${item.address || `${item.road || 'Ghod Dod Road'}, ${item.neighborhood}, Surat`}</span>
+              </div>
+              <div class="popup-landmark-line">
+                <span class="addr-label">Landmark:</span>
+                <span class="addr-val">${item.landmark || 'Near Main Market'}</span>
+              </div>
+              <div class="popup-ward-line">
+                <span class="addr-label">Ward:</span>
+                <span class="addr-val">${item.neighborhood}</span>
+              </div>
+            </div>
+
             <div class="popup-adulterant-box fail">
               <strong>Adulterant:</strong> ${item.adulterant}
             </div>
-            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px;">
+
+            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;">
               <strong>Test:</strong> ${item.testType || 'Reagent Colorimetric Test'}
             </div>
+
             <div class="popup-footer-row">
-              <span>${item.timestamp || 'Recent'}</span>
-              <span>${item.vendorType || 'Local Vendor'}</span>
+              <span>⏱️ ${item.timestamp || 'Recent'}</span>
+              <span>🏪 ${item.vendorType || 'Local Vendor'}</span>
             </div>
+
+            <a href="${googleMapsSearchUrl}" target="_blank" rel="noopener noreferrer" class="popup-gmaps-btn" id="btn-popup-gmaps-${item.id}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+              <span>Open in Google Maps ↗</span>
+            </a>
+
             <div class="popup-actions-row">
               <button class="popup-btn primary" id="btn-popup-test-${item.id}">
                 🔬 Test Food
@@ -414,7 +462,7 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
           </div>
         `;
 
-        marker.bindPopup(popupContent, { maxWidth: 320 });
+        marker.bindPopup(popupContent, { maxWidth: 330 });
 
         marker.on('click', () => {
           soundEngine.playClick();
@@ -464,25 +512,55 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
         });
         leafletCirclesGroupRef.current.addLayer(circle);
 
+        const googleMapsSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.address || (item.road + ', ' + item.neighborhood + ', Surat'))}`;
+
         const popupContent = `
           <div class="pureplate-popup-card">
             <div class="popup-status-badge pass">
               <span>🛡️ Verified Pure Zone</span>
             </div>
-            <div class="popup-food-title">${item.food}</div>
-            <div class="popup-loc-meta">
-              <span>📍 ${item.neighborhood}</span>
+
+            <div class="popup-road-badge pure">
+              <span>🛣️ ${item.road || 'City Light Road'}</span>
             </div>
+
+            <div class="popup-food-title">${item.food}</div>
+
+            <div class="popup-address-card">
+              <div class="popup-addr-line">
+                <span class="addr-label">Address:</span>
+                <span class="addr-val">${item.address || `${item.road || 'City Light Road'}, ${item.neighborhood}, Surat`}</span>
+              </div>
+              <div class="popup-landmark-line">
+                <span class="addr-label">Landmark:</span>
+                <span class="addr-val">${item.landmark || 'Near Science Centre'}</span>
+              </div>
+              <div class="popup-ward-line">
+                <span class="addr-label">Ward:</span>
+                <span class="addr-val">${item.neighborhood}</span>
+              </div>
+            </div>
+
             <div class="popup-adulterant-box pass">
               <strong>Verified Safe:</strong> 100% Unadulterated
             </div>
-            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px;">
+
+            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;">
               <strong>Test:</strong> ${item.testType || 'Reagent Verification'}
             </div>
+
             <div class="popup-footer-row">
-              <span>${item.timestamp || 'Recent'}</span>
-              <span>${item.vendorType || 'Local Vendor'}</span>
+              <span>⏱️ ${item.timestamp || 'Recent'}</span>
+              <span>🏪 ${item.vendorType || 'Local Vendor'}</span>
             </div>
+
+            <a href="${googleMapsSearchUrl}" target="_blank" rel="noopener noreferrer" class="popup-gmaps-btn" id="btn-popup-gmaps-${item.id}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+              </svg>
+              <span>Open in Google Maps ↗</span>
+            </a>
+
             <div class="popup-actions-row">
               <button class="popup-btn primary" id="btn-popup-test-${item.id}">
                 🔬 Re-Test Food
@@ -494,7 +572,7 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
           </div>
         `;
 
-        marker.bindPopup(popupContent, { maxWidth: 320 });
+        marker.bindPopup(popupContent, { maxWidth: 330 });
 
         marker.on('click', () => {
           soundEngine.playClick();
@@ -573,18 +651,27 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
           }
         });
 
+        const googleMapsSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.address || (item.road + ', ' + item.neighborhood + ', Surat'))}`;
+
         const info = new window.google.maps.InfoWindow({
           content: `
-            <div style="font-family: inherit; font-size: 13px; line-height: 1.4; padding: 6px; max-width: 260px;">
-              <div style="font-weight: 800; color: #ef4444; font-size: 14px; margin-bottom: 3px;">⚠️ Contamination Spike</div>
-              <strong>${item.food}</strong><br/>
-              <span style="color: #64748b; font-size: 11px;">📍 ${item.neighborhood}</span><br/>
-              <div style="margin-top: 5px; padding: 4px 8px; background: #fff1f2; border-radius: 6px; color: #9f1239; font-size: 11px; font-weight: 700;">
-                Detected: ${item.adulterant}
+            <div style="font-family: inherit; font-size: 13px; line-height: 1.4; padding: 6px; max-width: 290px;">
+              <div style="font-weight: 800; color: #ef4444; font-size: 13px; margin-bottom: 3px;">⚠️ Contamination Spike</div>
+              <div style="display: inline-block; padding: 2px 7px; background: rgba(239, 68, 68, 0.1); border-radius: 6px; font-size: 11px; font-weight: 700; color: #dc2626; margin-bottom: 4px;">
+                🛣️ ${item.road || 'Ghod Dod Road'}
               </div>
-              <div style="font-size: 10px; color: #94a3b8; margin-top: 5px;">
+              <div style="font-weight: 800; font-size: 15px; color: #0f172a; margin-bottom: 2px;">${item.food}</div>
+              <div style="color: #475569; font-size: 11.5px; margin-bottom: 3px;"><strong>🏠 Address:</strong> ${item.address || `${item.road || 'Ghod Dod Road'}, ${item.neighborhood}, Surat`}</div>
+              <div style="color: #64748b; font-size: 11px; margin-bottom: 6px;"><strong>📍 Landmark:</strong> ${item.landmark || 'Near Main Market'}</div>
+              <div style="padding: 5px 8px; background: #fff1f2; border-radius: 6px; color: #9f1239; font-size: 11px; font-weight: 700; margin-bottom: 6px;">
+                Adulterant: ${item.adulterant}
+              </div>
+              <div style="font-size: 10px; color: #94a3b8; margin-bottom: 8px;">
                 Reported ${item.timestamp} • ${item.vendorType || "Vendor"}
               </div>
+              <a href="${googleMapsSearchUrl}" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: center; gap: 5px; padding: 6px 10px; background: #0284c7; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 11.5px; font-weight: 700;">
+                📍 Open in Google Maps ↗
+              </a>
             </div>
           `
         });
@@ -615,18 +702,27 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
           }
         });
 
+        const googleMapsSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.address || (item.road + ', ' + item.neighborhood + ', Surat'))}`;
+
         const info = new window.google.maps.InfoWindow({
           content: `
-            <div style="font-family: inherit; font-size: 13px; line-height: 1.4; padding: 6px; max-width: 260px;">
-              <div style="font-weight: 800; color: #047857; font-size: 14px; margin-bottom: 3px;">🛡️ Verified Pure &amp; Safe</div>
-              <strong>${item.food}</strong><br/>
-              <span style="color: #64748b; font-size: 11px;">📍 ${item.neighborhood}</span><br/>
-              <div style="margin-top: 5px; padding: 4px 8px; background: #ecfdf5; border-radius: 6px; color: #065f46; font-size: 11px; font-weight: 700;">
+            <div style="font-family: inherit; font-size: 13px; line-height: 1.4; padding: 6px; max-width: 290px;">
+              <div style="font-weight: 800; color: #047857; font-size: 13px; margin-bottom: 3px;">🛡️ Verified Pure &amp; Safe</div>
+              <div style="display: inline-block; padding: 2px 7px; background: rgba(16, 185, 129, 0.1); border-radius: 6px; font-size: 11px; font-weight: 700; color: #059669; margin-bottom: 4px;">
+                🛣️ ${item.road || 'City Light Road'}
+              </div>
+              <div style="font-weight: 800; font-size: 15px; color: #0f172a; margin-bottom: 2px;">${item.food}</div>
+              <div style="color: #475569; font-size: 11.5px; margin-bottom: 3px;"><strong>🏠 Address:</strong> ${item.address || `${item.road || 'City Light Road'}, ${item.neighborhood}, Surat`}</div>
+              <div style="color: #64748b; font-size: 11px; margin-bottom: 6px;"><strong>📍 Landmark:</strong> ${item.landmark || 'Near Science Centre'}</div>
+              <div style="padding: 5px 8px; background: #ecfdf5; border-radius: 6px; color: #065f46; font-size: 11px; font-weight: 700; margin-bottom: 6px;">
                 Verified 100% Unadulterated
               </div>
-              <div style="font-size: 10px; color: #94a3b8; margin-top: 5px;">
-                Logged ${item.timestamp}
+              <div style="font-size: 10px; color: #94a3b8; margin-bottom: 8px;">
+                Logged ${item.timestamp} • Verified Pure
               </div>
+              <a href="${googleMapsSearchUrl}" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: center; gap: 5px; padding: 6px 10px; background: #059669; color: #ffffff; text-decoration: none; border-radius: 8px; font-size: 11.5px; font-weight: 700;">
+                📍 Open in Google Maps ↗
+              </a>
             </div>
           `
         });
@@ -776,6 +872,9 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
       adulterant: reportStatus === 'fail' ? reportAdulterant : 'None Detected',
       vendorType: reportVendor,
       locationName: reportCoords.neighborhood,
+      road: reportRoad || 'Ghod Dod Road',
+      landmark: reportLandmark || 'Near Main Market',
+      address: reportAddress || `${reportRoad || 'Ghod Dod Road'}, ${reportCoords.neighborhood}, Surat`,
       lat: reportCoords.lat,
       lng: reportCoords.lng
     });
@@ -1042,20 +1141,56 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
               >
                 <span className="feed-log-icon">{isFail ? '⚠️' : '🛡️'}</span>
                 <div className="feed-log-body">
-                  <span className="feed-log-text">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px', flexWrap: 'wrap' }}>
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      color: isFail ? '#dc2626' : '#059669',
+                      background: isFail ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                      padding: '1px 7px',
+                      borderRadius: '6px'
+                    }}>
+                      🛣️ {item.road || item.neighborhood}
+                    </span>
+                    <span style={{ fontSize: '13px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                      {item.food}
+                    </span>
+                  </div>
+                  <span className="feed-log-text" style={{ fontSize: '11.5px' }}>
                     {isFail
-                      ? `Adulterated ${item.food} near ${item.neighborhood} (${item.adulterant})`
-                      : `Verified Pure ${item.food} near ${item.neighborhood}`}
+                      ? `⚠️ ${item.adulterant}`
+                      : `🛡️ Verified Pure & Safe`}
                   </span>
-                  <div className="feed-log-meta">
-                    <span>📍 {item.neighborhood}</span>
+                  <div className="feed-log-meta" style={{ marginTop: '3px' }}>
+                    <span>🏠 {item.address || `${item.road || item.neighborhood}, Surat`}</span>
                     <span>•</span>
-                    <span>{item.timestamp || 'Recent'}</span>
+                    <span>📍 {item.landmark || item.neighborhood}</span>
                     <span>•</span>
-                    <span>{item.vendorType || 'Local Vendor'}</span>
+                    <span>⏱️ {item.timestamp || 'Recent'}</span>
                   </div>
                 </div>
-                <span className="feed-jump-hint">Inspect ➔</span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', flexShrink: 0 }}>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.address || (item.road + ', ' + item.neighborhood + ', Surat'))}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      fontSize: '10.5px',
+                      fontWeight: 700,
+                      color: '#0284c7',
+                      background: 'rgba(2, 132, 199, 0.1)',
+                      padding: '3px 8px',
+                      borderRadius: '6px',
+                      textDecoration: 'none',
+                      whiteSpace: 'nowrap'
+                    }}
+                    title="Open in Google Maps"
+                  >
+                    Google Maps ↗
+                  </a>
+                  <span className="feed-jump-hint">Inspect ➔</span>
+                </div>
               </div>
             );
           })}
@@ -1187,7 +1322,73 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
 
                 <div style={{ marginBottom: '12px' }}>
                   <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px' }}>
-                    Neighborhood / Location:
+                    Road / Street Name:
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Ghod Dod Road, Gaurav Path, Anand Mahal Road"
+                    value={reportRoad}
+                    onChange={(e) => setReportRoad(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      borderRadius: '12px',
+                      border: '1px solid var(--border-subtle)',
+                      background: 'var(--bg-input)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.85rem'
+                    }}
+                    required
+                  />
+                </div>
+
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px' }}>
+                    Specific Landmark:
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Near Joggers Park, Opp. ISCON Mall, Star Bazaar"
+                    value={reportLandmark}
+                    onChange={(e) => setReportLandmark(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      borderRadius: '12px',
+                      border: '1px solid var(--border-subtle)',
+                      background: 'var(--bg-input)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.85rem'
+                    }}
+                    required
+                  />
+                </div>
+
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px' }}>
+                    Full Street Address:
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Shop 4, Silver Point Arcade, Ghod Dod Road, Surat - 395007"
+                    value={reportAddress}
+                    onChange={(e) => setReportAddress(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      borderRadius: '12px',
+                      border: '1px solid var(--border-subtle)',
+                      background: 'var(--bg-input)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.85rem'
+                    }}
+                    required
+                  />
+                </div>
+
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px' }}>
+                    Surat Ward / Area:
                   </label>
                   <input
                     type="text"
@@ -1204,9 +1405,10 @@ export default function MapScreen({ showToast, theme, onNavigate, onSelectFood, 
                     }}
                     required
                   />
-                  <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
-                    Coordinates: {reportCoords.lat}, {reportCoords.lng}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--brand-green)', fontWeight: 700, marginTop: '6px' }}>
+                    <span className="pulse-dot"></span>
+                    <span>📍 GPS Pin Geocoded &amp; Locked to Surat Grid</span>
+                  </div>
                 </div>
 
                 <div style={{ marginBottom: '16px' }}>

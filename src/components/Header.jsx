@@ -96,13 +96,14 @@ export default function Header({
   return (
     <>
       {/* ============================================================
-           APPLE 2027 LIQUID GLASS DESKTOP COMMAND BAR (Laptop / Big Screens)
+           APPLE 2027 LIQUID GLASS DESKTOP COMMAND BAR (Laptop / Big S      {/* ============================================================
+           APPLE LIQUID GLASS DESKTOP COMMAND BAR (Desktop / Laptops)
            ============================================================ */}
       <header className="desktop-top-bar" id="desktop-top-bar">
-        {/* Left: Brand Identity with Glass Shield & Node Indicator */}
+        {/* Left: Brand Identity with Glass Shield & Live Grid Indicator */}
         <div className="dt-brand" onClick={() => onNavigate && onNavigate('screen-home')} style={{ cursor: 'pointer' }}>
           <div className="dt-logo-wrap">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--brand-teal)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--brand-teal)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               <path d="m9 12 2 2 4-4"/>
             </svg>
@@ -110,18 +111,17 @@ export default function Header({
           <div className="dt-titles">
             <div className="dt-title-row">
               <span className="dt-name">PurePlate</span>
-              <span className="dt-badge">Pro 2027</span>
               <div className="dt-node-status">
                 <span className="pulse-dot"></span>
-                <span>Surat Grid</span>
+                <span>Surat Grid Live</span>
               </div>
             </div>
-            <span className="dt-sub">Citizen Food Safety Network • Reagent & Spectrometry Lab</span>
+            <span className="dt-sub">Citizen Food Safety Network</span>
           </div>
         </div>
 
-        {/* Center: Apple 2027 Liquid Glass Desktop Island Navigation */}
-        <nav className="desktop-nav-island" aria-label="Desktop Island Navigation">
+        {/* Center: Apple Liquid Glass Capsule Navigation */}
+        <nav className="desktop-nav-island" aria-label="Desktop Navigation">
           <div className="dt-nav-capsule">
             {desktopNavItems.map((item) => {
               const isActive = currentScreen === item.id || (item.id === 'screen-selection' && currentScreen === 'screen-camera');
@@ -152,9 +152,9 @@ export default function Header({
           </div>
         </nav>
 
-        {/* Right: Workstation Actions & Profile */}
+        {/* Right: Primary Action, Location, Audio, Theme & Profile */}
         <div className="dt-right-actions">
-          {/* Quick Action: Rapid Test */}
+          {/* Quick Primary Action: Test Food */}
           <button
             className="dt-btn dt-btn-launch"
             id="dt-btn-quick-test"
@@ -164,7 +164,7 @@ export default function Header({
               if (onNavigate) onNavigate('screen-selection');
             }}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"/>
               <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
@@ -175,10 +175,10 @@ export default function Header({
           <button
             className="dt-btn dt-btn-loc"
             id="dt-btn-loc-detect"
-            title="Sync GPS Coordinates"
+            title="Sync Live GPS Coordinates"
             onClick={onDetectLocation}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
               <circle cx="12" cy="10" r="3"/>
             </svg>
@@ -222,42 +222,7 @@ export default function Header({
             )}
           </button>
 
-          {/* Viewport Switcher */}
-          <div className="view-mode-toggle" id="view-mode-toggle">
-            <button
-              className={`v-mode-btn ${viewMode === 'desktop' ? 'active' : ''}`}
-              id="btn-mode-desktop"
-              title="Expanded Desktop Workbench"
-              onClick={() => {
-                setViewMode('desktop');
-                soundEngine.playClick();
-              }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
-                <rect x="2" y="3" width="20" height="14" rx="2"/>
-                <line x1="8" y1="21" x2="16" y2="21"/>
-                <line x1="12" y1="17" x2="12" y2="21"/>
-              </svg>
-              <span>Mac View</span>
-            </button>
-            <button
-              className={`v-mode-btn ${viewMode === 'mobile' ? 'active' : ''}`}
-              id="btn-mode-mobile"
-              title="Switch to Mobile Phone Simulator"
-              onClick={() => {
-                setViewMode('mobile');
-                soundEngine.playClick();
-              }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4">
-                <rect x="5" y="2" width="14" height="20" rx="3"/>
-                <line x1="12" y1="18" x2="12.01" y2="18"/>
-              </svg>
-              <span>Phone</span>
-            </button>
-          </div>
-
-          {/* Evaluator / User Profile Button */}
+          {/* User Profile / Auth Button */}
           <button className="dt-btn dt-btn-auth" id="dt-user-btn" title="Cloud Profile & Sync" onClick={onOpenAuth}>
             <span className="auth-avatar-svg">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -267,16 +232,6 @@ export default function Header({
             </span>
             <span className="auth-label" id="dt-user-email">{currentUser ? currentUser.name : 'Sign In'}</span>
             <span className="sync-pulse-indicator" title="Cloud Sync Active"></span>
-          </button>
-
-          {/* QR Code Scanner for Phone Testing */}
-          <button className="dt-btn dt-icon-only" id="btn-show-qr" title="Scan to test on iPhone" onClick={onOpenQR}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-              <rect x="3" y="3" width="7" height="7"/>
-              <rect x="14" y="3" width="7" height="7"/>
-              <rect x="14" y="14" width="7" height="7"/>
-              <rect x="3" y="14" width="7" height="7"/>
-            </svg>
           </button>
         </div>
       </header>
