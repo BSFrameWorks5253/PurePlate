@@ -244,6 +244,27 @@ function sendResponse(res, statusCode, data) {
 // ── In-Memory OTP Store & Zero-Bill Google Drive / Email Dispatch ──
 const OTP_STORE = new Map();
 
+function generateOtpToken(email, otp, expiresAt) {
+  const payload = `${email}:${otp}:${expiresAt}`;
+  const sig = crypto.createHmac('sha256', CONFIG.JWT_SECRET).update(payload).digest('hex');
+  return Buffer.from(JSON.stringify({ email, expiresAt, sig })).toString('base64url');
+}
+
+function verifyOtpToken(email, otp, tokenStr) {
+  try {
+    if (!tokenStr) return false;
+    const raw = Buffer.from(tokenStr, 'base64url').toString('utf-8');
+    const { email: tokenEmail, expiresAt, sig } = JSON.parse(raw);
+    if (tokenEmail !== email || Date.now() > expiresAt) return false;
+    const expectedSig = crypto.createHmac('sha256', CONFIG.JWT_SECRET).update(`${email}:${otp}:${expiresAt}`).digest('hex');
+    const sigBuf = Buffer.from(sig);
+    const expBuf = Buffer.from(expectedSig);
+    return sigBuf.length === expBuf.length && crypto.timingSafeEqual(sigBuf, expBuf);
+  } catch (e) {
+    return false;
+  }
+}
+
 async function dispatchEmailOtp(email, otp, name) {
   const recipientName = name || 'Cadet Food Inspector';
   const driveWebhook = process.env.GOOGLE_DRIVE_WEBHOOK_URL || process.env.GOOGLE_SHEETS_WEBHOOK_URL;
@@ -413,12 +434,15 @@ module.exports = async function handler(req, res) {
         });
       }
 
-      // Generate 6-digit OTP code
+      // Generate 6-digit OTP code & signed session token
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiresAt = Date.now() + 10 * 60 * 1000;
+      const otpToken = generateOtpToken(email, otp, expiresAt);
+
       OTP_STORE.set(email, {
         otp,
         timestamp: Date.now(),
-        expiresAt: Date.now() + 10 * 60 * 1000
+        expiresAt
       });
 
       // Dispatch to registered inbox
@@ -428,6 +452,7 @@ module.exports = async function handler(req, res) {
         success: true,
         exists: true,
         message: `📧 Security OTP has been sent to your registered email (${email})!`,
+        token: otpToken,
         debugOtp: otp, // Available for smooth testing / demo fallback
         dispatched: dispatchResult.sent
       });
@@ -442,13 +467,19 @@ module.exports = async function handler(req, res) {
       const body = await getJsonBody(req);
       const email = (body.email || '').toLowerCase().trim();
       const code = (body.otp || '').trim();
+      const clientToken = body.token || body.otpToken;
 
       if (!email || !code) {
         return sendResponse(res, 400, { success: false, error: 'Please enter both your email address and 6-digit OTP code.' });
       }
 
       const stored = OTP_STORE.get(email);
-      const isValid = (stored && stored.otp === code && Date.now() <= stored.expiresAt) || code === '123456';
+      let isValid = (stored && stored.otp === code && Date.now() <= stored.expiresAt) || code === '123456';
+      
+      // Stateless HMAC signature verification across serverless lambdas
+      if (!isValid && clientToken) {
+        isValid = verifyOtpToken(email, code, clientToken);
+      }
 
       if (!isValid) {
         return sendResponse(res, 401, {

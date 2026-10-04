@@ -171,7 +171,10 @@ class PurePlateAuth {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        return { success: true, message: data.message, debugOtp: data.debugOtp, dispatched: data.dispatched };
+        if (data.token && typeof window !== 'undefined') {
+          sessionStorage.setItem(`pureplate_otp_token_${cleanEmail}`, data.token);
+        }
+        return { success: true, message: data.message, debugOtp: data.debugOtp, dispatched: data.dispatched, token: data.token };
       }
       if (res.status === 404) {
         return { success: false, exists: false, error: data.error || `⚠️ This email ID (${cleanEmail}) is not registered yet. Please create your student account first!` };
@@ -201,12 +204,13 @@ class PurePlateAuth {
   async verifyOtp(email, otp) {
     const cleanEmail = email.trim().toLowerCase();
     const cleanOtp = otp.trim();
+    const otpToken = typeof window !== 'undefined' ? sessionStorage.getItem(`pureplate_otp_token_${cleanEmail}`) : null;
 
     try {
       const res = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: cleanEmail, otp: cleanOtp })
+        body: JSON.stringify({ email: cleanEmail, otp: cleanOtp, token: otpToken })
       });
       const data = await res.json();
       if (res.ok && data.success) {
