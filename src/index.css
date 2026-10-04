@@ -7385,9 +7385,318 @@ button:active {
   text-align: center;
   padding: 8px;
   transition: color 0.2s ease;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 .btn-switch-cadet:hover {
   color: var(--brand-red);
+}
+
+/* ── OTP Dispatched Notice Banner ── */
+.otp-dispatched-notice {
+  background: rgba(13, 148, 136, 0.08);
+  border: 1px solid rgba(13, 148, 136, 0.25);
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.otp-notice-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.otp-notice-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+.otp-notice-text strong {
+  display: block;
+  font-size: 14.5px;
+  color: var(--text-primary);
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+.otp-notice-text p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.4;
+}
+.otp-highlight-email {
+  color: var(--brand-teal);
+  font-weight: 700;
+  word-break: break-all;
+}
+.otp-notice-tips {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-left: 36px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.input-otp-field {
+  font-family: 'SF Mono', Monaco, monospace;
+  font-size: 20px !important;
+  font-weight: 800;
+  letter-spacing: 6px;
+  text-align: center;
+}
+
+/* ── Demo / Offline Reveal Toggle ── */
+.demo-otp-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+}
+.btn-demo-toggle {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 4px 8px;
+  transition: color 0.2s ease;
+}
+.btn-demo-toggle:hover {
+  color: var(--brand-teal);
+}
+.demo-otp-card {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px dashed var(--border-subtle);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.demo-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.demo-code-pill {
+  font-family: monospace;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 6px;
+  color: var(--brand-teal);
+  background: var(--bg-surface);
+  padding: 6px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+}
+.btn-auto-fill-otp {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(13, 148, 136, 0.12);
+  color: var(--brand-teal);
+  border: 1px solid rgba(13, 148, 136, 0.2);
+  cursor: pointer;
+}
+.btn-auto-fill-otp:hover {
+  background: var(--brand-teal);
+  color: #ffffff;
+}
+
+.btn-resend-otp {
+  background: none;
+  border: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 8px;
+  text-align: center;
+  transition: color 0.2s ease;
+}
+.btn-resend-otp:hover {
+  color: var(--brand-teal);
+}
+
+/* ── Google Drive & Zero-Bill Cloud Backup Panel ── */
+.drive-backup-panel {
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: rgba(13, 148, 136, 0.04);
+  border: 1px solid rgba(13, 148, 136, 0.18);
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.drive-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.drive-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.drive-icon {
+  font-size: 24px;
+}
+.drive-header-title h4 {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+.drive-free-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 2px 8px;
+  border-radius: 10px;
+  display: inline-block;
+  margin-top: 2px;
+}
+.btn-guide-toggle {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  padding: 5px 12px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-guide-toggle:hover {
+  border-color: var(--brand-teal);
+  color: var(--brand-teal);
+}
+.drive-desc {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 0;
+}
+.drive-guide-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.drive-guide-card h5 {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+.drive-guide-card ol {
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.6;
+}
+.drive-guide-card code {
+  background: rgba(13, 148, 136, 0.1);
+  color: var(--brand-teal);
+  padding: 2px 5px;
+  border-radius: 6px;
+  font-size: 11px;
+}
+.drive-webhook-form {
+  display: flex;
+  gap: 8px;
+}
+@media (max-width: 520px) {
+  .drive-webhook-form {
+    flex-direction: column;
+  }
+}
+.drive-webhook-form .input-with-icon {
+  flex: 1;
+}
+.input-webhook {
+  font-size: 12px !important;
+}
+.btn-save-webhook {
+  padding: 0 16px;
+  border-radius: 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+.btn-save-webhook:hover {
+  background: var(--brand-teal);
+  color: #ffffff;
+  border-color: var(--brand-teal);
+}
+.drive-actions-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 480px) {
+  .drive-actions-row {
+    grid-template-columns: 1fr;
+  }
+}
+.btn-drive-sync {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(13, 148, 136, 0.15);
+  border: 1px solid rgba(13, 148, 136, 0.3);
+  color: var(--brand-teal);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-drive-sync:hover:not(:disabled) {
+  background: var(--brand-teal);
+  color: #ffffff;
+}
+.btn-drive-sync:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.btn-download-json {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-download-json:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 /* ============================================================

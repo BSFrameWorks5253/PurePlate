@@ -24,6 +24,14 @@ export default function LoginScreen({ onNavigate, showToast }) {
   const [regAvatar, setRegAvatar] = useState('🧑‍🔬');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Google Drive Webhook state
+  const [driveWebhookUrl, setDriveWebhookUrl] = useState(() => {
+    return localStorage.getItem('pureplate_google_drive_webhook') || '';
+  });
+  const [showDemoOtp, setShowDemoOtp] = useState(false);
+  const [isDriveSyncing, setIsDriveSyncing] = useState(false);
+  const [showDriveGuide, setShowDriveGuide] = useState(false);
+
   const avatars = ['🧑‍🔬', '👩‍🔬', '👨‍🔬', '🔬', '🛡️', '🌟'];
 
   useEffect(() => {
@@ -32,29 +40,50 @@ export default function LoginScreen({ onNavigate, showToast }) {
     });
   }, []);
 
-  // Request 6-digit OTP code
-  const handleRequestOtp = (e) => {
+  // Request 6-digit OTP code to registered email ID
+  const handleRequestOtp = async (e) => {
     e.preventDefault();
     soundEngine.playClick();
 
-    if (!emailInput.trim() || !emailInput.includes('@')) {
+    const cleanEmail = emailInput.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
       showToast('Please enter a valid student or institutional email ID', 'warning');
       return;
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      const randomCode = Math.floor(100000 + Math.random() * 900000).toString();
-      setGeneratedOtp(randomCode);
-      setOtpSent(true);
+
+    // 1. Check if email exists in database (Note 4 Requirement)
+    const check = await authEngine.checkEmail(cleanEmail);
+    if (!check.exists) {
       setIsLoading(false);
+      soundEngine.playClick();
+      showToast(`⚠️ This email ID (${cleanEmail}) is not registered yet. Please create your student account first!`, 'warning');
+      // Auto-switch to register mode and pre-fill email
+      setRegEmail(cleanEmail);
+      const suggestedName = cleanEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      setRegName(suggestedName);
+      setAuthMode('register');
+      return;
+    }
+
+    // 2. Email exists! Send real OTP to registered email address
+    const otpResult = await authEngine.sendOtp(cleanEmail);
+    setIsLoading(false);
+
+    if (otpResult.success) {
+      setGeneratedOtp(otpResult.debugOtp);
+      setOtpSent(true);
+      setShowDemoOtp(false);
       soundEngine.playSuccess();
-      showToast(`Verification code sent! Your security OTP is: ${randomCode}`, 'success');
-    }, 450);
+      showToast(`📧 Verification code sent to your registered email (${cleanEmail})! Please check your inbox.`, 'success');
+    } else {
+      showToast(otpResult.error || 'Failed to send verification code. Please try again.', 'error');
+    }
   };
 
   // Verify OTP and complete login
-  const handleVerifyOtp = (e) => {
+  const handleVerifyOtp = async (e) => {
     e.preventDefault();
     soundEngine.playClick();
 
@@ -63,64 +92,54 @@ export default function LoginScreen({ onNavigate, showToast }) {
       return;
     }
 
-    if (otpInput.trim() !== generatedOtp && otpInput.trim() !== '123456') {
-      showToast('Invalid verification code. Please check and try again.', 'error');
-      return;
-    }
-
     setIsLoading(true);
-    setTimeout(() => {
-      const email = emailInput.trim();
-      const existing = storage.getUserProfile();
-      let profileToSave = existing;
+    const cleanEmail = emailInput.trim().toLowerCase();
+    const result = await authEngine.verifyOtp(cleanEmail, otpInput.trim());
+    setIsLoading(false);
 
-      if (!existing || existing.email !== email) {
-        const studentName = email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-        profileToSave = {
-          name: studentName || 'Cadet Student',
-          email: email,
-          studentId: `LCPS-${Math.floor(1000 + Math.random() * 9000)}`,
-          school: 'Lourdes Convent Primary School, Surat',
-          grade: 'Class 7-A',
-          role: 'Cadet Food Inspector',
-          avatar: '🧑‍🔬',
-          verifiedTests: 6,
-          xpPoints: 240,
-          joinedDate: new Date().toISOString().split('T')[0]
-        };
-      }
-
-      storage.setUserProfile(profileToSave);
-      authEngine.login(email, 'otpVerified');
-
+    if (result.success) {
       soundEngine.playSuccess();
-      showToast(`Welcome back, ${profileToSave.name}! Verified with Lourdes Convent Primary School`, 'success');
-      setIsLoading(false);
-    }, 400);
+      showToast(`Welcome back, ${result.user.name}! Verified with Lourdes Convent Primary School`, 'success');
+      setOtpSent(false);
+      setOtpInput('');
+    } else {
+      showToast(result.error || 'Invalid verification code. Please check your inbox and try again.', 'error');
+    }
   };
 
   // Password Login
-  const handlePasswordLogin = (e) => {
+  const handlePasswordLogin = async (e) => {
     e.preventDefault();
     soundEngine.playClick();
 
-    if (!emailInput.trim() || !passwordInput.trim()) {
+    const cleanEmail = emailInput.trim().toLowerCase();
+    if (!cleanEmail || !passwordInput.trim()) {
       showToast('Please enter both Email and Password', 'warning');
       return;
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      const email = emailInput.trim();
-      const res = authEngine.login(email, passwordInput);
-      soundEngine.playSuccess();
-      showToast(`Signed in successfully!`, 'success');
+    const check = await authEngine.checkEmail(cleanEmail);
+    if (!check.exists) {
       setIsLoading(false);
-    }, 400);
+      showToast(`⚠️ This email ID (${cleanEmail}) is not registered yet. Please create your student account first!`, 'warning');
+      setRegEmail(cleanEmail);
+      setAuthMode('register');
+      return;
+    }
+
+    const res = await authEngine.login({ email: cleanEmail, password: passwordInput });
+    setIsLoading(false);
+    if (res.success) {
+      soundEngine.playSuccess();
+      showToast(`Signed in successfully! Welcome ${res.user.name}`, 'success');
+    } else {
+      showToast(res.error || 'Incorrect password. Please verify and try again.', 'error');
+    }
   };
 
   // Student Account Registration
-  const handleRegisterSubmit = (e) => {
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     soundEngine.playClick();
 
@@ -129,31 +148,95 @@ export default function LoginScreen({ onNavigate, showToast }) {
       return;
     }
 
-    const email = regEmail.trim() || `${regName.toLowerCase().replace(/[^a-z0-9]/g, '')}@lourdesconvent.edu.in`;
-    const id = regStudentId.trim() || `LCPS-${Math.floor(1000 + Math.random() * 9000)}`;
+    const email = (regEmail.trim() || `${regName.toLowerCase().replace(/[^a-z0-9]/g, '')}@lourdesconvent.edu.in`).toLowerCase();
 
     setIsLoading(true);
-    setTimeout(() => {
-      const newProfile = {
-        name: regName.trim(),
-        email: email,
-        studentId: id,
-        school: 'Lourdes Convent Primary School, Surat',
-        grade: regGrade,
-        role: regRole,
-        avatar: regAvatar,
-        verifiedTests: 5,
-        xpPoints: 200,
-        joinedDate: new Date().toISOString().split('T')[0]
-      };
-
-      storage.setUserProfile(newProfile);
-      authEngine.login(email, 'registeredPass');
-
-      soundEngine.playSuccess();
-      showToast(`Cadet account created! Welcome ${newProfile.name}`, 'success');
+    // Check if already registered
+    const existingCheck = await authEngine.checkEmail(email);
+    if (existingCheck.exists) {
       setIsLoading(false);
-    }, 450);
+      showToast(`⚠️ An account with this email (${email}) already exists. Please sign in!`, 'warning');
+      setEmailInput(email);
+      setAuthMode('otp');
+      return;
+    }
+
+    const id = regStudentId.trim() || `LCPS-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const newProfile = {
+      name: regName.trim(),
+      email: email,
+      studentId: id,
+      school: 'Lourdes Convent Primary School, Surat',
+      grade: regGrade,
+      role: regRole,
+      avatar: regAvatar,
+      verifiedTests: 5,
+      xpPoints: 200,
+      joinedDate: new Date().toISOString().split('T')[0]
+    };
+
+    const regResult = await authEngine.register({
+      name: newProfile.name,
+      email: newProfile.email,
+      password: 'cadet_verified_pass',
+      school: newProfile.school
+    });
+
+    storage.setUserProfile(newProfile);
+
+    // Sync to Google Drive webhook (100% free / zero database bill!)
+    authEngine.syncToGoogleDrive(newProfile, driveWebhookUrl);
+
+    setIsLoading(false);
+    soundEngine.playSuccess();
+    showToast(`Cadet account created! Welcome ${newProfile.name}`, 'success');
+  };
+
+  // Save Google Drive Webhook URL
+  const handleSaveDriveWebhook = (e) => {
+    e.preventDefault();
+    soundEngine.playClick();
+    const cleanUrl = driveWebhookUrl.trim();
+    localStorage.setItem('pureplate_google_drive_webhook', cleanUrl);
+    showToast('💾 Google Drive Webhook URL saved! Backups will mirror to Google Sheets/Drive for free.', 'success');
+  };
+
+  // Backup all data to Google Drive & download JSON
+  const handleBackupToDrive = async () => {
+    soundEngine.playClick();
+    const allData = {
+      user: currentUser,
+      profile: storage.getUserProfile(),
+      incidents: storage.getAllIncidents(),
+      region: storage.getUserRegion(),
+      exportedAt: new Date().toISOString()
+    };
+
+    if (driveWebhookUrl.trim()) {
+      setIsDriveSyncing(true);
+      showToast('☁️ Syncing all data to Google Drive & Sheets...', 'info');
+      try {
+        await authEngine.syncToGoogleDrive(allData, driveWebhookUrl.trim());
+        showToast('✅ Synced to Google Drive successfully! Zero database costs.', 'success');
+      } catch (err) {
+        showToast('⚠️ Could not connect to Google Apps Script. Check URL permissions.', 'error');
+      } finally {
+        setIsDriveSyncing(false);
+      }
+    } else {
+      showToast('ℹ️ Please paste your Google Apps Script URL above, or use Export Local JSON.', 'info');
+    }
+
+    // Also download JSON locally so the user always has a hard copy
+    const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pureplate_backup_${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('📥 Downloaded local JSON backup file!', 'success');
   };
 
   const handleLogout = () => {
@@ -237,6 +320,99 @@ export default function LoginScreen({ onNavigate, showToast }) {
               </div>
             </div>
 
+            {/* Google Drive & Zero-Bill Cloud Backup Panel */}
+            <div className="drive-backup-panel glass-inset">
+              <div className="drive-panel-header">
+                <div className="drive-header-title">
+                  <span className="drive-icon">☁️</span>
+                  <div>
+                    <h4>Google Drive &amp; Sheets Cloud Backup</h4>
+                    <span className="drive-free-badge">100% Free • Zero Database Overload</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="btn-guide-toggle"
+                  onClick={() => setShowDriveGuide(!showDriveGuide)}
+                >
+                  {showDriveGuide ? 'Hide Setup' : 'Setup Guide 📖'}
+                </button>
+              </div>
+
+              <p className="drive-desc">
+                Stream and mirror all your food test logs and credentials directly into your Google Drive &amp; Google Sheets. Uses Google Apps Script with zero cloud bills.
+              </p>
+
+              {showDriveGuide && (
+                <div className="drive-guide-card animate-fade-in">
+                  <h5>⚡ 1-Minute Free Google Drive Setup:</h5>
+                  <ol>
+                    <li>Create a new Google Sheet at <strong>sheets.new</strong> and name it <em>PurePlate Database</em>.</li>
+                    <li>Go to <strong>Extensions ➔ Apps Script</strong>.</li>
+                    <li>Copy and paste the code from <code>google_drive_sync_script.gs</code> into the editor.</li>
+                    <li>Click <strong>Deploy ➔ New Deployment</strong>, choose <strong>Web app</strong>, access: <strong>Anyone</strong>.</li>
+                    <li>Copy your <strong>Web app URL</strong> and paste it below!</li>
+                  </ol>
+                </div>
+              )}
+
+              <form onSubmit={handleSaveDriveWebhook} className="drive-webhook-form">
+                <div className="input-with-icon">
+                  <span className="input-icon">🔗</span>
+                  <input
+                    type="url"
+                    placeholder="Paste Google Apps Script URL (https://script.google.com/...)"
+                    value={driveWebhookUrl}
+                    onChange={(e) => setDriveWebhookUrl(e.target.value)}
+                    className="input-webhook"
+                  />
+                </div>
+                <button type="submit" className="btn-save-webhook">Save Webhook</button>
+              </form>
+
+              <div className="drive-actions-row">
+                <button
+                  type="button"
+                  className="btn-drive-sync"
+                  onClick={handleBackupToDrive}
+                  disabled={isDriveSyncing}
+                >
+                  {isDriveSyncing ? (
+                    <span>Syncing to Google Drive...</span>
+                  ) : (
+                    <>
+                      <span>☁️ Backup to Google Drive</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  className="btn-download-json"
+                  onClick={() => {
+                    soundEngine.playClick();
+                    const allData = {
+                      user: currentUser,
+                      profile: storage.getUserProfile(),
+                      incidents: storage.getAllIncidents(),
+                      region: storage.getUserRegion(),
+                      exportedAt: new Date().toISOString()
+                    };
+                    const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `pureplate_backup_${Date.now()}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    showToast('📥 Downloaded local JSON backup file!', 'success');
+                  }}
+                >
+                  📥 Export Local JSON
+                </button>
+              </div>
+            </div>
+
             <div className="cadet-badge-footer">
               <button
                 className="btn-primary-action"
@@ -313,19 +489,19 @@ export default function LoginScreen({ onNavigate, showToast }) {
                 {!otpSent ? (
                   <form onSubmit={handleRequestOtp} className="student-login-form">
                     <div className="form-group">
-                      <label htmlFor="otp-email-input">Student / Institutional Email ID</label>
+                      <label htmlFor="otp-email-input">Registered Student / Institutional Email ID</label>
                       <div className="input-with-icon">
                         <span className="input-icon">✉️</span>
                         <input
                           id="otp-email-input"
                           type="email"
                           required
-                          placeholder="e.g. cadet@lourdes.edu.in"
+                          placeholder="e.g. inspector@lourdesconvent.edu.in"
                           value={emailInput}
                           onChange={(e) => setEmailInput(e.target.value)}
                         />
                       </div>
-                      <small className="form-tip">We will send a 6-digit one-time passcode for instant login</small>
+                      <small className="form-tip">We verify your account and send a 6-digit code directly to your email inbox.</small>
                     </div>
 
                     <button
@@ -336,23 +512,29 @@ export default function LoginScreen({ onNavigate, showToast }) {
                       {isLoading ? (
                         <span className="loading-spinner"></span>
                       ) : (
-                        <span>Send 6-Digit Code (OTP) ➔</span>
+                        <span>Send 6-Digit Code to Email ➔</span>
                       )}
                     </button>
                   </form>
                 ) : (
                   <form onSubmit={handleVerifyOtp} className="student-login-form">
-                    {/* Security Code Banner */}
-                    {generatedOtp && (
-                      <div className="security-otp-box">
-                        <span className="security-icon">🛡️</span>
-                        <div className="security-text">
-                          <strong>Verification Code Generated:</strong>
-                          <span className="otp-digit-display">{generatedOtp}</span>
-                          <small>Enter this code below to complete sign in</small>
+                    {/* Dispatched to Registered Email Notice */}
+                    <div className="otp-dispatched-notice">
+                      <div className="otp-notice-header">
+                        <span className="otp-notice-icon">✉️</span>
+                        <div className="otp-notice-text">
+                          <strong>Verification Code Dispatched!</strong>
+                          <p>
+                            A 6-digit one-time code was sent to your registered email:{' '}
+                            <span className="otp-highlight-email">{emailInput}</span>
+                          </p>
                         </div>
                       </div>
-                    )}
+                      <div className="otp-notice-tips">
+                        <span>• Please check your email inbox and spam/junk folder</span>
+                        <span>• Code expires in 10 minutes</span>
+                      </div>
+                    </div>
 
                     <div className="form-group">
                       <label htmlFor="otp-code-input">Enter 6-Digit OTP Code</label>
@@ -365,8 +547,9 @@ export default function LoginScreen({ onNavigate, showToast }) {
                           required
                           placeholder="e.g. 748291"
                           value={otpInput}
-                          onChange={(e) => setOtpInput(e.target.value)}
+                          onChange={(e) => setOtpInput(e.target.value.replace(/\D/g, ''))}
                           className="input-otp-field"
+                          autoFocus
                         />
                       </div>
                     </div>
@@ -382,6 +565,34 @@ export default function LoginScreen({ onNavigate, showToast }) {
                         <span>Verify Code &amp; Sign In ➔</span>
                       )}
                     </button>
+
+                    {/* Offline / Demo Code Reveal Option */}
+                    <div className="demo-otp-section">
+                      <button
+                        type="button"
+                        className="btn-demo-toggle"
+                        onClick={() => setShowDemoOtp(!showDemoOtp)}
+                      >
+                        {showDemoOtp ? '🔒 Hide Demo / Offline Code' : '🔍 Didn\'t receive email? Click to view offline demo code'}
+                      </button>
+                      {showDemoOtp && (
+                        <div className="demo-otp-card animate-fade-in">
+                          <small className="demo-desc">
+                            Offline development code generated by security node:
+                          </small>
+                          <div className="demo-code-pill">
+                            {generatedOtp || '123456'}
+                          </div>
+                          <button
+                            type="button"
+                            className="btn-auto-fill-otp"
+                            onClick={() => setOtpInput(generatedOtp || '123456')}
+                          >
+                            Auto-Fill This Code
+                          </button>
+                        </div>
+                      )}
+                    </div>
 
                     <button
                       type="button"
@@ -399,14 +610,14 @@ export default function LoginScreen({ onNavigate, showToast }) {
             {authMode === 'password' && (
               <form onSubmit={handlePasswordLogin} className="student-login-form">
                 <div className="form-group">
-                  <label htmlFor="pwd-email-input">Email ID</label>
+                  <label htmlFor="pwd-email-input">Registered Email ID</label>
                   <div className="input-with-icon">
                     <span className="input-icon">✉️</span>
                     <input
                       id="pwd-email-input"
                       type="email"
                       required
-                      placeholder="e.g. aarav@lourdes.edu.in"
+                      placeholder="e.g. inspector@lourdesconvent.edu.in"
                       value={emailInput}
                       onChange={(e) => setEmailInput(e.target.value)}
                     />
@@ -454,6 +665,22 @@ export default function LoginScreen({ onNavigate, showToast }) {
                       onChange={(e) => setRegName(e.target.value)}
                     />
                   </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="reg-email-input">Student / Institutional Email ID *</label>
+                  <div className="input-with-icon">
+                    <span className="input-icon">✉️</span>
+                    <input
+                      id="reg-email-input"
+                      type="email"
+                      required
+                      placeholder="e.g. diya.m@lourdesconvent.edu.in"
+                      value={regEmail}
+                      onChange={(e) => setRegEmail(e.target.value)}
+                    />
+                  </div>
+                  <small className="form-tip">This email will be registered to receive one-time verification codes (OTP).</small>
                 </div>
 
                 <div className="form-row-2">
